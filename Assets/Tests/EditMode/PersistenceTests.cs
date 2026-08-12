@@ -62,5 +62,59 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(inventory.Slots[0].itemId, Is.EqualTo("herb_medicinal"));
             Assert.That(inventory.Slots[1].IsEmpty, Is.True);
         }
+
+        [Test]
+        public void MartialArtsLoadReplacesOldSlotsAndIgnoresMissingData()
+        {
+            var player = TestSceneFactory.CreatePlayer();
+            var martial = TestSceneFactory.AddComponentWithAwake<MartialArtsSystem>(player);
+            martial.LoadSaveData(new MartialArtsSystem.MartialArtsSaveData
+            {
+                learnedSkillIds = new[] { "basic_slash" },
+                equippedSkillIds = new[] { "basic_slash", "", "", "" }
+            }, MartialSkillDatabase.AllSkills);
+            Assert.That(martial.EquippedSkills[0], Is.Not.Null);
+
+            martial.LoadSaveData(new MartialArtsSystem.MartialArtsSaveData
+            {
+                learnedSkillIds = null,
+                equippedSkillIds = null
+            }, MartialSkillDatabase.AllSkills);
+
+            Assert.That(martial.LearnedSkills, Is.Empty);
+            Assert.That(martial.EquippedSkills, Is.All.Null);
+
+            Assert.DoesNotThrow(() => martial.LoadSaveData(
+                new MartialArtsSystem.MartialArtsSaveData
+                {
+                    learnedSkillIds = new[] { "missing_skill" },
+                    equippedSkillIds = new[] { "missing_skill" }
+                },
+                MartialSkillDatabase.AllSkills));
+            Assert.That(martial.LearnedSkills, Is.Empty);
+        }
+
+        [Test]
+        public void QuestLoadDeduplicatesIdsAndNewGameResetClearsAllProgress()
+        {
+            var questManager = TestSceneFactory.AddComponentWithAwake<QuestManager>(
+                TestSceneFactory.Create("QuestManager"));
+            var activeQuest = TestSceneFactory.CreateScriptableObject<QuestData>();
+            activeQuest.questId = "q_active";
+            activeQuest.questName = "进行中的任务";
+            activeQuest.objectives = new QuestObjective[0];
+            Assert.That(questManager.AcceptQuest(activeQuest), Is.True);
+
+            questManager.LoadCompletedQuests(
+                new[] { "q_main_01", "", "q_main_01", null, "q_side_02" });
+
+            CollectionAssert.AreEqual(
+                new[] { "q_main_01", "q_side_02" },
+                questManager.GetCompletedQuests());
+
+            questManager.ResetForNewGame();
+            Assert.That(questManager.ActiveQuests, Is.Empty);
+            Assert.That(questManager.CompletedQuestIds, Is.Empty);
+        }
     }
 }

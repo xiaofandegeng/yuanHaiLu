@@ -403,11 +403,20 @@ namespace YuanHaiLu.Character
         public void LoadSaveData(MartialArtsSaveData data, Dictionary<string, MartialSkill> allSkills)
         {
             _learnedSkills.Clear();
-            foreach (var id in data.learnedSkillIds)
+            System.Array.Clear(_equippedSkills, 0, _equippedSkills.Length);
+
+            if (data == null || allSkills == null) return;
+
+            if (data.learnedSkillIds != null)
             {
-                if (allSkills.TryGetValue(id, out var skill))
-                    _learnedSkills[id] = skill;
+                foreach (var id in data.learnedSkillIds)
+                {
+                    if (!string.IsNullOrEmpty(id) && allSkills.TryGetValue(id, out var skill))
+                        _learnedSkills[id] = skill;
+                }
             }
+
+            if (data.equippedSkillIds == null) return;
 
             for (int i = 0; i < data.equippedSkillIds.Length && i < _equippedSkills.Length; i++)
             {

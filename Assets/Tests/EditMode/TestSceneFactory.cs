@@ -12,6 +12,7 @@ namespace YuanHaiLu.Tests.EditMode
     internal static class TestSceneFactory
     {
         private static readonly List<GameObject> Roots = new List<GameObject>();
+        private static readonly List<Object> TrackedObjects = new List<Object>();
 
         internal static GameObject Create(string name)
         {
@@ -41,6 +42,13 @@ namespace YuanHaiLu.Tests.EditMode
             return component;
         }
 
+        internal static T CreateScriptableObject<T>() where T : ScriptableObject
+        {
+            var instance = ScriptableObject.CreateInstance<T>();
+            TrackedObjects.Add(instance);
+            return instance;
+        }
+
         internal static void DestroyAll()
         {
             for (int i = Roots.Count - 1; i >= 0; i--)
@@ -50,6 +58,14 @@ namespace YuanHaiLu.Tests.EditMode
             }
 
             Roots.Clear();
+
+            for (int i = TrackedObjects.Count - 1; i >= 0; i--)
+            {
+                if (TrackedObjects[i] != null)
+                    Object.DestroyImmediate(TrackedObjects[i]);
+            }
+
+            TrackedObjects.Clear();
             ResetSingleton<GameManager>();
             ResetSingleton<SaveManager>();
             ResetSingleton<InventoryManager>();
