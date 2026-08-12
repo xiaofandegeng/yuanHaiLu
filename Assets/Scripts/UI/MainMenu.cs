@@ -1,7 +1,8 @@
-using YuanHaiLu.GameSystem;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using YuanHaiLu.Core;
+using YuanHaiLu.GameSystem;
 
 namespace YuanHaiLu.UI
 {
@@ -16,7 +17,21 @@ namespace YuanHaiLu.UI
         [SerializeField] private GameObject loadPanel;
 
         [Header("场景名")]
-        [SerializeField] private string firstSceneName = "YanLiuTown";  // 烟柳镇
+        [SerializeField] private string firstSceneName = "Demo_YanLiuTown";
+
+        private void Start()
+        {
+            GameManager gameManager = GameManager.Instance;
+            if (gameManager == null)
+            {
+                gameManager = FindFirstObjectByType<GameManager>();
+                if (gameManager == null)
+                    gameManager = new GameObject("[GameManager]").AddComponent<GameManager>();
+            }
+
+            GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
+            BindMenuButtons();
+        }
 
         /// <summary>
         /// 开始新游戏
@@ -24,7 +39,28 @@ namespace YuanHaiLu.UI
         public void OnNewGame()
         {
             Debug.Log("[MainMenu] 开始新游戏");
-            Core.GameManager.Instance.SetState(Core.GameManager.GameState.Exploration);
+
+            var gameManager = GameManager.Instance;
+            if (gameManager == null)
+            {
+                Debug.LogError("[MainMenu] GameManager 缺失，无法开始新游戏！");
+                return;
+            }
+
+            GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
+            InventoryManager.Instance?.ResetForNewGame();
+            QuestManager.Instance?.ResetForNewGame();
+            gameManager.playerName = "凌霜";
+            gameManager.chapterIndex = 1;
+            gameManager.BeginSceneEntry(GameManager.SceneEntryMode.NewGame);
+            gameManager.SetState(GameManager.GameState.Exploration);
+
+            if (!Application.CanStreamedLevelBeLoaded(firstSceneName))
+            {
+                Debug.LogError($"[MainMenu] 场景不在 Build Settings 中: {firstSceneName}");
+                return;
+            }
+
             SceneManager.LoadScene(firstSceneName);
         }
 
@@ -34,8 +70,13 @@ namespace YuanHaiLu.UI
         public void OnContinue()
         {
             Debug.Log("[MainMenu] 继续游戏");
-            // TODO: 从存档系统加载
-            GameSystem.SaveManager.Instance?.LoadGame();
+            if (SaveManager.Instance == null)
+            {
+                Debug.LogError("[MainMenu] SaveManager 缺失，无法继续游戏！");
+                return;
+            }
+
+            SaveManager.Instance.LoadGame();
         }
 
         /// <summary>
@@ -43,6 +84,12 @@ namespace YuanHaiLu.UI
         /// </summary>
         public void OnSettings()
         {
+            if (mainPanel == null || settingsPanel == null)
+            {
+                Debug.LogWarning("[MainMenu] 设置面板引用未配置。");
+                return;
+            }
+
             mainPanel.SetActive(false);
             settingsPanel.SetActive(true);
         }
@@ -52,8 +99,42 @@ namespace YuanHaiLu.UI
         /// </summary>
         public void OnSettingsBack()
         {
+            if (mainPanel == null || settingsPanel == null)
+            {
+                Debug.LogWarning("[MainMenu] 设置面板引用未配置。");
+                return;
+            }
+
             settingsPanel.SetActive(false);
             mainPanel.SetActive(true);
+        }
+
+        private void BindMenuButtons()
+        {
+            foreach (Button button in GetComponentsInChildren<Button>(true))
+            {
+                switch (button.gameObject.name)
+                {
+                    case "Btn_新游戏":
+                        Bind(button, OnNewGame);
+                        break;
+                    case "Btn_继续游戏":
+                        Bind(button, OnContinue);
+                        break;
+                    case "Btn_设置":
+                        Bind(button, OnSettings);
+                        break;
+                    case "Btn_退出":
+                        Bind(button, OnQuit);
+                        break;
+                }
+            }
+        }
+
+        private static void Bind(Button button, UnityEngine.Events.UnityAction action)
+        {
+            button.onClick.RemoveListener(action);
+            button.onClick.AddListener(action);
         }
 
         /// <summary>

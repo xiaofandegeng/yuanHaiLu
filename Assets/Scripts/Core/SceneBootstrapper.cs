@@ -48,47 +48,16 @@ namespace YuanHaiLu.Core
         private void InitializeSystems()
         {
             // GameManager（全局单例）
-            if (GameManager.Instance == null)
-            {
-                new GameObject("GameManager").AddComponent<GameManager>();
-            }
+            GameManager gameManager = GameManager.Instance;
+            if (gameManager == null)
+                gameManager = new GameObject("GameManager").AddComponent<GameManager>();
 
-            // SaveManager
-            if (SaveManager.Instance == null)
-            {
-                var saveObj = new GameObject("SaveManager");
-                saveObj.transform.SetParent(GameManager.Instance.transform);
-                saveObj.AddComponent<SaveManager>();
-            }
-
-            // InventoryManager
-            if (InventoryManager.Instance == null)
-            {
-                var invObj = new GameObject("InventoryManager");
-                invObj.transform.SetParent(GameManager.Instance.transform);
-                invObj.AddComponent<InventoryManager>();
-            }
-
-            // QuestManager
-            if (QuestManager.Instance == null)
-            {
-                var questObj = new GameObject("QuestManager");
-                questObj.transform.SetParent(GameManager.Instance.transform);
-                questObj.AddComponent<QuestManager>();
-            }
+            GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
 
             // AudioManager
             if (AudioManager.Instance == null)
             {
                 new GameObject("AudioManager").AddComponent<AudioManager>();
-            }
-
-            // DialogueManager
-            if (DialogueManager.Instance == null)
-            {
-                var dlgObj = new GameObject("DialogueManager");
-                dlgObj.transform.SetParent(GameManager.Instance.transform);
-                dlgObj.AddComponent<DialogueManager>();
             }
 
             Debug.Log("[SceneBootstrapper] 全局系统初始化完成");
