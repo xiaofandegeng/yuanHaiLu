@@ -45,12 +45,18 @@ namespace YuanHaiLu.Editor
                     var tilesetPath = Path.Combine(directory, metadata.image).Replace('\\', '/');
                     var landmarkPath = Path.Combine(directory, metadata.landmarkImage).Replace('\\', '/');
                     var previewPath = Path.Combine(directory, metadata.id + "_reference.png").Replace('\\', '/');
+                    var kind = metadataPath.Contains("/Interiors/") ? "interior" : "region";
+                    var scenePath = kind == "interior"
+                        ? $"Assets/Scenes/Interiors/{metadata.id}.unity"
+                        : $"Assets/Scenes/Regions/{metadata.id}.unity";
                     environmentEntries.Add(EnvironmentArtEntry.Create(
                         metadata.id,
                         AssetDatabase.LoadAssetAtPath<Texture2D>(tilesetPath),
                         AssetDatabase.LoadAssetAtPath<Texture2D>(landmarkPath),
                         AssetDatabase.LoadAssetAtPath<Texture2D>(previewPath),
-                        metadata.id + "_reference"));
+                        metadata.id + "_reference",
+                        kind,
+                        scenePath));
                 }
             }
 

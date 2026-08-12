@@ -12,12 +12,16 @@ namespace YuanHaiLu.Art
         [SerializeField] private Texture2D landmarks;
         [SerializeField] private Texture2D preview;
         [SerializeField] private string sceneConfigurationId;
+        [SerializeField] private string kind;
+        [SerializeField] private string sceneAssetPath;
 
         public string RegionId => regionId;
         public Texture2D Tileset => tileset;
         public Texture2D Landmarks => landmarks;
         public Texture2D Preview => preview;
         public string SceneConfigurationId => sceneConfigurationId;
+        public string Kind => kind;
+        public string SceneAssetPath => sceneAssetPath;
 
         private EnvironmentArtEntry() { }
 
@@ -26,7 +30,9 @@ namespace YuanHaiLu.Art
             Texture2D tilesetTexture,
             Texture2D landmarkTexture,
             Texture2D previewTexture,
-            string configurationId)
+            string configurationId,
+            string environmentKind = "region",
+            string scenePath = "Assets/Scenes/Regions/test.unity")
         {
             return new EnvironmentArtEntry
             {
@@ -34,7 +40,9 @@ namespace YuanHaiLu.Art
                 tileset = tilesetTexture,
                 landmarks = landmarkTexture,
                 preview = previewTexture,
-                sceneConfigurationId = configurationId
+                sceneConfigurationId = configurationId,
+                kind = environmentKind,
+                sceneAssetPath = scenePath
             };
         }
 
@@ -62,6 +70,10 @@ namespace YuanHaiLu.Art
             if (!ArtAssetId.IsValid(sceneConfigurationId))
                 throw new InvalidOperationException(
                     $"Environment art '{regionId}' has invalid scene configuration id '{sceneConfigurationId}'.");
+            if (kind != "region" && kind != "interior")
+                throw new InvalidOperationException($"Environment art '{regionId}' has invalid kind '{kind}'.");
+            if (string.IsNullOrWhiteSpace(sceneAssetPath) || !sceneAssetPath.EndsWith(".unity", StringComparison.Ordinal))
+                throw new InvalidOperationException($"Environment art '{regionId}' has invalid scene path '{sceneAssetPath}'.");
         }
     }
 
@@ -88,7 +100,10 @@ namespace YuanHaiLu.Art
 
         private void OnEnable()
         {
-            RebuildLookup();
+            // Serialized catalog migrations may temporarily contain entries from an
+            // older schema. Rebuild explicitly after the editor builder has written
+            // the current fields, or lazily from TryGet/LoadDefault.
+            lookup = null;
         }
 
         public void SetEntriesForEditor(IEnumerable<EnvironmentArtEntry> values)

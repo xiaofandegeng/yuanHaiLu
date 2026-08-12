@@ -48,7 +48,12 @@ def build_manifest(manifest_path, output_dir=None):
     if "environments" in payload:
         destination = _resolve_output(payload, output_dir, "environments")
         for recipe in load_environment_manifest(manifest_path).environments:
-            baked = bake_environment(recipe, destination)
+            recipe_destination = (
+                destination / recipe.id
+                if payload.get("perRecipeDirectory") is True
+                else destination
+            )
+            baked = bake_environment(recipe, recipe_destination)
             result = result.plus(baked.changed)
         return result
 
@@ -62,6 +67,11 @@ def _all_manifests():
     if full_player_roster.exists():
         manifests = [
             path for path in manifests if path.name != "reference-characters.json"
+        ]
+    full_region_roster = source_root / "Environment" / "Manifests" / "regions.json"
+    if full_region_roster.exists():
+        manifests = [
+            path for path in manifests if path.name != "yanliu-reference.json"
         ]
     return manifests
 
