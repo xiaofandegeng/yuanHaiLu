@@ -79,7 +79,7 @@ Assets/
 
 ## 自动验证
 
-项目使用 Unity Test Framework `1.6.0`，当前有 11 个 EditMode 测试，覆盖：
+项目使用 Unity Test Framework `1.6.0`，当前有 14 个 EditMode 测试，覆盖：
 
 - 场景进入模式；
 - 背包/装备和资源值恢复；

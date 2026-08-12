@@ -153,6 +153,16 @@ namespace YuanHaiLu.Character
             currentMp = Mathf.Clamp(curMp, 0, maxMp);
         }
 
+        /// <summary>
+        /// 装备上限恢复完成后，再按最终上限精确恢复当前资源。
+        /// </summary>
+        internal void SetCurrentResourcesFromLoad(int hp, int mp)
+        {
+            currentHp = Mathf.Clamp(hp, 0, maxHp);
+            currentMp = Mathf.Clamp(mp, 0, maxMp);
+            OnHpChanged?.Invoke(currentHp, maxHp);
+        }
+
         // === 受伤 ===
         public void TakeDamage(int rawDamage, CharacterStats attacker = null)
         {

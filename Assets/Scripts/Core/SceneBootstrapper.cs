@@ -113,6 +113,8 @@ namespace YuanHaiLu.Core
             // 确保在正确的层级
             player.layer = LayerMask.NameToLayer("Player");
             PlayerInteraction.EnsureOn(player);
+            if (player.GetComponent<MartialArtsSystem>() == null)
+                player.AddComponent<MartialArtsSystem>();
         }
 
         /// <summary>

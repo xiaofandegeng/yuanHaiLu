@@ -239,6 +239,7 @@ namespace YuanHaiLu.GameSystem
 
             var gameManager = GameManager.Instance;
             var player = GameObject.FindGameObjectWithTag("Player");
+            CharacterStats stats = null;
 
             if (player == null)
             {
@@ -248,7 +249,7 @@ namespace YuanHaiLu.GameSystem
             {
                 player.transform.position = new Vector2(saveData.positionX, saveData.positionY);
 
-                var stats = player.GetComponent<CharacterStats>();
+                stats = player.GetComponent<CharacterStats>();
                 if (stats == null)
                 {
                     Debug.LogError("[SaveManager] 玩家缺少 CharacterStats，无法恢复属性！");
@@ -272,17 +273,34 @@ namespace YuanHaiLu.GameSystem
                 }
 
                 if (saveData.inventory != null)
-                    InventoryManager.Instance?.LoadSaveData(saveData.inventory);
+                {
+                    if (InventoryManager.Instance != null)
+                        InventoryManager.Instance.LoadSaveData(saveData.inventory);
+                    else
+                        Debug.LogError("[SaveManager] InventoryManager 缺失，无法恢复背包！");
+                }
+
+                // SetBaseFromLoad 必须先于装备重算；装备恢复完成后再按最终上限
+                // 写回当前资源，避免装备增加上限时把合法 HP/MP 提前裁剪掉。
+                stats?.SetCurrentResourcesFromLoad(saveData.currentHp, saveData.currentMp);
 
                 if (saveData.martialArts != null)
                 {
                     var martial = player.GetComponent<MartialArtsSystem>();
                     if (martial != null)
                         martial.LoadSaveData(saveData.martialArts, MartialSkillDatabase.AllSkills);
+                    else
+                        Debug.LogError("[SaveManager] 玩家缺少 MartialArtsSystem，无法恢复武学！");
                 }
             }
 
-            QuestManager.Instance?.LoadCompletedQuests(saveData.completedQuests);
+            if (saveData.completedQuests != null)
+            {
+                if (QuestManager.Instance != null)
+                    QuestManager.Instance.LoadCompletedQuests(saveData.completedQuests);
+                else
+                    Debug.LogError("[SaveManager] QuestManager 缺失，无法恢复已完成任务！");
+            }
 
             if (gameManager != null)
             {

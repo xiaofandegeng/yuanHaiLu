@@ -138,8 +138,8 @@ namespace YuanHaiLu.Tests.EditMode
                 playerName = "凌霜",
                 level = 3,
                 exp = 25,
-                currentHp = 40,
-                currentMp = 20,
+                currentHp = 120,
+                currentMp = 60,
                 baseAttack = 15,
                 baseDefense = 5,
                 baseAgility = 10,
@@ -152,8 +152,8 @@ namespace YuanHaiLu.Tests.EditMode
                 {
                     slotItemIds = new[] { "herb_medicinal" },
                     slotAmounts = new[] { 2 },
-                    equippedWeapon = "sword_iron",
-                    equippedArmor = "",
+                    equippedWeapon = "sword_frost",
+                    equippedArmor = "armor_silk",
                     equippedAccessory = "",
                     gold = 77
                 },
@@ -169,9 +169,11 @@ namespace YuanHaiLu.Tests.EditMode
 
             var stats = player.GetComponent<CharacterStats>();
             Assert.That(stats.BaseAttack, Is.EqualTo(15));
-            Assert.That(stats.attack, Is.EqualTo(20));
-            Assert.That(stats.currentHp, Is.EqualTo(40));
-            Assert.That(stats.currentMp, Is.EqualTo(20));
+            Assert.That(stats.attack, Is.EqualTo(37));
+            Assert.That(stats.maxHp, Is.EqualTo(130));
+            Assert.That(stats.maxMp, Is.EqualTo(70));
+            Assert.That(stats.currentHp, Is.EqualTo(120));
+            Assert.That(stats.currentMp, Is.EqualTo(60));
             Assert.That(player.transform.position, Is.EqualTo(new Vector3(3f, -2f, 0f)));
             Assert.That(inventory.Gold, Is.EqualTo(77));
             Assert.That(gameManager.chapterIndex, Is.EqualTo(2));

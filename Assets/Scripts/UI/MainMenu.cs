@@ -30,6 +30,7 @@ namespace YuanHaiLu.UI
             }
 
             GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
+            gameManager.SetState(GameManager.GameState.MainMenu);
             BindMenuButtons();
         }
 
@@ -47,6 +48,12 @@ namespace YuanHaiLu.UI
                 return;
             }
 
+            if (!Application.CanStreamedLevelBeLoaded(firstSceneName))
+            {
+                Debug.LogError($"[MainMenu] 场景不在 Build Settings 中: {firstSceneName}");
+                return;
+            }
+
             GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
             InventoryManager.Instance?.ResetForNewGame();
             QuestManager.Instance?.ResetForNewGame();
@@ -54,12 +61,6 @@ namespace YuanHaiLu.UI
             gameManager.chapterIndex = 1;
             gameManager.BeginSceneEntry(GameManager.SceneEntryMode.NewGame);
             gameManager.SetState(GameManager.GameState.Exploration);
-
-            if (!Application.CanStreamedLevelBeLoaded(firstSceneName))
-            {
-                Debug.LogError($"[MainMenu] 场景不在 Build Settings 中: {firstSceneName}");
-                return;
-            }
 
             SceneManager.LoadScene(firstSceneName);
         }
@@ -133,6 +134,9 @@ namespace YuanHaiLu.UI
 
         private static void Bind(Button button, UnityEngine.Events.UnityAction action)
         {
+            if (button.onClick.GetPersistentEventCount() > 0)
+                return;
+
             button.onClick.RemoveListener(action);
             button.onClick.AddListener(action);
         }

@@ -35,7 +35,7 @@ namespace YuanHaiLu.Map
 
             bool shouldInitializeNewGame = GameManager.Instance == null ||
                                            GameManager.Instance.ShouldInitializeNewGame;
-            if (playIntro && !_introPlayed && shouldInitializeNewGame)
+            if (!_introPlayed && shouldInitializeNewGame)
             {
                 StartCoroutine(PlayIntroSequence());
             }
@@ -46,7 +46,7 @@ namespace YuanHaiLu.Map
             _introPlayed = true;
 
             // 等待全局管理器初始化
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(introDelay);
 
             // 初始化玩家
             yield return InitPlayer();
@@ -54,7 +54,11 @@ namespace YuanHaiLu.Map
             // 初始化武学
             yield return InitMartialArts();
 
-            GameManager.Instance?.CompleteSceneEntry();
+            CompleteNewGameInitialization(GameManager.Instance);
+
+            // playIntro 只控制演出；出生、属性、武学和初始物资始终需要初始化。
+            if (!playIntro)
+                yield break;
 
             // 显示区域名
             var transition = ScreenTransition.Instance;
@@ -123,16 +127,15 @@ namespace YuanHaiLu.Map
             if (player == null) yield break;
 
             var martialSys = player.GetComponent<MartialArtsSystem>();
-            if (martialSys == null) yield break;
-
-            // 学习初始招式
-            var starterSkills = MartialSkillDatabase.GetStarterSkills();
-            foreach (var skillId in starterSkills)
+            if (martialSys != null)
             {
-                var skill = MartialSkillDatabase.Get(skillId);
-                if (skill != null)
+                // 学习初始招式
+                var starterSkills = MartialSkillDatabase.GetStarterSkills();
+                foreach (var skillId in starterSkills)
                 {
-                    martialSys.LearnSkill(skill);
+                    var skill = MartialSkillDatabase.Get(skillId);
+                    if (skill != null)
+                        martialSys.LearnSkill(skill);
                 }
             }
 
@@ -149,6 +152,14 @@ namespace YuanHaiLu.Map
             yield return null;
         }
 
+        internal static void CompleteNewGameInitialization(GameManager gameManager)
+        {
+            if (gameManager == null) return;
+
+            gameManager.SetState(GameManager.GameState.Exploration);
+            gameManager.CompleteSceneEntry();
+        }
+
         private void ShowControlTips()
         {
             // 显示操作提示（通过对话系统）
@@ -158,7 +169,7 @@ namespace YuanHaiLu.Map
                 dm.StartDialogue("系统", new string[]
                 {
                     "【操作提示】",
-                    "WASD 移动 | J 攻击（3连击）| K 交互",
+                    "WASD 移动 | J 攻击（3连击）| K/E 交互",
                     "Shift 冲刺 | Tab 背包 | Q 任务 | ESC 暂停",
                     "数字键 1-4 释放武学招式",
                     "祝你旅途愉快，少侠！"
