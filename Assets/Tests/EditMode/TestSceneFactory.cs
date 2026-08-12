@@ -32,6 +32,15 @@ namespace YuanHaiLu.Tests.EditMode
             return player;
         }
 
+        internal static T AddComponentWithAwake<T>(GameObject gameObject) where T : MonoBehaviour
+        {
+            var component = gameObject.AddComponent<T>();
+            typeof(T).GetMethod(
+                "Awake",
+                BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(component, null);
+            return component;
+        }
+
         internal static void DestroyAll()
         {
             for (int i = Roots.Count - 1; i >= 0; i--)

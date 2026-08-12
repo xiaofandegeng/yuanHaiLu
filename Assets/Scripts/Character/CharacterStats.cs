@@ -40,11 +40,6 @@ namespace YuanHaiLu.Character
         [Tooltip("暴击伤害倍率")]
         public float critMultiplier = 1.5f;
 
-        [Header("=== 武学 ===")]
-        [Tooltip("已学武学列表（旧版，实际由 MartialArtsSystem 管理）")]
-        [System.Obsolete]
-        public System.Collections.Generic.List<MartialSkillLegacy> learnedSkills = new System.Collections.Generic.List<MartialSkillLegacy>();
-
         [Header("=== 经验/等级 ===")]
         public int level = 1;
         public int exp = 0;
@@ -68,6 +63,12 @@ namespace YuanHaiLu.Character
         // 运行时展示的 attack 等于 _base + _eq（装备加成）。
         private int _baseAttack, _baseDefense, _baseAgility, _baseMaxHp, _baseMaxMp;
         private int _eqAttack, _eqDefense, _eqAgility, _eqMaxHp, _eqMaxMp;
+
+        public int BaseAttack => _baseAttack;
+        public int BaseDefense => _baseDefense;
+        public int BaseAgility => _baseAgility;
+        public int BaseMaxHp => _baseMaxHp;
+        public int BaseMaxMp => _baseMaxMp;
 
         private void Awake()
         {
@@ -101,26 +102,41 @@ namespace YuanHaiLu.Character
         /// 设置装备加成（由 InventoryManager 在装备/卸下时调用）
         /// maxHp/maxMp 的变化会同步调整当前值
         /// </summary>
-        public void SetEquipmentBonus(int atk, int def, int agi, int hp, int mp)
+        public void SetEquipmentBonus(
+            int attackBonus,
+            int defenseBonus,
+            int agilityBonus,
+            int maxHpBonus,
+            int maxMpBonus,
+            bool adjustCurrentResources = true)
         {
-            int hpDelta = hp - _eqMaxHp;
-            int mpDelta = mp - _eqMaxMp;
+            int hpDelta = maxHpBonus - _eqMaxHp;
+            int mpDelta = maxMpBonus - _eqMaxMp;
 
-            _eqAttack = atk;
-            _eqDefense = def;
-            _eqAgility = agi;
-            _eqMaxHp = hp;
-            _eqMaxMp = mp;
+            _eqAttack = attackBonus;
+            _eqDefense = defenseBonus;
+            _eqAgility = agilityBonus;
+            _eqMaxHp = maxHpBonus;
+            _eqMaxMp = maxMpBonus;
 
             RecomputeDerived();
 
-            // 装备带来的上限提升也补满对应当前值（常见 RPG 体验）
-            currentHp = Mathf.Clamp(currentHp + Mathf.Max(0, hpDelta), 0, maxHp);
-            currentMp = Mathf.Clamp(currentMp + Mathf.Max(0, mpDelta), 0, maxMp);
+            if (adjustCurrentResources)
+            {
+                // 正常装备时，上限提升会同步增加当前资源。
+                currentHp = Mathf.Clamp(currentHp + Mathf.Max(0, hpDelta), 0, maxHp);
+                currentMp = Mathf.Clamp(currentMp + Mathf.Max(0, mpDelta), 0, maxMp);
+            }
+            else
+            {
+                // 读档时只恢复上限，不能把装备加成当成治疗。
+                currentHp = Mathf.Clamp(currentHp, 0, maxHp);
+                currentMp = Mathf.Clamp(currentMp, 0, maxMp);
+            }
         }
 
         /// <summary>
-        /// 读档时设置基础值（视为无装备；与"背包未接入存档"的现状一致）
+        /// 读档时设置基础值；装备加成由 InventoryManager 随后恢复。
         /// </summary>
         public void SetBaseFromLoad(int atk, int def, int agi, int hp, int mp, int curHp, int curMp)
         {
@@ -257,24 +273,5 @@ namespace YuanHaiLu.Character
         /// 是否存活
         /// </summary>
         public bool IsAlive => currentHp > 0;
-    }
-
-    /// <summary>
-    /// [已废弃] 旧版武学数据 — 请使用 YuanHaiLu.Character.MartialSkill（ScriptableObject）
-    /// 保留仅为向后兼容
-    /// </summary>
-    [System.Serializable]
-    [System.Obsolete("Use MartialSkill ScriptableObject instead")]
-    public class MartialSkillLegacy
-    {
-        public string skillName;
-        public string description;
-        public int mpCost;
-        public int staminaCost;
-        public int baseDamage;
-        public float range;
-        public float cooldown;
-        public int masteryLevel;
-        public float masteryExp;
     }
 }
