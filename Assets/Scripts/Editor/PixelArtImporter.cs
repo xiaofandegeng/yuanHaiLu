@@ -1,8 +1,5 @@
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.U2D.Sprites;
-using System.Linq;
-using System.IO;
 
 namespace YuanHaiLu.Editor
 {
@@ -16,7 +13,7 @@ namespace YuanHaiLu.Editor
         private static readonly string[] SpriteFolders =
         {
             "Assets/Sprites",
-            "Assets/Art/Tilesets"
+            "Assets/Art"
         };
 
         [MenuItem("Tools/渊海录/配置所有精灵为像素模式")]
@@ -28,24 +25,7 @@ namespace YuanHaiLu.Editor
             foreach (string guid in guids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
-                var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-
-                if (importer == null) continue;
-
-                // 像素艺术设置
-                importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Multiple; // 多数是精灵表
-                importer.filterMode = FilterMode.Point;                // 最近邻过滤（锐利像素）
-                importer.textureCompression = TextureImporterCompression.Uncompressed; // 不压缩
-                importer.maxTextureSize = 2048;
-                importer.spritePixelsPerUnit = PIXELS_PER_UNIT;
-
-                // 像素完美相机兼容
-                importer.spritePivot = new Vector2(0.5f, 0f); // 底部中心（角色）
-                importer.mipmapEnabled = false;
-
-                EditorUtility.SetDirty(importer);
-                importer.SaveAndReimport();
+                ArtImportRules.Apply(path);
                 count++;
             }
 
@@ -70,32 +50,21 @@ namespace YuanHaiLu.Editor
             foreach (Object obj in selections)
             {
                 string path = AssetDatabase.GetAssetPath(obj);
-                var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-
-                if (importer == null) continue;
-
-                importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Multiple;
-                importer.filterMode = FilterMode.Point;
-                importer.textureCompression = TextureImporterCompression.Uncompressed;
-                importer.spritePixelsPerUnit = PIXELS_PER_UNIT;
-                importer.mipmapEnabled = false;
-
-                importer.SaveAndReimport();
+                ArtImportRules.Apply(path);
                 count++;
             }
 
             Debug.Log($"[PixelArtImporter] 配置了 {count} 个精灵");
         }
 
-        [MenuItem("Tools/渊海录/切分角色精灵表 (48x48)")]
+        [MenuItem("Tools/渊海录/切分角色精灵表 (32x32)")]
         public static void SliceCharacterSpriteSheet()
         {
             Object selected = Selection.activeObject;
             if (selected == null) return;
 
             string path = AssetDatabase.GetAssetPath(selected);
-            SliceSpriteSheet(path, 48, 48, Vector2.zero);
+            ArtImportRules.Apply(path);
         }
 
         [MenuItem("Tools/渊海录/切分瓦片集 (16x16)")]
@@ -105,56 +74,7 @@ namespace YuanHaiLu.Editor
             if (selected == null) return;
 
             string path = AssetDatabase.GetAssetPath(selected);
-            SliceSpriteSheet(path, 16, 16, new Vector2(0.5f, 0.5f));
-        }
-
-        private static void SliceSpriteSheet(string path, int cellW, int cellH, Vector2 pivot)
-        {
-            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-            if (importer == null) return;
-
-            // 获取纹理尺寸
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            int cols = texture.width / cellW;
-            int rows = texture.height / cellH;
-
-            // 生成切片数据
-            var spriteRects = new SpriteRect[cols * rows];
-            int index = 0;
-
-            for (int row = rows - 1; row >= 0; row--) // 从上到下
-            {
-                for (int col = 0; col < cols; col++)
-                {
-                    spriteRects[index] = new SpriteRect
-                    {
-                        name = $"sprite_{row}_{col}",
-                        rect = new Rect(col * cellW, row * cellH, cellW, cellH),
-                        pivot = pivot,
-                        alignment = SpriteAlignment.Custom,
-                        spriteID = GUID.Generate(),
-                    };
-                    index++;
-                }
-            }
-
-            var factory = new SpriteDataProviderFactories();
-            factory.Init();
-            var dataProvider = factory.GetSpriteEditorDataProviderFromObject(texture);
-            dataProvider.InitSpriteEditorDataProvider();
-            dataProvider.SetSpriteRects(spriteRects);
-
-            var nameProvider = dataProvider.GetDataProvider<ISpriteNameFileIdDataProvider>();
-            nameProvider.SetNameFileIdPairs(spriteRects.Select(
-                spriteRect => new SpriteNameFileIdPair(spriteRect.name, spriteRect.spriteID)));
-            dataProvider.Apply();
-
-            importer.SaveAndReimport();
-
-            Debug.Log($"[PixelArtImporter] 切分完成: {path}\n" +
-                      $"尺寸: {texture.width}x{texture.height}\n" +
-                      $"格子: {cellW}x{cellH}\n" +
-                      $"总数: {cols}x{rows} = {cols * rows} 帧");
+            ArtImportRules.Apply(path);
         }
 
         // === 图层和标签自动配置 ===
