@@ -60,12 +60,12 @@
 
 - 新增 `Assets/Tests/EditMode/YuanHaiLu.EditModeTests.asmdef`。
 - 新增测试工具 `TestSceneFactory`，清理真实组件、SO 和静态单例。
-- 当前 11 个 EditMode 测试：
-  - 场景进入模式 1；
+- 当前 14 个 EditMode 测试：
+  - 场景进入模式 2；
   - 持久化 7；
   - 交互 2；
-  - 全局系统 Bootstrapper 1。
-- 分组验证结果：1/1、7/7、2/2、1/1 均通过。
+  - 全局系统与主菜单生命周期 3。
+- 分组验证结果：2/2、7/7、2/2、3/3 均通过。
 - Unity `-runTests` 命令已确认不能同时使用 `-quit`，否则可能无结果 XML。
 
 ## 实施中发现并修复的根因
@@ -80,6 +80,10 @@
 8. 主菜单只创建部分管理器，进入 Demo 后重复 GameManager 被销毁时会连带丢失场景内系统。
 9. 主菜单场景名与 Build Settings 不一致，且生成的按钮没有监听器。
 10. 主菜单生成器对同一对象添加两次 `Canvas`。
+11. 返回主菜单时持久化 `GameManager` 仍处于探索状态；无效首场景会在报错前清空会话。
+12. 装备提高 HP/MP 上限时，当前资源会在装备恢复前被基础上限提前裁剪。
+13. 直接 Play Demo 时 `GameManager.Start` 将状态设为主菜单，导致玩家输入被锁定。
+14. 编辑器初始化工具仍会创建旧 SortingLayer 和不存在的 `Interactable` Layer；新资源元数据也未应用像素导入基线。
 
 ## 明确不在本次范围
 

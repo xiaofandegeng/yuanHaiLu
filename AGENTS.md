@@ -13,7 +13,7 @@
 | 代码规模 | 48 个运行时/编辑器 C# 文件，约 10,600 行；另有 5 个测试文件 |
 | 状态 | 烟柳镇 Demo 可运行；核心框架完整，内容和动画待填充 |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
-| 测试 | Unity Test Framework `1.6.0`；11 个 EditMode 测试 |
+| 测试 | Unity Test Framework `1.6.0`；14 个 EditMode 测试 |
 | 设计文档 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/superpowers/specs/`、`README.md`、`SETUP_GUIDE.md` |
 
 ## 1. 如何运行
@@ -225,7 +225,7 @@ Ground → Environment → Character → Foreground → UI
 yuanHaiLu/
 ├── Assets/
 │   ├── Scripts/                 48 个 .cs，约 10,600 行
-│   ├── Tests/EditMode/          11 个测试 + 测试工具
+│   ├── Tests/EditMode/          14 个测试 + 测试工具
 │   ├── Scenes/                  MainMenu + Demo_YanLiuTown
 │   ├── Sprites/Generated/       占位精灵
 │   ├── Art/Tilesets/            瓦片与参考
@@ -271,7 +271,9 @@ yuanHaiLu/
 15. 修复 `sceneLoaded` 在加载后才订阅且匿名回调不解除的问题，改为加载前注册、单次具名回调。
 16. `SceneDirector` 只在新游戏初始化，读档不再重置出生点或重复发初始物资。
 17. 新增 `GlobalSystemsBootstrapper`，修复主菜单进入 Demo 后管理器缺失；主菜单按钮运行时绑定，首场景名改为 `Demo_YanLiuTown`。
-18. 建立 EditMode 测试程序集和 11 个回归测试。
+18. 建立 EditMode 测试程序集和 14 个回归测试。
+19. 审查阶段修复返回主菜单状态、无效新游戏场景提前清档、装备上限资源裁剪和直接 Play Demo 被锁在主菜单状态的问题。
+20. 统一项目初始化工具的 Layer/SortingLayer 基线，并把现有 Sprites/Tilesets 固定为 PPU 16、Point、无压缩导入。
 
 ## 8. 当前人工 QA 清单
 

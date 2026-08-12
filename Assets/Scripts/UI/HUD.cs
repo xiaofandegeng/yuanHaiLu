@@ -241,7 +241,7 @@ namespace YuanHaiLu.UI
             if (_goldText != null) _goldText.text = gold.ToString();
         }
 
-        public void ShowInteractPrompt(string text = "[K] 交互")
+        public void ShowInteractPrompt(string text = "[K/E] 交互")
         {
             if (_interactPrompt != null)
             {

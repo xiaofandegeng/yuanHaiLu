@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.SceneManagement;
+using YuanHaiLu.Core;
 
 namespace YuanHaiLu.Editor
 {
@@ -14,14 +14,8 @@ namespace YuanHaiLu.Editor
         {
             Debug.Log("=== 渊海录 项目初始化 ===");
 
-            // 1. 设置 Tags
-            SetupTags();
-
-            // 2. 设置 Layers
-            SetupLayers();
-
-            // 3. 设置 Sorting Layers
-            SetupSortingLayers();
+            // 1-3. 设置 Tags / Layers / Sorting Layers
+            ConfigureProjectSettings();
 
             // 4. 生成主菜单场景
             MainMenuSceneGenerator.Generate();
@@ -34,17 +28,34 @@ namespace YuanHaiLu.Editor
             Debug.Log("=== 初始化完成！请打开 Demo_YanLiuTown 场景按 Play ===");
         }
 
+        internal static void ConfigureProjectSettings()
+        {
+            SetupTags();
+            SetupLayers();
+            SetupSortingLayers();
+            AssetDatabase.SaveAssets();
+        }
+
         private static void SetupTags()
         {
-            var tags = new string[] { "Player", "Enemy", "NPC", "Item", "Environment", "Trigger" };
+            var tags = new[] { "Player", "Enemy", "NPC", "Item", "Environment", "Trigger" };
             var serializedObject = new SerializedObject(AssetDatabase.LoadAssetAtPath<Object>("ProjectSettings/TagManager.asset"));
             var tagsProp = serializedObject.FindProperty("tags");
 
-            tagsProp.ClearArray();
-            for (int i = 0; i < tags.Length; i++)
+            foreach (string tag in tags)
             {
-                tagsProp.InsertArrayElementAtIndex(i);
-                tagsProp.GetArrayElementAtIndex(i).stringValue = tags[i];
+                bool exists = false;
+                for (int i = 0; i < tagsProp.arraySize; i++)
+                {
+                    if (tagsProp.GetArrayElementAtIndex(i).stringValue != tag) continue;
+                    exists = true;
+                    break;
+                }
+
+                if (exists) continue;
+                int index = tagsProp.arraySize;
+                tagsProp.InsertArrayElementAtIndex(index);
+                tagsProp.GetArrayElementAtIndex(index).stringValue = tag;
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -82,12 +93,11 @@ namespace YuanHaiLu.Editor
 
             var layers = new (string name, int id)[]
             {
-                ("Background", 0),
-                ("Terrain", 1),
-                ("Decoration", 2),
-                ("Character", 3),
-                ("Foreground", 4),
-                ("UI", 5),
+                (GameConfig.SORTING_GROUND, 0),
+                (GameConfig.SORTING_ENVIRONMENT, 1),
+                (GameConfig.SORTING_CHARACTER, 2),
+                (GameConfig.SORTING_FOREGROUND, 3),
+                (GameConfig.SORTING_UI, 4),
             };
 
             for (int i = 0; i < layers.Length; i++)

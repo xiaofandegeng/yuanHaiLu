@@ -12,12 +12,16 @@ namespace YuanHaiLu.Editor
     public static class PixelArtImporter
     {
         private const int PIXELS_PER_UNIT = 16;
-        private const string SPRITE_FOLDER = "Assets/Sprites";
+        private static readonly string[] SpriteFolders =
+        {
+            "Assets/Sprites",
+            "Assets/Art/Tilesets"
+        };
 
         [MenuItem("Tools/渊海录/配置所有精灵为像素模式")]
         public static void ConfigureAllSpritesAsPixelArt()
         {
-            string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { SPRITE_FOLDER });
+            string[] guids = AssetDatabase.FindAssets("t:Texture2D", SpriteFolders);
             int count = 0;
 
             foreach (string guid in guids)
@@ -45,12 +49,15 @@ namespace YuanHaiLu.Editor
             }
 
             AssetDatabase.Refresh();
-            EditorUtility.DisplayDialog("完成",
-                $"已配置 {count} 个精灵为像素模式\n" +
-                $"PPU: {PIXELS_PER_UNIT}\n" +
-                $"过滤: Point (无模糊)\n" +
-                $"压缩: 无",
-                "确定");
+            if (!Application.isBatchMode)
+            {
+                EditorUtility.DisplayDialog("完成",
+                    $"已配置 {count} 个精灵为像素模式\n" +
+                    $"PPU: {PIXELS_PER_UNIT}\n" +
+                    $"过滤: Point (无模糊)\n" +
+                    $"压缩: 无",
+                    "确定");
+            }
         }
 
         [MenuItem("Tools/渊海录/配置选中精灵为像素模式")]
@@ -150,61 +157,12 @@ namespace YuanHaiLu.Editor
         [MenuItem("Tools/渊海录/初始化项目设置")]
         public static void InitializeProjectSettings()
         {
-            SetupLayers();
-            SetupSortingLayers();
-            SetupTags();
+            ProjectInitializer.ConfigureProjectSettings();
 
             EditorUtility.DisplayDialog("完成", "项目设置已初始化！\n" +
-                "- 图层: Player, Enemy, NPC, Interactable, Ground, Environment\n" +
+                "- 图层: 6 Player, 7 Enemy, 8 NPC, 9 Environment\n" +
                 "- 排序层: Ground, Environment, Character, Foreground, UI\n" +
-                "- 标签: Player, Enemy, NPC, Interactable", "确定");
-        }
-
-        private static void SetupLayers()
-        {
-            // Unity 的 Layer 需要通过 SerializedObject 设置
-            var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
-
-            var layersProp = tagManager.FindProperty("layers");
-            string[] neededLayers = { "Player", "Enemy", "NPC", "Interactable", "Ground", "Environment" };
-
-            foreach (string layerName in neededLayers)
-            {
-                bool found = false;
-                for (int i = 8; i < layersProp.arraySize; i++) // 从8开始（用户自定义层）
-                {
-                    var layerProp = layersProp.GetArrayElementAtIndex(i);
-                    if (layerProp.stringValue == layerName)
-                    {
-                        found = true;
-                        break;
-                    }
-                    if (string.IsNullOrEmpty(layerProp.stringValue))
-                    {
-                        layerProp.stringValue = layerName;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    Debug.LogWarning($"[ProjectInit] 无法添加图层: {layerName}（已满）");
-                }
-            }
-
-            tagManager.ApplyModifiedProperties();
-        }
-
-        private static void SetupSortingLayers()
-        {
-            // Sorting Layer 需要通过内部API设置，这里只记录日志
-            Debug.Log("[ProjectInit] 请手动添加排序层: Ground → Environment → Character → Foreground → UI");
-        }
-
-        private static void SetupTags()
-        {
-            // Tag 设置同理，记录日志
-            Debug.Log("[ProjectInit] 请手动添加标签: Player, Enemy, NPC, Interactable");
+                "- 标签: Player, Enemy, NPC, Item, Environment, Trigger", "确定");
         }
     }
 }

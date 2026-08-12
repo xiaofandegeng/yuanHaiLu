@@ -124,9 +124,9 @@ namespace YuanHaiLu.Character
             {
                 var npc = go.GetComponent<NPCBase>();
                 if (npc != null && !string.IsNullOrEmpty(npc.npcName))
-                    return $"[K] 与 {npc.npcName} 交谈";
+                    return $"[K/E] 与 {npc.npcName} 交谈";
             }
-            return "[K] 交互";
+            return "[K/E] 交互";
         }
 
         private void OnDisable()
