@@ -2,6 +2,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 using YuanHaiLu.Character;
+using YuanHaiLu.Dialogue;
 using YuanHaiLu.GameSystem;
 using YuanHaiLu.Map;
 
@@ -155,10 +156,111 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(manager.GetActiveQuest("collect_quest").Objectives[0].currentAmount, Is.EqualTo(1));
         }
 
+        [Test]
+        public void QuestGiverAcceptsAndReportsTalkOnlyAfterIntroDialogueEnds()
+        {
+            QuestManager manager = CreateQuestManager();
+            DialogueManager dialogue = CreateDialogueManager();
+            NPCBase npc = CreateQuestNpc("M01_01", "innkeeper_zhao", out QuestGiver giver);
+            giver.canCompleteQuest = false;
+
+            npc.OnInteract(TestSceneFactory.CreatePlayer());
+
+            Assert.That(dialogue.IsInDialogue, Is.True);
+            Assert.That(manager.IsQuestActive("M01_01"), Is.False);
+            dialogue.ForceEndDialogue();
+
+            ActiveQuest active = manager.GetActiveQuest("M01_01");
+            Assert.That(active, Is.Not.Null);
+            Assert.That(active.Objectives[1].currentAmount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ActiveQuestNpcReportsItsConfiguredTalkTargetAfterDialogue()
+        {
+            QuestManager manager = CreateQuestManager();
+            Assert.That(manager.AcceptQuestById("M01_01"), Is.True);
+            DialogueManager dialogue = CreateDialogueManager();
+            NPCBase npc = CreateQuestNpc("M01_01", "drunk_old_man", out QuestGiver giver);
+            giver.canAcceptQuest = false;
+            giver.canCompleteQuest = false;
+
+            npc.OnInteract(TestSceneFactory.CreatePlayer());
+            dialogue.ForceEndDialogue();
+
+            Assert.That(
+                manager.GetActiveQuest("M01_01").Objectives[2].currentAmount,
+                Is.EqualTo(1));
+        }
+
+        [Test]
+        public void CompletableQuestNpcSubmitsOnceAndCompletedDialogueDoesNotRewardAgain()
+        {
+            QuestManager manager = CreateQuestManager();
+            manager.LoadCompletedQuests(new string[0]);
+            Assert.That(manager.AcceptQuestById("M01_01"), Is.True);
+            manager.UpdateObjective(QuestObjective.ObjectiveType.ReachArea, "yanliu_inn");
+            manager.UpdateObjective(QuestObjective.ObjectiveType.TalkToNPC, "innkeeper_zhao");
+            manager.UpdateObjective(QuestObjective.ObjectiveType.TalkToNPC, "drunk_old_man");
+            DialogueManager dialogue = CreateDialogueManager();
+            TestSceneFactory.CreatePlayer();
+            InventoryManager inventory = TestSceneFactory.AddComponentWithAwake<InventoryManager>(
+                TestSceneFactory.Create("InventoryManager"));
+            int startingGold = inventory.Gold;
+            NPCBase npc = CreateQuestNpc("M01_01", "innkeeper_zhao", out QuestGiver giver);
+            giver.completedDialogue = new[] { "少侠一路顺风。" };
+
+            npc.OnInteract(GameObject.FindGameObjectWithTag("Player"));
+            dialogue.ForceEndDialogue();
+            Assert.That(manager.IsQuestCompleted("M01_01"), Is.True);
+            Assert.That(inventory.Gold, Is.EqualTo(startingGold + 20));
+
+            npc.OnInteract(GameObject.FindGameObjectWithTag("Player"));
+            dialogue.ForceEndDialogue();
+            Assert.That(inventory.Gold, Is.EqualTo(startingGold + 20));
+        }
+
+        [Test]
+        public void QuestGiverDoesNotQueueActionWhileAnotherDialogueIsBusy()
+        {
+            QuestManager manager = CreateQuestManager();
+            DialogueManager dialogue = CreateDialogueManager();
+            dialogue.StartDialogue("旁人", new[] { "正在进行的对话" });
+            CreateQuestNpc("M01_01", "innkeeper_zhao", out QuestGiver giver);
+
+            bool handled = giver.TryHandleInteraction(TestSceneFactory.CreatePlayer());
+            dialogue.ForceEndDialogue();
+
+            Assert.That(handled, Is.False);
+            Assert.That(manager.IsQuestActive("M01_01"), Is.False);
+        }
+
         private static QuestManager CreateQuestManager()
         {
             return TestSceneFactory.AddComponentWithAwake<QuestManager>(
                 TestSceneFactory.Create("QuestManager"));
+        }
+
+        private static DialogueManager CreateDialogueManager()
+        {
+            return TestSceneFactory.AddComponentWithAwake<DialogueManager>(
+                TestSceneFactory.Create("DialogueManager"));
+        }
+
+        private static NPCBase CreateQuestNpc(
+            string questId,
+            string targetId,
+            out QuestGiver giver)
+        {
+            GameObject npcObject = TestSceneFactory.Create($"NPC_{targetId}");
+            npcObject.AddComponent<BoxCollider2D>();
+            NPCBase npc = npcObject.AddComponent<NPCBase>();
+            npc.npcName = targetId;
+            npc.canWander = false;
+            giver = npcObject.AddComponent<QuestGiver>();
+            giver.questId = questId;
+            giver.interactionTargetId = targetId;
+            return npc;
         }
 
         private static QuestData CreateQuest(string id, params QuestObjective[] objectives)
