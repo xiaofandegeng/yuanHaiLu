@@ -1,0 +1,82 @@
+"""Command-line entry point for deterministic formal-art builds."""
+
+import argparse
+import json
+from dataclasses import dataclass
+from pathlib import Path
+
+from .character_baker import bake_character
+from .environment_baker import bake_environment
+from .schema import load_character_manifest, load_environment_manifest
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+@dataclass(frozen=True)
+class BuildResult:
+    built: int = 0
+    skipped: int = 0
+
+    def plus(self, changed):
+        return BuildResult(self.built + int(changed), self.skipped + int(not changed))
+
+
+def _resolve_output(raw_payload, explicit_output, kind):
+    if explicit_output is not None:
+        return Path(explicit_output)
+    configured = raw_payload.get("outputDirectory")
+    if configured:
+        configured_path = Path(configured)
+        return configured_path if configured_path.is_absolute() else PROJECT_ROOT / configured_path
+    suffix = "Characters/Generated" if kind == "characters" else "Environment/Generated"
+    return PROJECT_ROOT / "Assets" / "Art" / suffix
+
+
+def build_manifest(manifest_path, output_dir=None):
+    manifest_path = Path(manifest_path)
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    result = BuildResult()
+
+    if "characters" in payload:
+        destination = _resolve_output(payload, output_dir, "characters")
+        for recipe in load_character_manifest(manifest_path).characters:
+            baked = bake_character(recipe, destination)
+            result = result.plus(baked.changed)
+        return result
+
+    if "environments" in payload:
+        destination = _resolve_output(payload, output_dir, "environments")
+        for recipe in load_environment_manifest(manifest_path).environments:
+            baked = bake_environment(recipe, destination)
+            result = result.plus(baked.changed)
+        return result
+
+    raise ValueError("manifest '{}' contains neither characters nor environments".format(manifest_path))
+
+
+def _all_manifests():
+    source_root = PROJECT_ROOT / "Assets" / "ArtSource"
+    return sorted(source_root.glob("**/Manifests/*.json"))
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--manifest", type=Path)
+    selection.add_argument("--all", action="store_true")
+    parser.add_argument("--output-dir", type=Path)
+    args = parser.parse_args(argv)
+
+    manifests = _all_manifests() if args.all else [args.manifest]
+    total = BuildResult()
+    for manifest in manifests:
+        result = build_manifest(manifest, args.output_dir)
+        total = BuildResult(total.built + result.built, total.skipped + result.skipped)
+    print("built={} skipped={}".format(total.built, total.skipped))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
