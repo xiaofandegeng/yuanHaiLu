@@ -400,6 +400,162 @@ namespace YuanHaiLu.GameSystem
         }
 
         // === 存档支持 ===
+        [System.Serializable]
+        public class QuestObjectiveSaveData
+        {
+            public QuestObjective.ObjectiveType type;
+            public string targetId;
+            public int currentAmount;
+        }
+
+        [System.Serializable]
+        public class ActiveQuestSaveData
+        {
+            public string questId;
+            public ActiveQuest.QuestState state;
+            public long acceptTimeBinary;
+            public QuestObjectiveSaveData[] objectives;
+        }
+
+        [System.Serializable]
+        public class QuestSaveData
+        {
+            public ActiveQuestSaveData[] activeQuests;
+            public string[] completedQuestIds;
+        }
+
+        public QuestSaveData GetSaveData()
+        {
+            var savedActiveQuests = new List<ActiveQuestSaveData>();
+            foreach (ActiveQuest activeQuest in activeQuests)
+            {
+                if (activeQuest?.data == null || string.IsNullOrEmpty(activeQuest.data.questId))
+                    continue;
+
+                var savedObjectives = new QuestObjectiveSaveData[activeQuest.Objectives.Length];
+                for (int i = 0; i < activeQuest.Objectives.Length; i++)
+                {
+                    QuestObjective objective = activeQuest.Objectives[i];
+                    savedObjectives[i] = new QuestObjectiveSaveData
+                    {
+                        type = objective.type,
+                        targetId = objective.targetId,
+                        currentAmount = objective.currentAmount
+                    };
+                }
+
+                savedActiveQuests.Add(new ActiveQuestSaveData
+                {
+                    questId = activeQuest.data.questId,
+                    state = activeQuest.state,
+                    acceptTimeBinary = activeQuest.acceptTime.ToBinary(),
+                    objectives = savedObjectives
+                });
+            }
+
+            return new QuestSaveData
+            {
+                activeQuests = savedActiveQuests.ToArray(),
+                completedQuestIds = completedQuestIds.ToArray()
+            };
+        }
+
+        public void LoadSaveData(QuestSaveData data)
+        {
+            activeQuests.Clear();
+            completedQuestIds.Clear();
+
+            if (data == null) return;
+
+            if (data.completedQuestIds != null)
+            {
+                foreach (string id in data.completedQuestIds)
+                {
+                    if (!string.IsNullOrEmpty(id) && !completedQuestIds.Contains(id))
+                        completedQuestIds.Add(id);
+                }
+            }
+
+            if (data.activeQuests == null) return;
+
+            var restoredIds = new HashSet<string>();
+            foreach (ActiveQuestSaveData savedQuest in data.activeQuests)
+            {
+                if (savedQuest == null || string.IsNullOrEmpty(savedQuest.questId)) continue;
+                if (!restoredIds.Add(savedQuest.questId)) continue;
+
+                if (savedQuest.state == ActiveQuest.QuestState.Completed)
+                {
+                    if (!completedQuestIds.Contains(savedQuest.questId))
+                        completedQuestIds.Add(savedQuest.questId);
+                    continue;
+                }
+
+                if (completedQuestIds.Contains(savedQuest.questId)) continue;
+
+                QuestData template = QuestDatabase.Get(savedQuest.questId);
+                if (template == null)
+                {
+                    Debug.LogWarning($"[Quest] 存档中的任务模板不存在，已跳过: {savedQuest.questId}");
+                    continue;
+                }
+
+                var activeQuest = new ActiveQuest(template);
+                if (savedQuest.acceptTimeBinary != 0)
+                {
+                    try
+                    {
+                        activeQuest.acceptTime = DateTime.FromBinary(savedQuest.acceptTimeBinary);
+                    }
+                    catch (ArgumentException)
+                    {
+                        activeQuest.acceptTime = DateTime.Now;
+                    }
+                }
+
+                RestoreObjectiveProgress(activeQuest, savedQuest.objectives);
+                activeQuest.state = savedQuest.state == ActiveQuest.QuestState.Failed
+                    ? ActiveQuest.QuestState.Failed
+                    : ActiveQuest.QuestState.Active;
+                activeQuest.CheckCompletion();
+                activeQuests.Add(activeQuest);
+            }
+        }
+
+        private static void RestoreObjectiveProgress(
+            ActiveQuest activeQuest,
+            QuestObjectiveSaveData[] savedObjectives)
+        {
+            foreach (QuestObjective objective in activeQuest.Objectives)
+            {
+                objective.currentAmount = 0;
+                objective.completed = false;
+            }
+
+            if (savedObjectives == null) return;
+
+            foreach (QuestObjectiveSaveData savedObjective in savedObjectives)
+            {
+                if (savedObjective == null || string.IsNullOrEmpty(savedObjective.targetId)) continue;
+
+                foreach (QuestObjective objective in activeQuest.Objectives)
+                {
+                    if (objective.type != savedObjective.type ||
+                        objective.targetId != savedObjective.targetId)
+                    {
+                        continue;
+                    }
+
+                    objective.currentAmount = Mathf.Clamp(
+                        savedObjective.currentAmount,
+                        0,
+                        objective.requiredAmount);
+                    objective.completed = objective.currentAmount >= objective.requiredAmount;
+                    break;
+                }
+            }
+        }
+
         /// <summary>
         /// 导出已完成任务 ID 列表（供 SaveManager 保存）
         /// </summary>
@@ -414,6 +570,7 @@ namespace YuanHaiLu.GameSystem
         /// </summary>
         public void LoadCompletedQuests(string[] ids)
         {
+            activeQuests.Clear();
             completedQuestIds.Clear();
             if (ids == null) return;
             foreach (var id in ids)

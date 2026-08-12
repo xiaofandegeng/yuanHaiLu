@@ -16,7 +16,8 @@ namespace YuanHaiLu.GameSystem
 
         private const string SAVE_KEY = "YuanHaiLu_SaveSlot_";
         private const string AUTO_SAVE_KEY = "YuanHaiLu_AutoSave";
-        private const int CURRENT_SAVE_VERSION = 2;
+        private const int BASE_STATS_SAVE_VERSION = 2;
+        private const int CURRENT_SAVE_VERSION = 3;
 
         private SaveData _pendingLoadData;
 
@@ -79,6 +80,8 @@ namespace YuanHaiLu.GameSystem
             public InventoryManager.InventorySaveData inventory;
             // 武学（已学/已装备）
             public MartialArtsSystem.MartialArtsSaveData martialArts;
+            // v3 起保存活跃任务、目标进度和已完成任务。
+            public QuestManager.QuestSaveData quests;
 
             // 世界状态
             public string[] defeatedEnemies;
@@ -149,6 +152,7 @@ namespace YuanHaiLu.GameSystem
                 saveData.martialArts = martial.GetSaveData();
             }
             saveData.completedQuests = QuestManager.Instance?.GetCompletedQuests();
+            saveData.quests = QuestManager.Instance?.GetSaveData();
 
             string json = JsonUtility.ToJson(saveData, true);
             string key = slot == -1 ? AUTO_SAVE_KEY : SAVE_KEY + slot;
@@ -294,12 +298,16 @@ namespace YuanHaiLu.GameSystem
                 }
             }
 
-            if (saveData.completedQuests != null)
+            if (QuestManager.Instance != null)
             {
-                if (QuestManager.Instance != null)
-                    QuestManager.Instance.LoadCompletedQuests(saveData.completedQuests);
+                if (saveData.saveVersion >= CURRENT_SAVE_VERSION && saveData.quests != null)
+                    QuestManager.Instance.LoadSaveData(saveData.quests);
                 else
-                    Debug.LogError("[SaveManager] QuestManager 缺失，无法恢复已完成任务！");
+                    QuestManager.Instance.LoadCompletedQuests(saveData.completedQuests);
+            }
+            else if (saveData.quests != null || saveData.completedQuests != null)
+            {
+                Debug.LogError("[SaveManager] QuestManager 缺失，无法恢复任务！");
             }
 
             if (gameManager != null)
@@ -320,7 +328,7 @@ namespace YuanHaiLu.GameSystem
             out int baseMaxHp,
             out int baseMaxMp)
         {
-            if (saveData.saveVersion >= CURRENT_SAVE_VERSION)
+            if (saveData.saveVersion >= BASE_STATS_SAVE_VERSION)
             {
                 baseAttack = saveData.baseAttack;
                 baseDefense = saveData.baseDefense;
