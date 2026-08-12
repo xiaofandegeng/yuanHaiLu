@@ -106,6 +106,19 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(gameManager.currentState, Is.EqualTo(GameManager.GameState.Combat));
         }
 
+        [Test]
+        public void MainMenuAppearanceSelectionUpdatesPersistentGameManager()
+        {
+            var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
+                TestSceneFactory.Create("GameManager"));
+            var menu = TestSceneFactory.Create("MainMenu").AddComponent<MainMenu>();
+
+            menu.SelectAppearance("player_male_hidden_weapon");
+
+            Assert.That(menu.SelectedAppearance.ArtId, Is.EqualTo("player_male_hidden_weapon"));
+            Assert.That(gameManager.PlayerArtId, Is.EqualTo("player_male_hidden_weapon"));
+        }
+
         private static void InvokePrivate(object target, string methodName)
         {
             target.GetType().GetMethod(

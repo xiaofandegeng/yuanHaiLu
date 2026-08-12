@@ -131,8 +131,9 @@ namespace YuanHaiLu.Tests.EditMode
                 .Select(sprite => sprite.name)
                 .ToArray();
 
-            Assert.That(names, Does.Contain("yanliu__grass__0"));
-            Assert.That(names, Does.Contain("yanliu__water_deep__0"));
+            Assert.That(names, Does.Contain("yanliu__ground__0"));
+            Assert.That(names, Does.Contain("yanliu__water__0"));
+            Assert.That(names, Does.Contain("yanliu__bridge__0"));
         }
 
         [Test]

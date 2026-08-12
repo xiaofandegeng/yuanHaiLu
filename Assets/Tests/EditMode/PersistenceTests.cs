@@ -249,5 +249,67 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(stats.attack, Is.EqualTo(20));
             Assert.That(stats.currentHp, Is.EqualTo(40));
         }
+
+        [Test]
+        public void VersionFourSaveRestoresFormalPlayerAppearance()
+        {
+            var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
+                TestSceneFactory.Create("GameManager"));
+            gameManager.BeginSceneEntry(GameManager.SceneEntryMode.LoadGame);
+            var player = TestSceneFactory.CreatePlayer();
+            var saveManager = TestSceneFactory.AddComponentWithAwake<SaveManager>(
+                TestSceneFactory.Create("SaveManager"));
+
+            saveManager.ApplySaveDataToLoadedScene(new SaveManager.SaveData
+            {
+                saveVersion = 4,
+                playerName = "凌霜",
+                playerArtId = "player_male_boxer",
+                level = 1,
+                currentHp = 100,
+                currentMp = 50,
+                baseAttack = 15,
+                baseDefense = 5,
+                baseAgility = 10,
+                baseMaxHp = 100,
+                baseMaxMp = 50,
+                chapterIndex = 1
+            });
+
+            Assert.That(gameManager.PlayerAppearance.ArtId, Is.EqualTo("player_male_boxer"));
+            Assert.That(player.GetComponent<YuanHaiLu.Art.CharacterVisual>().ArtId,
+                Is.EqualTo("player_male_boxer"));
+        }
+
+        [Test]
+        public void OlderSaveMigratesToDefaultFormalPlayerAppearance()
+        {
+            var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
+                TestSceneFactory.Create("GameManager"));
+            gameManager.SetPlayerAppearance("player_male_mystic");
+            gameManager.BeginSceneEntry(GameManager.SceneEntryMode.LoadGame);
+            var player = TestSceneFactory.CreatePlayer();
+            var saveManager = TestSceneFactory.AddComponentWithAwake<SaveManager>(
+                TestSceneFactory.Create("SaveManager"));
+
+            saveManager.ApplySaveDataToLoadedScene(new SaveManager.SaveData
+            {
+                saveVersion = 3,
+                playerName = "旧档",
+                level = 1,
+                currentHp = 80,
+                currentMp = 30,
+                baseAttack = 15,
+                baseDefense = 5,
+                baseAgility = 10,
+                baseMaxHp = 100,
+                baseMaxMp = 50,
+                chapterIndex = 1
+            });
+
+            Assert.That(gameManager.PlayerAppearance, Is.EqualTo(PlayerAppearance.Default));
+            Assert.That(player.GetComponent<YuanHaiLu.Art.CharacterVisual>().ArtId,
+                Is.EqualTo(PlayerAppearance.Default.ArtId));
+        }
     }
 }

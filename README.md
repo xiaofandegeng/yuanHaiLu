@@ -21,6 +21,8 @@ Build Profiles / Build Settings 中应包含：
 ```text
 0  Assets/Scenes/MainMenu.unity
 1  Assets/Scenes/Demo_YanLiuTown.unity
+2–11  Assets/Scenes/Regions/*.unity（10 个户外区域）
+12–24 Assets/Scenes/Interiors/*.unity（13 个室内场景）
 ```
 
 ## 操作说明
@@ -51,9 +53,15 @@ Build Profiles / Build Settings 中应包含：
 - v3 存档：玩家身份/等级/位置/基础属性/当前 HP、MP、背包、装备、金钱、武学、活跃任务进度和已完成任务。
 - 新游戏、读档、普通运行使用显式场景进入模式，读档回调单次执行。
 - 主菜单运行时补齐全局管理器并绑定按钮。
-- 编辑器菜单可程序化生成主菜单和烟柳镇 Demo。
+- 主菜单可选择 2 种性别 × 6 种职业；稳定角色 ID 写入 v4 存档并跨场景保持。
+- 97 套正式角色资源：12 主角、15 剧情角色、36 NPC、24 敌人、10 BOSS；全部有独立 PNG、动画 Controller 与 Prefab。
+- 10 个户外区域、13 个室内场景、23 个正式环境场景；统一 7 层 Tilemap、地标、锚点和持久化 Tile 资源。
+- 烟柳镇 Demo 已接入正式 Tilemap、桥、水岸、建筑、角色、NPC、敌人、战斗、交互与 UI，不再生成色块占位地图。
+- 确定性美术流水线：稳定 PNG/JSON 源、Python baker、SHA-256 校验、Unity 精确切片和目录校验。
+- v4 存档：在 v3 任务/背包/武学基础上增加正式主角外观稳定 ID，旧档迁移到女剑客。
+- 编辑器菜单可重建美术、角色动画/Prefab、23 个场景、主菜单和烟柳镇 Demo。
 
-当前存档仍不包含敌人/唯一拾取物/一次性事件状态和其他世界标志。`M01_01`–`M01_05` 模板已可运行，但尚未配置进烟柳镇场景。
+当前存档仍不包含敌人/唯一拾取物/一次性事件状态和其他世界标志。`M01_01`–`M01_05` 模板已可运行，但尚未全部配置进烟柳镇场景。
 
 ## 项目结构
 
@@ -71,22 +79,25 @@ Assets/
 │   └── Editor/       场景生成和项目配置工具
 ├── Tests/EditMode/   Unity Test Framework 编辑器测试
 ├── Tests/PlayMode/   Unity Test Framework 运行时测试
-├── Scenes/           MainMenu + Demo_YanLiuTown
-├── Resources/        物品/任务设计稿及后续 SO 资源位置
-├── Sprites/          占位精灵
-└── Art/              美术参考与瓦片资源
+├── ArtSource/        可编辑 PNG/JSON、角色模块、环境布局和清单
+├── Art/              97 套角色、23 套环境输出、预览与哈希元数据
+├── Prefabs/Characters/           97 个正式角色 Prefab
+├── AnimatorControllers/Characters/ 97 个角色 Controller
+├── Tilemaps/Formal/  23 套持久 Tile 资源
+├── Scenes/           MainMenu、Demo、10 Regions、13 Interiors、2 Showcase
+└── Resources/Art/    CharacterArtCatalog + EnvironmentArtCatalog
 ```
 
-当前运行时/编辑器代码为 51 个 C# 文件、约 11,600 行；另有 12 个测试/测试工具文件。
+当前运行时/编辑器代码为 68 个 C# 文件；另有 19 个测试/测试工具文件。
 
 ## 自动验证
 
-项目使用 Unity Test Framework `1.6.0`，当前有 43 个 EditMode 测试和 2 个 PlayMode 测试，覆盖：
+项目使用 Unity Test Framework `1.6.0`，当前全量结果为 **81 个 EditMode + 6 个 PlayMode 全通过**；Python 美术流水线另有 **34 个测试**。覆盖：
 
 - 场景进入模式；
 - 背包/装备和资源值恢复；
 - 武学、活跃/已完成任务的替换式恢复；
-- v3 JSON 往返、损坏任务进度诊断和 v2 迁移；
+- v4 JSON 往返、外观迁移、损坏任务进度诊断和 v2/v3 迁移；
 - 任务模板不可变、运行时目标、奖励幂等及各玩法目标来源；
 - NPC 对话结束后接取/推进/提交任务的真实 PlayMode 事件链；
 - 交互组件幂等接入；
@@ -94,6 +105,18 @@ Assets/
 - 主菜单鼠标/键盘入口、像素摄像机清屏与边界；
 - Demo 摄像机位置、默认暂停面板、缺失音效去重；
 - 无 Animator Controller 时的运行时兼容。
+- 97 个角色目录计数、Prefab/Controller、代表角色 idle→walk 动画；
+- 23 个正式环境场景、7 层 Tilemap、持久化地面/结构 Tile、锚点可达性；
+- 主菜单 12 套外观选择、菜单→Demo 外观保持、正式烟柳镇场景绑定；
+- GameManager 尚未引导时 PlayerCombat 的空值安全。
+
+确定性资源验证：
+
+```bash
+python3 -m unittest discover -s tools/art_pipeline/tests -v
+python3 -m tools.art_pipeline.build --all   # 正常应 built=0 skipped=120
+python3 -m tools.art_pipeline.validate --all
+```
 
 命令行运行全部测试：
 
@@ -119,16 +142,19 @@ Assets/
 | Tools/渊海录/生成Demo场景 | 重建烟柳镇 Demo |
 | Tools/渊海录/初始化项目设置 | 配置 Tags、Layers、SortingLayers |
 | Tools/渊海录/配置所有精灵为像素模式 | 批量配置 Point/无压缩 |
+| Tools/渊海录/美术/重建角色动画与Prefab | 重建 97 个角色 Controller/Prefab |
+| Tools/渊海录/美术/生成全部正式环境场景 | 重建 10 户外 + 13 室内 |
+| Tools/渊海录/美术/生成环境总览场景 | 重建环境 Showcase |
+| Tools/渊海录/美术/截取正式烟柳镇预览 | 生成实际相机验收图 |
 | Tools/渊海录/切分角色精灵表(48×48) | 角色切片 |
 | Tools/渊海录/切分瓦片集(16×16) | 瓦片切片 |
 
 ## 主要待办
 
-- 替换程序生成的占位美术。
-- 建立 Animator Controller 和动画剪辑。
+- 在当前模块化正式像素资源基础上继续人工精修细节、动作节奏和区域差异。
 - 将物品/任务设计稿制作成正式 ScriptableObject 资源。
 - 把 `M01_01`–`M01_05` 的发布者、目标和奖励物配置进烟柳镇场景。
 - 持久化敌人、唯一拾取物、一次性事件和其他世界状态。
-- 增加商店 UI、武学树、小地图、BOSS、BGM/SFX 和后续区域。
+- 增加商店 UI、武学树、小地图、BOSS 玩法和 BGM/SFX。
 
 更完整的架构、约定、已知限制和修复历史见 `AGENTS.md`。

@@ -59,5 +59,23 @@ namespace YuanHaiLu.Tests.EditMode
                 Object.DestroyImmediate(target);
             }
         }
+
+        [Test]
+        public void CharacterVisualCreatesMissingRendererAndAnimatorForKnownFormalId()
+        {
+            var target = new GameObject("FreshVisual");
+            try
+            {
+                var visual = CharacterVisual.ApplyTo(target, "innkeeper_zhao");
+
+                Assert.That(visual.ArtId, Is.EqualTo("innkeeper_zhao"));
+                Assert.That(target.GetComponent<SpriteRenderer>()?.sprite, Is.Not.Null);
+                Assert.That(target.GetComponent<Animator>()?.runtimeAnimatorController, Is.Not.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(target);
+            }
+        }
     }
 }

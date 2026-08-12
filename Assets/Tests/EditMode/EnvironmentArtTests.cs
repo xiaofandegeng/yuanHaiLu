@@ -15,8 +15,6 @@ namespace YuanHaiLu.Tests.EditMode
         [Test]
         public void EnvironmentCatalogContainsTenRegionsAndThirteenInteriors()
         {
-            EnvironmentTileBuilder.RebuildAll();
-            RegionSceneBuilder.BuildAll();
             var catalog = EnvironmentArtCatalog.LoadDefault();
 
             Assert.That(catalog.Entries.Count, Is.EqualTo(23));
@@ -32,7 +30,6 @@ namespace YuanHaiLu.Tests.EditMode
         [TestCase("tomb")]
         public void RegionSceneContainsRequiredFormalLayers(string id)
         {
-            RegionSceneBuilder.Build(id);
             var scene = EditorSceneManager.OpenScene(
                 RegionSceneBuilder.ScenePath(id),
                 OpenSceneMode.Additive);
@@ -58,6 +55,17 @@ namespace YuanHaiLu.Tests.EditMode
                 Assert.That(definition.SceneId, Is.EqualTo(id));
                 Assert.That(definition.Anchors.Any(anchor => anchor.Type == "entry"), Is.True);
                 Assert.That(definition.Anchors.Any(anchor => anchor.Type == "exit"), Is.True);
+                var ground = roots.SelectMany(root => root.GetComponentsInChildren<Tilemap>(true))
+                    .Single(tilemap => tilemap.name == "Ground");
+                int persistedGroundCells = ground.GetTilesBlock(ground.cellBounds)
+                    .Count(tile => tile != null);
+                Assert.That(persistedGroundCells,
+                    Is.GreaterThanOrEqualTo(definition.Size.x * definition.Size.y),
+                    id + " must persist its complete formal ground Tilemap.");
+                var buildings = roots.SelectMany(root => root.GetComponentsInChildren<Tilemap>(true))
+                    .Single(tilemap => tilemap.name == "Buildings");
+                Assert.That(buildings.GetUsedTilesCount(), Is.GreaterThan(0),
+                    id + " must contain authored structural tiles, not only a flat floor.");
             }
             finally
             {
