@@ -10,10 +10,10 @@
 | 项目 | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
-| 代码规模 | 48 个运行时/编辑器 C# 文件，约 10,600 行；另有 8 个测试/测试工具文件 |
-| 状态 | 烟柳镇 Demo 可运行；核心框架完整，内容和动画待填充 |
+| 代码规模 | 51 个运行时/编辑器 C# 文件，约 11,600 行；另有 12 个测试/测试工具文件 |
+| 状态 | 烟柳镇 Demo 可运行；任务运行时第一阶段完成，5 条主线的场景内容待接入 |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
-| 测试 | Unity Test Framework `1.6.0`；21 个 EditMode + 1 个 PlayMode 测试 |
+| 测试 | Unity Test Framework `1.6.0`；43 个 EditMode + 2 个 PlayMode 测试 |
 | 设计文档 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/superpowers/specs/`、`README.md`、`SETUP_GUIDE.md` |
 
 ## 1. 如何运行
@@ -90,7 +90,8 @@ YuanHaiLu.Dialogue
 
 YuanHaiLu.GameSystem
   GlobalSystemsBootstrapper / SaveManager / InventoryManager / ItemDatabase
-  QuestManager / MartialSkillDatabase / ShopManager / LootTable
+  QuestDatabase / QuestManager / QuestGiver / QuestTarget
+  MartialSkillDatabase / ShopManager / LootTable
   AudioManager / GameTimeManager / ScreenTransition / PlayerDeathHandler
 
 YuanHaiLu.UI
@@ -124,12 +125,13 @@ LoadGame 读取并校验 JSON
   → 恢复身份/等级/基础属性/HP/MP/位置
   → 恢复背包/装备/金钱并重算派生属性
   → 恢复武学和装备槽
-  → 恢复已完成任务
+  → v3 按稳定 ID 恢复活跃任务、目标进度、接取时间和已完成任务
+    （v2 只恢复已完成任务，并清空活跃任务）
   → 状态切到 Exploration
   → SceneEntryMode.Active
 ```
 
-`SaveData.saveVersion == 2` 保存基础属性，避免把装备加成重复当作基础值；旧/过渡存档有迁移路径。
+`SaveData.saveVersion == 3` 是当前格式；基础属性仍按 v2 语义恢复，避免把装备加成重复当作基础值。v2 迁移为空活跃任务，旧/过渡存档也有迁移路径。
 
 ## 3. 关键约定
 
@@ -177,6 +179,14 @@ Ground → Environment → Character → Foreground → UI
 - 普通装备允许按上限增量调整当前资源；读档装备重算使用 `adjustCurrentResources=false`，只 clamp，不治疗。
 - `LoadSaveData` 是替换式恢复：先清空槽位，再载入有效共同长度，未知 ID 跳过并警告。
 
+### 3.6 任务运行时
+
+- `QuestDatabase` 提供 `M01_01`–`M01_05` 五个稳定代码模板；`Resources/Quests` 下同 ID 的 `QuestData` 可覆盖代码模板。
+- `ActiveQuest` 深复制模板目标，模板只提供显示和奖励数据，运行时进度不得写回模板。
+- `QuestManager` 是接取、目标推进、提交、奖励与 v3 序列化的唯一权威；损坏进度会钳制并警告，未知模板/目标会跳过并警告。
+- `QuestGiver` 与 `NPCBase` 同物体配置，但不实现 `IInteractable`；任务行为只在它启动的对话结束后结算。
+- `QuestTarget`、`AreaTrigger`、`ItemPickup` 和 `MartialArtsSystem` 只在真实成功行为后上报进度；重复死亡、区域、拾取或学习不会重复计数。
+
 ## 4. 开发与测试流程
 
 1. 修改代码和对应测试。
@@ -198,7 +208,9 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前测试覆盖场景入口、存档迁移/往返、背包装备、武学任务、交互幂等、全局系统补全、菜单输入、摄像机呈现、暂停 UI 和无 Animator Controller 的运行时兼容。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前测试覆盖场景入口、v2/v3 存档迁移与往返、任务模板/深复制/奖励幂等/目标来源、NPC 对话任务链、背包装备、武学任务、交互幂等、全局系统补全、菜单输入、摄像机呈现、暂停 UI 和无 Animator Controller 的运行时兼容。
+
+若批处理日志出现 `Unsupported protocol version '1.18.1'` 或许可证连接挂起，先退出 Unity Hub，再运行批处理；测试结束后可重新打开 Hub。不要同时保留陈旧的 Unity 批处理进程。
 
 ## 5. 已知问题与未完成项
 
@@ -208,7 +220,8 @@ PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件
 
 ### P1 — 数据与内容
 
-- 存档尚未包含活跃任务目标进度、敌人状态、拾取物状态、区域标志和其他世界状态。
+- v3 已保存活跃任务，但尚未保存敌人状态、唯一拾取物、一次性事件、区域标志和其他世界状态。
+- `M01_01`–`M01_05` 运行时模板已完成，但烟柳镇现有场景尚未配置对应 `QuestGiver`、区域目标、敌人目标和任务物品；这是阶段二内容接入任务。
 - `Assets/Sprites/Generated/` 和部分瓦片是程序生成的占位美术。
 - 没有正式 Animator Controller / 动画剪辑；代码会跳过无 Controller 的 Animator 写入以避免告警，但动画仍不会完整播放。
 - 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
@@ -224,9 +237,9 @@ PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件
 ```text
 yuanHaiLu/
 ├── Assets/
-│   ├── Scripts/                 48 个 .cs，约 10,600 行
-│   ├── Tests/EditMode/          21 个 EditMode 测试 + 测试工具
-│   ├── Tests/PlayMode/          1 个 PlayMode 测试
+│   ├── Scripts/                 51 个 .cs，约 11,600 行
+│   ├── Tests/EditMode/          43 个 EditMode 测试 + 测试工具
+│   ├── Tests/PlayMode/          2 个 PlayMode 测试
 │   ├── Scenes/                  MainMenu + Demo_YanLiuTown
 │   ├── Sprites/Generated/       占位精灵
 │   ├── Art/Tilesets/            瓦片与参考
@@ -287,6 +300,16 @@ yuanHaiLu/
 27. 移除项目未使用且已停止支持的 Unity IAP 4.15，启动时不再弹 Package Errors；同步清理重复 using、过期查找 API 和未使用字段告警。
 28. 测试扩展为 21 个 EditMode + 1 个 PlayMode；最终两组测试均全量通过。
 
+### 第五批：任务运行时与 v3 持久化
+
+29. 新增 `QuestDatabase`，用稳定 ID 提供 `M01_01`–`M01_05` 模板，并允许 Resources 同 ID 覆盖；`ActiveQuest` 深复制目标，模板不再被运行时污染。
+30. 存档升级为 v3，保存活跃任务、目标进度、状态、接取时间和已完成 ID；v2 迁移为空活跃任务，基础属性恢复顺序保持兼容。
+31. `QuestManager.CompleteQuest` 改为幂等结算；经验、金钱、物品和武学依赖分别处理，单一依赖缺失不再吞掉其他奖励。
+32. 新增 `QuestTarget`，并接通区域、拾取、首次学习等真实目标来源；区域在目标尚未激活时会重试，成功上报后才锁定。
+33. 新增非交互候选的 `QuestGiver`，由 `NPCBase` 委托；接取、交谈推进和提交只在对应对话结束后执行，忙碌对话不会串台。
+34. 审查阶段补齐未知存档目标/越界进度警告和真实 MonoBehaviour 任务链 PlayMode 测试。
+35. 最终验证：43/43 EditMode、2/2 PlayMode、批处理编译均通过；阶段差异已按规格与代码标准双轴审查。
+
 ## 8. 当前人工 QA 清单
 
 自动测试不能替代 Play 验证。涉及本批改动时至少检查：
@@ -296,11 +319,11 @@ yuanHaiLu/
 - K/E NPC 对话、手动事件和传送点可达。
 - WASD、J、Shift 和 ESC 可用；暂停时应显示默认暂停面板。
 - 自动事件不显示交互提示，一次性事件不会再次成为目标。
-- 存档往返精确恢复位置、HP/MP、背包、装备、金钱、武学和已完成任务。
+- v3 存档往返精确恢复位置、HP/MP、背包、装备、金钱、武学、活跃任务进度和已完成任务。
 - 读档不发初始物资、不覆盖位置；卸装后属性正确。
 - 后续场景加载不会重复应用旧存档。
 
-2026-08-12 本轮已人工验证：主菜单 Enter → Demo、开场对话、世界显示、WASD、Shift、J、K（钓鱼翁对话）和暂停状态切换；Console 在进入 Demo 时为 0 warning / 0 error。暂停面板补齐后由 EditMode 回归测试验证，最终桌面复看因 macOS 自动锁屏未再次截图。
+2026-08-12 第一轮已人工验证主菜单 Enter → Demo、开场对话、世界显示、WASD、Shift、J、K（钓鱼翁对话）和暂停状态切换。任务运行时阶段完成后的复测验证了 MainMenu 与 Demo 可打开、WASD、J、K/E 交互提示、ESC 暂停/恢复；Console 0 error，只有占位 BGM/SFX 缺失的去重 warning。任务接取→目标推进→提交→奖励的真实 MonoBehaviour 链由 2 个 PlayMode 测试中的专项用例覆盖；五条任务的场景内容仍属阶段二。
 
 ## 9. 推送到 GitHub（尚未执行）
 
