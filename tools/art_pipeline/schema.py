@@ -95,10 +95,45 @@ class CharacterRecipe:
 
 
 @dataclass(frozen=True)
+class LandmarkRecipe:
+    id: str
+    module: str
+    collision: tuple
+    foreground_cut: int
+
+    @classmethod
+    def from_dict(cls, payload):
+        if not isinstance(payload, dict):
+            raise ManifestError("landmark recipe must be an object")
+        art_id = _stable_id(payload.get("id"))
+        module = payload.get("module")
+        collision = payload.get("collision")
+        foreground_cut = payload.get("foregroundCut")
+        if not isinstance(module, str) or not module.strip():
+            raise ManifestError("{} landmark requires a module".format(art_id))
+        if (
+            not isinstance(collision, list)
+            or len(collision) != 4
+            or any(not isinstance(value, int) or value < 0 for value in collision)
+            or collision[2] <= 0
+            or collision[3] <= 0
+        ):
+            raise ManifestError(
+                "{} landmark collision must be [x, y, width, height]".format(art_id)
+            )
+        if not isinstance(foreground_cut, int) or foreground_cut < 0:
+            raise ManifestError(
+                "{} landmark foregroundCut must be non-negative".format(art_id)
+            )
+        return cls(art_id, module.strip(), tuple(collision), foreground_cut)
+
+
+@dataclass(frozen=True)
 class EnvironmentRecipe:
     id: str
     tile_size: int
     modules: tuple
+    landmarks: tuple = ()
 
     @classmethod
     def from_dict(cls, payload):
@@ -108,7 +143,18 @@ class EnvironmentRecipe:
         tile_size = payload.get("tileSize")
         if tile_size != 16:
             raise ManifestError("{} tileSize must be 16".format(art_id))
-        return cls(art_id, tile_size, _module_names(payload.get("modules"), art_id))
+        landmarks = tuple(
+            LandmarkRecipe.from_dict(item) for item in payload.get("landmarks", [])
+        )
+        landmark_ids = [landmark.id for landmark in landmarks]
+        if len(landmark_ids) != len(set(landmark_ids)):
+            raise ManifestError("{} contains duplicate landmark id".format(art_id))
+        return cls(
+            art_id,
+            tile_size,
+            _module_names(payload.get("modules"), art_id),
+            landmarks,
+        )
 
 
 def _payload_items(payload, key):
@@ -167,4 +213,3 @@ def load_character_manifest(path):
 
 def load_environment_manifest(path):
     return EnvironmentManifest.from_dict(_load_json(path))
-

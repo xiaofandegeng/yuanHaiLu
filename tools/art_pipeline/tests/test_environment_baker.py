@@ -6,7 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 from tools.art_pipeline.environment_baker import bake_environment
-from tools.art_pipeline.schema import EnvironmentRecipe
+from tools.art_pipeline.schema import EnvironmentRecipe, LandmarkRecipe
 
 
 class EnvironmentBakerTests(unittest.TestCase):
@@ -48,6 +48,36 @@ class EnvironmentBakerTests(unittest.TestCase):
         self.assertEqual(metadata["sprites"][1]["name"], "yanliu__grass__1")
         self.assertEqual(metadata["sprites"][2]["name"], "yanliu__water__0")
         self.assertEqual(metadata["sprites"][0]["pivot"], [0.5, 0.5])
+
+    def test_landmarks_bake_to_separate_bottom_pivoted_sheet(self):
+        landmark_path = self.root / "inn.png"
+        landmark = Image.new("RGBA", (48, 32), (0, 0, 0, 0))
+        for x in range(4, 44):
+            for y in range(6, 32):
+                landmark.putpixel((x, y), (230, 220, 195, 255))
+        landmark.save(landmark_path)
+        recipe = EnvironmentRecipe(
+            "yanliu",
+            16,
+            tuple(self.module_paths),
+            landmarks=(
+                LandmarkRecipe(
+                    "inn",
+                    str(landmark_path),
+                    (4, 20, 40, 12),
+                    18,
+                ),
+            ),
+        )
+
+        baked = bake_environment(recipe, self.root / "landmark-output")
+        metadata = json.loads(baked.metadata_path.read_text(encoding="utf-8"))
+
+        self.assertTrue(baked.landmark_image_path.exists())
+        self.assertEqual(metadata["landmarks"][0]["name"], "yanliu__landmark__inn")
+        self.assertEqual(metadata["landmarks"][0]["pivot"], [0.5, 0.0])
+        self.assertEqual(metadata["landmarks"][0]["collision"], [4, 20, 40, 12])
+        self.assertEqual(metadata["landmarks"][0]["foregroundCut"], 18)
 
 
 if __name__ == "__main__":

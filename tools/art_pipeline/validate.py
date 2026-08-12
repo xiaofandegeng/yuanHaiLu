@@ -37,6 +37,15 @@ def validate_outputs(root):
             unit = metadata.get("frameSize", metadata.get("tileSize"))
             if unit not in (16, 32) or image.width % unit != 0 or image.height % unit != 0:
                 errors.append("{}: dimensions violate {}px unit".format(image_path, unit))
+            landmark_name = metadata.get("landmarkImage")
+            if landmark_name:
+                landmark_path = metadata_path.parent / landmark_name
+                with Image.open(landmark_path) as source:
+                    landmark_image = source.convert("RGBA")
+                if _image_hash(landmark_image) != metadata.get("landmarkSha256"):
+                    errors.append("{}: hash mismatch".format(landmark_path))
+                elif landmark_image.getbbox() is None:
+                    errors.append("{}: image has no opaque pixels".format(landmark_path))
         except (OSError, KeyError, json.JSONDecodeError, ValueError) as exc:
             errors.append("{}: {}".format(metadata_path, exc))
     return errors
