@@ -52,7 +52,8 @@ namespace YuanHaiLu.Core
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            if (Application.isPlaying)
+                DontDestroyOnLoad(gameObject);
 
             // 初始化子系统
             Application.targetFrameRate = 60;

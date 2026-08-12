@@ -33,7 +33,9 @@ namespace YuanHaiLu.Map
             if (player != null)
                 PlayerInteraction.EnsureOn(player);
 
-            if (playIntro && !_introPlayed)
+            bool shouldInitializeNewGame = GameManager.Instance == null ||
+                                           GameManager.Instance.ShouldInitializeNewGame;
+            if (playIntro && !_introPlayed && shouldInitializeNewGame)
             {
                 StartCoroutine(PlayIntroSequence());
             }
@@ -51,6 +53,8 @@ namespace YuanHaiLu.Map
 
             // 初始化武学
             yield return InitMartialArts();
+
+            GameManager.Instance?.CompleteSceneEntry();
 
             // 显示区域名
             var transition = ScreenTransition.Instance;
@@ -105,11 +109,8 @@ namespace YuanHaiLu.Map
                 {
                     stats.characterName = "凌霜";
                     stats.level = 1;
-                    stats.maxHp = 100; stats.currentHp = 100;
-                    stats.maxMp = 50; stats.currentMp = 50;
-                    stats.attack = 15;
-                    stats.defense = 5;
-                    stats.agility = 10;
+                    stats.exp = 0;
+                    stats.SetBaseFromLoad(15, 5, 10, 100, 50, 100, 50);
                 }
             }
 
