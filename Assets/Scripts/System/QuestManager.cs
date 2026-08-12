@@ -362,5 +362,35 @@ namespace YuanHaiLu.GameSystem
         {
             return completedQuestIds.Contains(questId);
         }
+
+        // === 存档支持 ===
+        /// <summary>
+        /// 导出已完成任务 ID 列表（供 SaveManager 保存）
+        /// </summary>
+        public string[] GetCompletedQuests()
+        {
+            return completedQuestIds.ToArray();
+        }
+
+        /// <summary>
+        /// 从存档恢复已完成任务清单
+        /// （注：活跃任务因缺任务数据库 ScriptableObject 暂不持久化）
+        /// </summary>
+        public void LoadCompletedQuests(string[] ids)
+        {
+            completedQuestIds.Clear();
+            if (ids == null) return;
+            foreach (var id in ids)
+            {
+                if (!string.IsNullOrEmpty(id) && !completedQuestIds.Contains(id))
+                    completedQuestIds.Add(id);
+            }
+        }
+
+        public void ResetForNewGame()
+        {
+            activeQuests.Clear();
+            completedQuestIds.Clear();
+        }
     }
 }
