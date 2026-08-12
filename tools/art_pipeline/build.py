@@ -57,7 +57,13 @@ def build_manifest(manifest_path, output_dir=None):
 
 def _all_manifests():
     source_root = PROJECT_ROOT / "Assets" / "ArtSource"
-    return sorted(source_root.glob("**/Manifests/*.json"))
+    manifests = sorted(source_root.glob("**/Manifests/*.json"))
+    full_player_roster = source_root / "Characters" / "Manifests" / "player-roster.json"
+    if full_player_roster.exists():
+        manifests = [
+            path for path in manifests if path.name != "reference-characters.json"
+        ]
+    return manifests
 
 
 def main(argv=None):
@@ -79,4 +85,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

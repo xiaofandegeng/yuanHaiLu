@@ -30,6 +30,18 @@ namespace YuanHaiLu.Editor
         public int tileSize;
         public ArtSpriteMetadata[] sprites;
         public ArtSpriteMetadata[] landmarks;
+        public ArtAnimationMetadata[] animations;
+    }
+
+    [Serializable]
+    internal sealed class ArtAnimationMetadata
+    {
+        public string name;
+        public string direction;
+        public string[] frames;
+        public int fps;
+        public bool loop;
+        public int[] hitFrames;
     }
 
     /// <summary>
@@ -99,6 +111,7 @@ namespace YuanHaiLu.Editor
                 throw new InvalidDataException($"Invalid art metadata '{metadataPath}'.");
             metadata.sprites = metadata.sprites ?? Array.Empty<ArtSpriteMetadata>();
             metadata.landmarks = metadata.landmarks ?? Array.Empty<ArtSpriteMetadata>();
+            metadata.animations = metadata.animations ?? Array.Empty<ArtAnimationMetadata>();
             return metadata;
         }
 
