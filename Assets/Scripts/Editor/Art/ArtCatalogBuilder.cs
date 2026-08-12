@@ -34,8 +34,10 @@ namespace YuanHaiLu.Editor
                         metadata.id,
                         InferCategory(metadata.id),
                         sheet,
-                        null,
-                        null,
+                        AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+                            CharacterControllerPath(metadata.id)),
+                        AssetDatabase.LoadAssetAtPath<GameObject>(
+                            CharacterPrefabPath(metadata.id)),
                         sheet));
                 }
                 else if (string.Equals(metadata.kind, "environment", StringComparison.Ordinal))
@@ -93,13 +95,40 @@ namespace YuanHaiLu.Editor
             AssetDatabase.CreateFolder(parent, name);
         }
 
-        private static string InferCategory(string id)
+        internal static string InferCategory(string id)
         {
+            if (File.Exists($"Assets/Art/Characters/Player/{id}.art.json")) return ArtAssetId.CharacterCategory.Player;
+            if (File.Exists($"Assets/Art/Characters/Named/{id}.art.json")) return ArtAssetId.CharacterCategory.Named;
+            if (File.Exists($"Assets/Art/Characters/NPC/{id}.art.json")) return ArtAssetId.CharacterCategory.Npc;
+            if (File.Exists($"Assets/Art/Characters/Enemies/{id}.art.json")) return ArtAssetId.CharacterCategory.Enemy;
+            if (File.Exists($"Assets/Art/Characters/Bosses/{id}.art.json")) return ArtAssetId.CharacterCategory.Boss;
             if (id.StartsWith("player_", StringComparison.Ordinal)) return ArtAssetId.CharacterCategory.Player;
             if (id.StartsWith("boss_", StringComparison.Ordinal)) return ArtAssetId.CharacterCategory.Boss;
             if (id.StartsWith("enemy_", StringComparison.Ordinal)) return ArtAssetId.CharacterCategory.Enemy;
             if (id.StartsWith("npc_", StringComparison.Ordinal)) return ArtAssetId.CharacterCategory.Npc;
             return ArtAssetId.CharacterCategory.Named;
+        }
+
+        internal static string CharacterCategoryFolder(string id)
+        {
+            switch (InferCategory(id))
+            {
+                case ArtAssetId.CharacterCategory.Player: return "Player";
+                case ArtAssetId.CharacterCategory.Boss: return "Bosses";
+                case ArtAssetId.CharacterCategory.Enemy: return "Enemies";
+                case ArtAssetId.CharacterCategory.Npc: return "NPC";
+                default: return "Named";
+            }
+        }
+
+        internal static string CharacterControllerPath(string id)
+        {
+            return $"Assets/AnimatorControllers/Characters/{CharacterCategoryFolder(id)}/{id}.controller";
+        }
+
+        internal static string CharacterPrefabPath(string id)
+        {
+            return $"Assets/Prefabs/Characters/{CharacterCategoryFolder(id)}/{id}.prefab";
         }
     }
 }
