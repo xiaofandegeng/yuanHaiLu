@@ -89,18 +89,21 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void AreaTargetReportsOnlyOnceWhenConfiguredShowOnce()
+        public void AreaTargetRetriesUntilObjectiveExistsThenReportsOnlyOnce()
         {
             QuestManager manager = CreateQuestManager();
-            QuestData quest = CreateQuest(
-                "area_quest",
-                Objective(QuestObjective.ObjectiveType.ReachArea, "yanliu_inn", 2));
-            Assert.That(manager.AcceptQuest(quest), Is.True);
             GameObject areaObject = TestSceneFactory.Create("Area");
             areaObject.AddComponent<BoxCollider2D>();
             AreaTrigger area = areaObject.AddComponent<AreaTrigger>();
             area.questTargetId = "yanliu_inn";
-            area.showOnce = true;
+            area.showOnce = false;
+
+            area.ReportAreaReached();
+
+            QuestData quest = CreateQuest(
+                "area_quest",
+                Objective(QuestObjective.ObjectiveType.ReachArea, "yanliu_inn", 2));
+            Assert.That(manager.AcceptQuest(quest), Is.True);
 
             area.ReportAreaReached();
             area.ReportAreaReached();
@@ -108,6 +111,24 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(
                 manager.GetActiveQuest("area_quest").Objectives[0].currentAmount,
                 Is.EqualTo(1));
+        }
+
+        [Test]
+        public void CompletingQuestWithoutPlayerStillGrantsInventoryRewards()
+        {
+            QuestManager manager = CreateQuestManager();
+            InventoryManager inventory = TestSceneFactory.AddComponentWithAwake<InventoryManager>(
+                TestSceneFactory.Create("InventoryManager"));
+            QuestData quest = CreateQuest("inventory_reward_quest");
+            quest.rewardGold = 15;
+            quest.rewardItemIds = new[] { "herb_medicinal" };
+            int startingGold = inventory.Gold;
+
+            Assert.That(manager.AcceptQuest(quest), Is.True);
+            Assert.That(manager.CompleteQuest(quest.questId), Is.True);
+
+            Assert.That(inventory.Gold, Is.EqualTo(startingGold + 15));
+            Assert.That(inventory.HasItem("herb_medicinal"), Is.True);
         }
 
         [Test]

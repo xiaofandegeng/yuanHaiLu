@@ -251,8 +251,11 @@ namespace YuanHaiLu.GameSystem
         }
 
         // === 更新目标进度 ===
-        public void UpdateObjective(QuestObjective.ObjectiveType type, string targetId, int amount = 1)
+        public bool UpdateObjective(QuestObjective.ObjectiveType type, string targetId, int amount = 1)
         {
+            if (string.IsNullOrEmpty(targetId) || amount <= 0) return false;
+
+            bool updated = false;
             foreach (var quest in activeQuests)
             {
                 if (quest.state != ActiveQuest.QuestState.Active) continue;
@@ -262,6 +265,7 @@ namespace YuanHaiLu.GameSystem
                     if (obj.type == type && obj.targetId == targetId && !obj.completed)
                     {
                         obj.currentAmount = Mathf.Min(obj.currentAmount + amount, obj.requiredAmount);
+                        updated = true;
                         OnObjectiveUpdated?.Invoke(obj);
 
                         if (obj.currentAmount >= obj.requiredAmount)
@@ -275,6 +279,8 @@ namespace YuanHaiLu.GameSystem
                     }
                 }
             }
+
+            return updated;
         }
 
         // === 完成任务 ===
@@ -314,13 +320,16 @@ namespace YuanHaiLu.GameSystem
         private void GrantRewards(QuestData quest)
         {
             var player = GameObject.FindGameObjectWithTag("Player");
-            if (player == null) return;
 
             // 经验
             if (quest.rewardExp > 0)
             {
-                var stats = player.GetComponent<Character.CharacterStats>();
-                if (stats != null)
+                var stats = player?.GetComponent<Character.CharacterStats>();
+                if (stats == null)
+                {
+                    Debug.LogWarning("[Quest] 玩家或 CharacterStats 不存在，无法发放经验奖励");
+                }
+                else
                 {
                     stats.GainExp(quest.rewardExp);
                     Debug.Log($"[Quest] 获得 {quest.rewardExp} 经验");
@@ -331,7 +340,11 @@ namespace YuanHaiLu.GameSystem
             if (quest.rewardGold > 0)
             {
                 var inventory = InventoryManager.Instance;
-                if (inventory != null)
+                if (inventory == null)
+                {
+                    Debug.LogWarning("[Quest] InventoryManager 不存在，无法发放金钱奖励");
+                }
+                else
                 {
                     inventory.AddGold(quest.rewardGold);
                     Debug.Log($"[Quest] 获得 {quest.rewardGold} 文钱");
@@ -342,9 +355,16 @@ namespace YuanHaiLu.GameSystem
             if (quest.rewardItemIds != null)
             {
                 var inventory = InventoryManager.Instance;
-                foreach (string itemId in quest.rewardItemIds)
+                if (inventory == null && quest.rewardItemIds.Length > 0)
                 {
-                    inventory?.AddItem(itemId);
+                    Debug.LogWarning("[Quest] InventoryManager 不存在，无法发放物品奖励");
+                }
+                else
+                {
+                    foreach (string itemId in quest.rewardItemIds)
+                    {
+                        inventory.AddItem(itemId);
+                    }
                 }
             }
 
@@ -352,10 +372,14 @@ namespace YuanHaiLu.GameSystem
             if (!string.IsNullOrEmpty(quest.rewardSkillId))
             {
                 var skill = MartialSkillDatabase.Get(quest.rewardSkillId);
-                var martial = player.GetComponent<Character.MartialArtsSystem>();
+                var martial = player?.GetComponent<Character.MartialArtsSystem>();
                 if (skill == null)
                 {
                     Debug.LogWarning($"[Quest] 奖励武学不存在: {quest.rewardSkillId}");
+                }
+                else if (player == null)
+                {
+                    Debug.LogWarning("[Quest] 玩家不存在，无法发放武学奖励");
                 }
                 else if (martial == null)
                 {
@@ -549,7 +573,9 @@ namespace YuanHaiLu.GameSystem
 
             foreach (QuestObjectiveSaveData savedObjective in savedObjectives)
             {
-                if (savedObjective == null || string.IsNullOrEmpty(savedObjective.targetId)) continue;
+                if (savedObjective == null) continue;
+
+                bool matched = false;
 
                 foreach (QuestObjective objective in activeQuest.Objectives)
                 {
@@ -559,12 +585,30 @@ namespace YuanHaiLu.GameSystem
                         continue;
                     }
 
+                    matched = true;
+                    if (savedObjective.currentAmount < 0 ||
+                        savedObjective.currentAmount > objective.requiredAmount)
+                    {
+                        Debug.LogWarning(
+                            $"[Quest] 存档中的任务进度越界，已钳制: " +
+                            $"{activeQuest.data.questId}/{savedObjective.type}:" +
+                            $"{savedObjective.targetId}={savedObjective.currentAmount}");
+                    }
+
                     objective.currentAmount = Mathf.Clamp(
                         savedObjective.currentAmount,
                         0,
                         objective.requiredAmount);
                     objective.completed = objective.currentAmount >= objective.requiredAmount;
                     break;
+                }
+
+                if (!matched)
+                {
+                    Debug.LogWarning(
+                        $"[Quest] 存档中的任务目标不存在，已跳过: " +
+                        $"{activeQuest.data.questId}/{savedObjective.type}:" +
+                        $"{savedObjective.targetId}");
                 }
             }
         }
@@ -578,8 +622,7 @@ namespace YuanHaiLu.GameSystem
         }
 
         /// <summary>
-        /// 从存档恢复已完成任务清单
-        /// （注：活跃任务因缺任务数据库 ScriptableObject 暂不持久化）
+        /// 从 v2 及更早存档恢复已完成任务清单，并清空活跃任务。
         /// </summary>
         public void LoadCompletedQuests(string[] ids)
         {
