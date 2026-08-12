@@ -98,6 +98,9 @@ namespace YuanHaiLu.Character
 
             _learnedSkills[skill.skillId] = skill;
             OnSkillLearned?.Invoke(skill);
+            GameSystem.QuestManager.Instance?.UpdateObjective(
+                GameSystem.QuestObjective.ObjectiveType.LearnSkill,
+                skill.skillId);
 
             Debug.Log($"[武学] 学会新招式：{skill.skillName}（{skill.school}）");
 

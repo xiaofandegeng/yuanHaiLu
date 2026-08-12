@@ -14,6 +14,7 @@ namespace YuanHaiLu.Map
         [Header("区域信息")]
         public string areaName = "烟柳镇";
         public string areaSubtitle = "渊朝·江南道";
+        public string questTargetId = "";
 
         [Header("场景切换（可选）")]
         public bool triggersSceneChange = false;
@@ -29,6 +30,7 @@ namespace YuanHaiLu.Map
         public bool showOnce = true;
 
         private bool _hasShown = false;
+        private bool _questProgressReported = false;
 
         private void Awake()
         {
@@ -39,6 +41,8 @@ namespace YuanHaiLu.Map
         {
             if (!other.CompareTag("Player")) return;
             if (showOnce && _hasShown) return;
+
+            ReportAreaReached();
 
             if (triggersSceneChange && !string.IsNullOrEmpty(targetSceneName))
             {
@@ -64,6 +68,17 @@ namespace YuanHaiLu.Map
             {
                 Debug.Log($"[AreaTrigger] 进入区域: {areaName} — {areaSubtitle}");
             }
+        }
+
+        internal void ReportAreaReached()
+        {
+            if (string.IsNullOrEmpty(questTargetId)) return;
+            if (showOnce && _questProgressReported) return;
+
+            _questProgressReported = true;
+            QuestManager.Instance?.UpdateObjective(
+                QuestObjective.ObjectiveType.ReachArea,
+                questTargetId);
         }
 
         private System.Collections.IEnumerator TransitionToScene(GameObject player)

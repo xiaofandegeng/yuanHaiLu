@@ -186,10 +186,32 @@ namespace YuanHaiLu.GameSystem
         // === 添加物品 ===
         public bool AddItem(string itemId, int amount = 1)
         {
+            if (amount <= 0) return false;
+
             ItemData itemData = GetItemData(itemId);
             if (itemData == null)
             {
                 Debug.LogWarning($"[Inventory] 物品不存在: {itemId}");
+                return false;
+            }
+
+            int requestedAmount = amount;
+            int availableCapacity = 0;
+            foreach (InventorySlot slot in slots)
+            {
+                if (slot.IsEmpty)
+                {
+                    availableCapacity += itemData.maxStack;
+                }
+                else if (slot.itemId == itemId && itemData.maxStack > 1)
+                {
+                    availableCapacity += Mathf.Max(0, itemData.maxStack - slot.amount);
+                }
+            }
+
+            if (availableCapacity < requestedAmount)
+            {
+                Debug.LogWarning("[Inventory] 背包空间不足！");
                 return false;
             }
 
@@ -205,7 +227,7 @@ namespace YuanHaiLu.GameSystem
                         amount -= canAdd;
                         if (amount <= 0)
                         {
-                            OnItemAdded?.Invoke(itemId, slot.amount);
+                            OnItemAdded?.Invoke(itemId, requestedAmount);
                             OnInventoryChanged?.Invoke();
                             return true;
                         }
@@ -219,7 +241,7 @@ namespace YuanHaiLu.GameSystem
                 int emptyIndex = FindEmptySlot();
                 if (emptyIndex == -1)
                 {
-                    Debug.LogWarning("[Inventory] 背包已满！");
+                    Debug.LogWarning("[Inventory] 背包空间不足！");
                     OnInventoryChanged?.Invoke();
                     return false;
                 }
@@ -231,7 +253,7 @@ namespace YuanHaiLu.GameSystem
                 amount -= addAmount;
             }
 
-            OnItemAdded?.Invoke(itemId, amount);
+            OnItemAdded?.Invoke(itemId, requestedAmount);
             OnInventoryChanged?.Invoke();
             return true;
         }
