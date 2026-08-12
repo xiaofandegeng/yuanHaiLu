@@ -4,16 +4,16 @@
   "image": "yanliu_tileset.png",
   "kind": "environment",
   "landmarkImage": "yanliu_landmarks.png",
-  "landmarkSha256": "5b09c8899cc79733ce9c779cde73e84081df52f46ad46d4412d5a9ca4009fb00",
+  "landmarkSha256": "bfcd64d17ff001b0d895ca6260d7b54e993da4f19eb5d770fdf55c6704786fe4",
   "landmarks": [
     {
       "collision": [
-        8,
-        64,
-        80,
+        4,
+        56,
+        88,
         16
       ],
-      "foregroundCut": 55,
+      "foregroundCut": 48,
       "id": "inn",
       "name": "yanliu__landmark__inn",
       "pivot": [
@@ -24,38 +24,17 @@
         0,
         0,
         96,
-        80
-      ]
-    },
-    {
-      "collision": [
-        6,
-        58,
-        68,
-        14
-      ],
-      "foregroundCut": 50,
-      "id": "pharmacy",
-      "name": "yanliu__landmark__pharmacy",
-      "pivot": [
-        0.5,
-        0.0
-      ],
-      "rect": [
-        96,
-        8,
-        80,
         72
       ]
     },
     {
       "collision": [
-        8,
-        38,
-        96,
-        18
+        4,
+        56,
+        88,
+        16
       ],
-      "foregroundCut": 32,
+      "foregroundCut": 48,
       "id": "arched_bridge",
       "name": "yanliu__landmark__arched_bridge",
       "pivot": [
@@ -63,18 +42,39 @@
         0.0
       ],
       "rect": [
-        176,
-        24,
-        112,
-        56
+        96,
+        0,
+        96,
+        72
+      ]
+    },
+    {
+      "collision": [
+        4,
+        56,
+        88,
+        16
+      ],
+      "foregroundCut": 48,
+      "id": "pharmacy",
+      "name": "yanliu__landmark__pharmacy",
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "rect": [
+        192,
+        0,
+        96,
+        72
       ]
     }
   ],
   "schemaVersion": 1,
-  "sha256": "8aafc0f103760b64d7861ef669c3c81357f9a5c48986e7d90e771fb26c4d8d0a",
+  "sha256": "39c683be79e131f615d49d2d249b2fc52f3e491699e48aaf496dbf3e8bfad018",
   "sprites": [
     {
-      "name": "yanliu__grass__0",
+      "name": "yanliu__ground__0",
       "pivot": [
         0.5,
         0.5
@@ -85,11 +85,11 @@
         16,
         16
       ],
-      "role": "grass",
+      "role": "ground",
       "variant": 0
     },
     {
-      "name": "yanliu__grass__1",
+      "name": "yanliu__ground__1",
       "pivot": [
         0.5,
         0.5
@@ -100,11 +100,11 @@
         16,
         16
       ],
-      "role": "grass",
+      "role": "ground",
       "variant": 1
     },
     {
-      "name": "yanliu__grass__2",
+      "name": "yanliu__ground__2",
       "pivot": [
         0.5,
         0.5
@@ -115,11 +115,11 @@
         16,
         16
       ],
-      "role": "grass",
+      "role": "ground",
       "variant": 2
     },
     {
-      "name": "yanliu__dirt__0",
+      "name": "yanliu__ground__3",
       "pivot": [
         0.5,
         0.5
@@ -130,11 +130,11 @@
         16,
         16
       ],
-      "role": "dirt",
-      "variant": 0
+      "role": "ground",
+      "variant": 3
     },
     {
-      "name": "yanliu__stone_path__0",
+      "name": "yanliu__ground__4",
       "pivot": [
         0.5,
         0.5
@@ -145,11 +145,11 @@
         16,
         16
       ],
-      "role": "stone_path",
-      "variant": 0
+      "role": "ground",
+      "variant": 4
     },
     {
-      "name": "yanliu__water_shallow__0",
+      "name": "yanliu__ground__5",
       "pivot": [
         0.5,
         0.5
@@ -160,11 +160,11 @@
         16,
         16
       ],
-      "role": "water_shallow",
-      "variant": 0
+      "role": "ground",
+      "variant": 5
     },
     {
-      "name": "yanliu__water_deep__0",
+      "name": "yanliu__ground__6",
       "pivot": [
         0.5,
         0.5
@@ -175,11 +175,11 @@
         16,
         16
       ],
-      "role": "water_deep",
-      "variant": 0
+      "role": "ground",
+      "variant": 6
     },
     {
-      "name": "yanliu__shore_n__0",
+      "name": "yanliu__ground__7",
       "pivot": [
         0.5,
         0.5
@@ -190,11 +190,11 @@
         16,
         16
       ],
-      "role": "shore_n",
-      "variant": 0
+      "role": "ground",
+      "variant": 7
     },
     {
-      "name": "yanliu__shore_e__0",
+      "name": "yanliu__road__0",
       "pivot": [
         0.5,
         0.5
@@ -205,11 +205,11 @@
         16,
         16
       ],
-      "role": "shore_e",
+      "role": "road",
       "variant": 0
     },
     {
-      "name": "yanliu__shore_s__0",
+      "name": "yanliu__road__1",
       "pivot": [
         0.5,
         0.5
@@ -220,11 +220,11 @@
         16,
         16
       ],
-      "role": "shore_s",
-      "variant": 0
+      "role": "road",
+      "variant": 1
     },
     {
-      "name": "yanliu__shore_w__0",
+      "name": "yanliu__water__0",
       "pivot": [
         0.5,
         0.5
@@ -235,11 +235,11 @@
         16,
         16
       ],
-      "role": "shore_w",
+      "role": "water",
       "variant": 0
     },
     {
-      "name": "yanliu__shore_ne__0",
+      "name": "yanliu__water__1",
       "pivot": [
         0.5,
         0.5
@@ -250,11 +250,11 @@
         16,
         16
       ],
-      "role": "shore_ne",
-      "variant": 0
+      "role": "water",
+      "variant": 1
     },
     {
-      "name": "yanliu__shore_se__0",
+      "name": "yanliu__shore__0",
       "pivot": [
         0.5,
         0.5
@@ -265,11 +265,11 @@
         16,
         16
       ],
-      "role": "shore_se",
+      "role": "shore",
       "variant": 0
     },
     {
-      "name": "yanliu__shore_sw__0",
+      "name": "yanliu__wall__0",
       "pivot": [
         0.5,
         0.5
@@ -280,11 +280,11 @@
         16,
         16
       ],
-      "role": "shore_sw",
+      "role": "wall",
       "variant": 0
     },
     {
-      "name": "yanliu__shore_nw__0",
+      "name": "yanliu__wall__1",
       "pivot": [
         0.5,
         0.5
@@ -295,11 +295,11 @@
         16,
         16
       ],
-      "role": "shore_nw",
-      "variant": 0
+      "role": "wall",
+      "variant": 1
     },
     {
-      "name": "yanliu__white_wall__0",
+      "name": "yanliu__roof__0",
       "pivot": [
         0.5,
         0.5
@@ -310,11 +310,11 @@
         16,
         16
       ],
-      "role": "white_wall",
+      "role": "roof",
       "variant": 0
     },
     {
-      "name": "yanliu__stone_base__0",
+      "name": "yanliu__roof__1",
       "pivot": [
         0.5,
         0.5
@@ -325,11 +325,11 @@
         16,
         16
       ],
-      "role": "stone_base",
-      "variant": 0
+      "role": "roof",
+      "variant": 1
     },
     {
-      "name": "yanliu__wood_wall__0",
+      "name": "yanliu__door__0",
       "pivot": [
         0.5,
         0.5
@@ -340,7 +340,7 @@
         16,
         16
       ],
-      "role": "wood_wall",
+      "role": "door",
       "variant": 0
     },
     {
@@ -359,7 +359,7 @@
       "variant": 0
     },
     {
-      "name": "yanliu__door__0",
+      "name": "yanliu__bridge__0",
       "pivot": [
         0.5,
         0.5
@@ -370,11 +370,11 @@
         16,
         16
       ],
-      "role": "door",
+      "role": "bridge",
       "variant": 0
     },
     {
-      "name": "yanliu__roof_body__0",
+      "name": "yanliu__decor__0",
       "pivot": [
         0.5,
         0.5
@@ -385,11 +385,11 @@
         16,
         16
       ],
-      "role": "roof_body",
+      "role": "decor",
       "variant": 0
     },
     {
-      "name": "yanliu__roof_eave__0",
+      "name": "yanliu__decor__1",
       "pivot": [
         0.5,
         0.5
@@ -400,11 +400,11 @@
         16,
         16
       ],
-      "role": "roof_eave",
-      "variant": 0
+      "role": "decor",
+      "variant": 1
     },
     {
-      "name": "yanliu__roof_ridge__0",
+      "name": "yanliu__decor__2",
       "pivot": [
         0.5,
         0.5
@@ -415,11 +415,11 @@
         16,
         16
       ],
-      "role": "roof_ridge",
-      "variant": 0
+      "role": "decor",
+      "variant": 2
     },
     {
-      "name": "yanliu__roof_corner_left__0",
+      "name": "yanliu__decor__3",
       "pivot": [
         0.5,
         0.5
@@ -430,11 +430,11 @@
         16,
         16
       ],
-      "role": "roof_corner_left",
-      "variant": 0
+      "role": "decor",
+      "variant": 3
     },
     {
-      "name": "yanliu__roof_corner_right__0",
+      "name": "yanliu__decor__4",
       "pivot": [
         0.5,
         0.5
@@ -445,11 +445,11 @@
         16,
         16
       ],
-      "role": "roof_corner_right",
-      "variant": 0
+      "role": "decor",
+      "variant": 4
     },
     {
-      "name": "yanliu__willow__0",
+      "name": "yanliu__decor__5",
       "pivot": [
         0.5,
         0.5
@@ -460,11 +460,11 @@
         16,
         16
       ],
-      "role": "willow",
-      "variant": 0
+      "role": "decor",
+      "variant": 5
     },
     {
-      "name": "yanliu__lotus__0",
+      "name": "yanliu__decor__6",
       "pivot": [
         0.5,
         0.5
@@ -475,11 +475,11 @@
         16,
         16
       ],
-      "role": "lotus",
-      "variant": 0
+      "role": "decor",
+      "variant": 6
     },
     {
-      "name": "yanliu__lantern__0",
+      "name": "yanliu__decor__7",
       "pivot": [
         0.5,
         0.5
@@ -490,11 +490,11 @@
         16,
         16
       ],
-      "role": "lantern",
-      "variant": 0
+      "role": "decor",
+      "variant": 7
     },
     {
-      "name": "yanliu__flag__0",
+      "name": "yanliu__decor__8",
       "pivot": [
         0.5,
         0.5
@@ -505,11 +505,11 @@
         16,
         16
       ],
-      "role": "flag",
-      "variant": 0
+      "role": "decor",
+      "variant": 8
     },
     {
-      "name": "yanliu__barrel__0",
+      "name": "yanliu__decor__9",
       "pivot": [
         0.5,
         0.5
@@ -520,11 +520,11 @@
         16,
         16
       ],
-      "role": "barrel",
-      "variant": 0
+      "role": "decor",
+      "variant": 9
     },
     {
-      "name": "yanliu__crate__0",
+      "name": "yanliu__decor__10",
       "pivot": [
         0.5,
         0.5
@@ -535,11 +535,11 @@
         16,
         16
       ],
-      "role": "crate",
-      "variant": 0
+      "role": "decor",
+      "variant": 10
     },
     {
-      "name": "yanliu__bridge__0",
+      "name": "yanliu__decor__11",
       "pivot": [
         0.5,
         0.5
@@ -550,11 +550,11 @@
         16,
         16
       ],
-      "role": "bridge",
-      "variant": 0
+      "role": "decor",
+      "variant": 11
     },
     {
-      "name": "yanliu__dock__0",
+      "name": "yanliu__decor__12",
       "pivot": [
         0.5,
         0.5
@@ -565,11 +565,11 @@
         16,
         16
       ],
-      "role": "dock",
-      "variant": 0
+      "role": "decor",
+      "variant": 12
     },
     {
-      "name": "yanliu__boat__0",
+      "name": "yanliu__decor__13",
       "pivot": [
         0.5,
         0.5
@@ -580,11 +580,11 @@
         16,
         16
       ],
-      "role": "boat",
-      "variant": 0
+      "role": "decor",
+      "variant": 13
     },
     {
-      "name": "yanliu__well__0",
+      "name": "yanliu__decor__14",
       "pivot": [
         0.5,
         0.5
@@ -595,11 +595,11 @@
         16,
         16
       ],
-      "role": "well",
-      "variant": 0
+      "role": "decor",
+      "variant": 14
     },
     {
-      "name": "yanliu__sign__0",
+      "name": "yanliu__decor__15",
       "pivot": [
         0.5,
         0.5
@@ -610,8 +610,8 @@
         16,
         16
       ],
-      "role": "sign",
-      "variant": 0
+      "role": "decor",
+      "variant": 15
     }
   ],
   "tileSize": 16,
