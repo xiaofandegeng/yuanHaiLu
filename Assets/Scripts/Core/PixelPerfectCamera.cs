@@ -25,15 +25,30 @@ namespace YuanHaiLu.Core
         public int minScale = 1;
 
         private Camera _camera;
+        private Camera _clearCamera;
         private int _currentScale;
         private int _lastScreenWidth;
         private int _lastScreenHeight;
+
+        private const string ClearCameraName = "[PixelPerfectBackground]";
 
         private void Awake()
         {
             _camera = GetComponent<Camera>();
             _camera.orthographic = true;
+            EnsureClearCamera();
             UpdateCamera();
+        }
+
+        private void OnEnable()
+        {
+            if (_camera == null) _camera = GetComponent<Camera>();
+            EnsureClearCamera();
+        }
+
+        private void OnDisable()
+        {
+            DestroyClearCamera();
         }
 
         private void Update()
@@ -49,6 +64,9 @@ namespace YuanHaiLu.Core
 
         private void UpdateCamera()
         {
+            if (_camera == null) _camera = GetComponent<Camera>();
+            ConfigureClearCamera();
+
             _lastScreenWidth = Screen.width;
             _lastScreenHeight = Screen.height;
 
@@ -73,6 +91,62 @@ namespace YuanHaiLu.Core
             Debug.Log($"[PixelPerfectCamera] Scale: {_currentScale}x | " +
                       $"OrthoSize: {orthoSize:F2} | " +
                       $"Viewport: {_camera.pixelRect}");
+        }
+
+        /// <summary>
+        /// 像素摄像机只渲染居中的整数倍视口；先用一个无内容摄像机清空整个屏幕，
+        /// 避免切换场景后视口外残留上一帧画面。
+        /// </summary>
+        private void EnsureClearCamera()
+        {
+            if (_camera == null) return;
+
+            if (_clearCamera == null)
+            {
+                Transform existing = transform.Find(ClearCameraName);
+                if (existing != null)
+                {
+                    _clearCamera = existing.GetComponent<Camera>();
+                }
+                else
+                {
+                    var clearObject = new GameObject(ClearCameraName)
+                    {
+                        hideFlags = HideFlags.HideAndDontSave
+                    };
+                    clearObject.transform.SetParent(transform, false);
+                    _clearCamera = clearObject.AddComponent<Camera>();
+                }
+            }
+
+            ConfigureClearCamera();
+        }
+
+        private void ConfigureClearCamera()
+        {
+            if (_camera == null || _clearCamera == null) return;
+
+            _clearCamera.clearFlags = CameraClearFlags.SolidColor;
+            _clearCamera.backgroundColor = _camera.backgroundColor;
+            _clearCamera.cullingMask = 0;
+            _clearCamera.depth = _camera.depth - 1f;
+            _clearCamera.rect = new Rect(0f, 0f, 1f, 1f);
+            _clearCamera.targetDisplay = _camera.targetDisplay;
+            _clearCamera.allowHDR = false;
+            _clearCamera.allowMSAA = false;
+            _clearCamera.useOcclusionCulling = false;
+        }
+
+        private void DestroyClearCamera()
+        {
+            if (_clearCamera == null) return;
+
+            GameObject clearObject = _clearCamera.gameObject;
+            _clearCamera = null;
+            if (Application.isPlaying)
+                Destroy(clearObject);
+            else
+                DestroyImmediate(clearObject);
         }
 
         private Rect CalculatePixelRect()

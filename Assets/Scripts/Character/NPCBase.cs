@@ -42,6 +42,7 @@ namespace YuanHaiLu.Character
         private static readonly int AnimSpeed = Animator.StringToHash("Speed");
         private static readonly int AnimMoveX = Animator.StringToHash("MoveX");
         private static readonly int AnimMoveY = Animator.StringToHash("MoveY");
+        private bool CanAnimate => _anim != null && _anim.runtimeAnimatorController != null;
 
         private void Awake()
         {
@@ -77,7 +78,7 @@ namespace YuanHaiLu.Character
 
             // 更新动画方向
             Vector2 dir = (_targetPosition - (Vector2)transform.position).normalized;
-            if (_anim != null)
+            if (CanAnimate)
             {
                 _anim.SetFloat(AnimMoveX, dir.x);
                 _anim.SetFloat(AnimMoveY, dir.y);
@@ -96,7 +97,7 @@ namespace YuanHaiLu.Character
                 _isWandering = false;
                 _wanderTimer = wanderInterval + Random.Range(-1f, 1f);
 
-                if (_anim != null)
+                if (CanAnimate)
                 {
                     _anim.SetFloat(AnimSpeed, 0f);
                 }

@@ -1,7 +1,6 @@
 using UnityEngine;
 using YuanHaiLu.Core;
 using UnityEngine.UI;
-using YuanHaiLu.Core;
 using System.Collections.Generic;
 using YuanHaiLu.GameSystem;
 
@@ -20,7 +19,6 @@ namespace YuanHaiLu.UI
         [Header("槽位")]
         [SerializeField] private Transform slotContainer;
         [SerializeField] private GameObject slotPrefab;
-        [SerializeField] private int slotColumns = 8;
 
         [Header("详情面板")]
         [SerializeField] private GameObject detailPanel;

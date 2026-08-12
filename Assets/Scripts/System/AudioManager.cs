@@ -216,6 +216,8 @@ namespace YuanHaiLu.GameSystem
             }
             else
             {
+                // 缓存缺失结果，避免移动脚步等高频调用每次都刷同一条警告。
+                _bgmCache[bgmId] = null;
                 Debug.LogWarning($"[Audio] BGM未找到: {bgmId}");
             }
             return clip;
@@ -233,6 +235,8 @@ namespace YuanHaiLu.GameSystem
             }
             else
             {
+                // 缓存缺失结果，避免移动脚步等高频调用每次都刷同一条警告。
+                _sfxCache[sfxId] = null;
                 Debug.LogWarning($"[Audio] 音效未找到: {sfxId}");
             }
             return clip;

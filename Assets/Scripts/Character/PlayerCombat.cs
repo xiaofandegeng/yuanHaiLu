@@ -38,6 +38,7 @@ namespace YuanHaiLu.Character
         // === 动画参数 ===
         private static readonly int AnimIsAttacking = Animator.StringToHash("IsAttacking");
         private static readonly int AnimAttackIndex = Animator.StringToHash("AttackIndex");
+        private bool CanAnimate => _anim != null && _anim.runtimeAnimatorController != null;
 
         // === 事件 ===
         public event System.Action<int> OnAttackHit;     // (damage dealt)
@@ -80,8 +81,11 @@ namespace YuanHaiLu.Character
             _isAttacking = true;
             _attackTimer = attackDuration;
 
-            _anim.SetBool(AnimIsAttacking, true);
-            _anim.SetInteger(AnimAttackIndex, _comboIndex);
+            if (CanAnimate)
+            {
+                _anim.SetBool(AnimIsAttacking, true);
+                _anim.SetInteger(AnimAttackIndex, _comboIndex);
+            }
 
             // 禁用移动（攻击期间不能移动）
             _controller.SetInputEnabled(false);
@@ -164,7 +168,7 @@ namespace YuanHaiLu.Character
         public void OnAttackAnimationEnd()
         {
             _isAttacking = false;
-            _anim.SetBool(AnimIsAttacking, false);
+            if (CanAnimate) _anim.SetBool(AnimIsAttacking, false);
 
             if (_comboQueued && _comboIndex < maxCombo - 1)
             {

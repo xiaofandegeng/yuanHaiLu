@@ -1,7 +1,9 @@
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 using YuanHaiLu.Core;
 using YuanHaiLu.Dialogue;
 using YuanHaiLu.GameSystem;
@@ -27,19 +29,19 @@ namespace YuanHaiLu.Tests.EditMode
             GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
 
             Assert.That(
-                Object.FindObjectsByType<SaveManager>(FindObjectsSortMode.None),
+                Object.FindObjectsByType<SaveManager>(),
                 Has.Length.EqualTo(1));
             Assert.That(
-                Object.FindObjectsByType<InventoryManager>(FindObjectsSortMode.None),
+                Object.FindObjectsByType<InventoryManager>(),
                 Has.Length.EqualTo(1));
             Assert.That(
-                Object.FindObjectsByType<QuestManager>(FindObjectsSortMode.None),
+                Object.FindObjectsByType<QuestManager>(),
                 Has.Length.EqualTo(1));
             Assert.That(
-                Object.FindObjectsByType<GameTimeManager>(FindObjectsSortMode.None),
+                Object.FindObjectsByType<GameTimeManager>(),
                 Has.Length.EqualTo(1));
             Assert.That(
-                Object.FindObjectsByType<DialogueManager>(FindObjectsSortMode.None),
+                Object.FindObjectsByType<DialogueManager>(),
                 Has.Length.EqualTo(1));
         }
 
@@ -54,6 +56,27 @@ namespace YuanHaiLu.Tests.EditMode
             InvokePrivate(menu, "Start");
 
             Assert.That(gameManager.currentState, Is.EqualTo(GameManager.GameState.MainMenu));
+        }
+
+        [Test]
+        public void MainMenuStartSelectsNewGameButtonForKeyboardNavigation()
+        {
+            TestSceneFactory.AddComponentWithAwake<GameManager>(
+                TestSceneFactory.Create("GameManager"));
+            var eventSystemObject = TestSceneFactory.Create("EventSystem");
+            var eventSystem = eventSystemObject.AddComponent<EventSystem>();
+            eventSystemObject.AddComponent<StandaloneInputModule>();
+            InvokePrivate(eventSystem, "OnEnable");
+            var menuObject = TestSceneFactory.Create("MainMenu");
+            var menu = menuObject.AddComponent<MainMenu>();
+            var buttonObject = TestSceneFactory.Create("Btn_新游戏");
+            buttonObject.transform.SetParent(menuObject.transform);
+            buttonObject.AddComponent<Image>();
+            buttonObject.AddComponent<Button>();
+
+            InvokePrivate(menu, "Start");
+
+            Assert.That(eventSystem.currentSelectedGameObject, Is.SameAs(buttonObject));
         }
 
         [Test]

@@ -37,6 +37,7 @@ namespace YuanHaiLu.Editor
             var scaler = canvasObj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(480, 270);
+            canvasObj.AddComponent<GraphicRaycaster>();
 
             // 背景
             var bgObj = new GameObject("Background");

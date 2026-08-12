@@ -161,6 +161,14 @@ AttackIndex Int
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
+运行 PlayMode 测试时使用相同命令，并把平台和输出文件改为：
+
+```bash
+-testPlatform PlayMode \
+-testResults /tmp/yuanHaiLu-playmode.xml \
+-logFile /tmp/yuanHaiLu-playmode.log
+```
+
 注意：`-runTests` 命令不要附加 `-quit`。仅做编译/导入检查时才使用：
 
 ```bash
@@ -176,9 +184,11 @@ AttackIndex Int
 重启 Unity 后至少验证：
 
 - [ ] 主菜单“新游戏”进入 `Demo_YanLiuTown`。
+- [ ] Demo 地图、玩家和 NPC 可见，场景切换后视口外无主菜单残影。
 - [ ] NPC 附近出现提示，K 与 E 都能开始对话。
 - [ ] 自动事件不显示交互提示；按键事件可以触发且一次性事件不会重复出现。
 - [ ] J 攻击、Shift 冲刺、数字键武学在探索状态可用。
+- [ ] ESC 显示暂停面板，再按 ESC 可继续游戏。
 - [ ] 存档后修改位置、HP/MP、背包、装备、金钱、武学和已完成任务，读档可精确恢复。
 - [ ] 读档不追加初始物资、不覆盖出生点；卸下装备后属性正确。
 - [ ] 再次加载其他场景不会重复应用旧存档。
@@ -193,3 +203,5 @@ AttackIndex Int
 - **物品 ID 找不到**：`InventoryManager` 先加载 `ItemDatabase` 代码表，再用 `Resources/Items` 下同 ID 的 SO 覆盖。
 - **读档后属性叠加**：v2 存档应保存基础属性；装备加成由背包恢复后统一重算。
 - **大量命名空间错误**：系统代码必须使用 `YuanHaiLu.GameSystem`，不要使用 `YuanHaiLu.System`。
+- **只有 HUD、没有地图**：确认 Demo 主摄像机位于 Z=-10；重新生成场景也应由生成器设置该位置。
+- **启动提示 Packages with Errors**：项目已移除未使用且停止支持的 IAP 4.15；若旧 Library 缓存仍显示，等待 Package Manager 完成刷新后重启 Unity。

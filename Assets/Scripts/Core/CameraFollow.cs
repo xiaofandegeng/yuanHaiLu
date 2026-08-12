@@ -80,11 +80,25 @@ namespace YuanHaiLu.Core
                 float halfH = _camera.orthographicSize;
                 float halfW = halfH * _camera.aspect;
 
-                smoothed.x = Mathf.Clamp(smoothed.x, minBounds.x + halfW, maxBounds.x - halfW);
-                smoothed.y = Mathf.Clamp(smoothed.y, minBounds.y + halfH, maxBounds.y - halfH);
+                smoothed.x = ClampToBounds(smoothed.x, minBounds.x, maxBounds.x, halfW);
+                smoothed.y = ClampToBounds(smoothed.y, minBounds.y, maxBounds.y, halfH);
             }
 
             transform.position = smoothed;
+        }
+
+        private static float ClampToBounds(float value, float min, float max, float halfViewSize)
+        {
+            // (0,0)–(0,0) 是未配置状态；此时不应把摄像机推到视野半径之外。
+            if (max <= min) return value;
+
+            float allowedMin = min + halfViewSize;
+            float allowedMax = max - halfViewSize;
+
+            // 地图小于当前视野时固定在地图中心，避免反向 Clamp。
+            if (allowedMin > allowedMax) return (min + max) * 0.5f;
+
+            return Mathf.Clamp(value, allowedMin, allowedMax);
         }
 
         private void UpdateShake()

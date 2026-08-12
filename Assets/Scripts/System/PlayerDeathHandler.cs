@@ -16,7 +16,6 @@ namespace YuanHaiLu.GameSystem
 
         [Header("死亡设置")]
         [SerializeField] private float deathFadeDelay = 1f;
-        [SerializeField] private float respawnFadeDuration = 1f;
         [SerializeField] private int hpLostOnDeathPercent = 20; // 死亡损失气血上限百分比
         [SerializeField] private int goldLostPercent = 10;       // 死亡损失金币百分比
 

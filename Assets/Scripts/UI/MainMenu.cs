@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using YuanHaiLu.Core;
@@ -24,7 +25,7 @@ namespace YuanHaiLu.UI
             GameManager gameManager = GameManager.Instance;
             if (gameManager == null)
             {
-                gameManager = FindFirstObjectByType<GameManager>();
+                gameManager = FindAnyObjectByType<GameManager>(FindObjectsInactive.Include);
                 if (gameManager == null)
                     gameManager = new GameObject("[GameManager]").AddComponent<GameManager>();
             }
@@ -118,6 +119,8 @@ namespace YuanHaiLu.UI
                 {
                     case "Btn_新游戏":
                         Bind(button, OnNewGame);
+                        if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
+                            EventSystem.current.SetSelectedGameObject(button.gameObject);
                         break;
                     case "Btn_继续游戏":
                         Bind(button, OnContinue);

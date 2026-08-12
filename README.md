@@ -68,18 +68,19 @@ Assets/
 │   ├── UI/           HUD、主菜单、背包、任务、暂停、对话
 │   ├── Combat/       战斗计算预留
 │   └── Editor/       场景生成和项目配置工具
-├── Tests/EditMode/   Unity Test Framework 测试
+├── Tests/EditMode/   Unity Test Framework 编辑器测试
+├── Tests/PlayMode/   Unity Test Framework 运行时测试
 ├── Scenes/           MainMenu + Demo_YanLiuTown
 ├── Resources/        物品/任务设计稿及后续 SO 资源位置
 ├── Sprites/          占位精灵
 └── Art/              美术参考与瓦片资源
 ```
 
-当前运行时代码为 48 个 C# 文件、约 10,600 行；另有 5 个 EditMode 测试/工具文件。
+当前运行时代码为 48 个 C# 文件、约 10,600 行；另有 8 个测试/测试工具文件。
 
 ## 自动验证
 
-项目使用 Unity Test Framework `1.6.0`，当前有 14 个 EditMode 测试，覆盖：
+项目使用 Unity Test Framework `1.6.0`，当前有 21 个 EditMode 测试和 1 个 PlayMode 测试，覆盖：
 
 - 场景进入模式；
 - 背包/装备和资源值恢复；
@@ -87,6 +88,9 @@ Assets/
 - v2 JSON 往返和旧存档迁移；
 - 交互组件幂等接入；
 - 全局系统幂等补全。
+- 主菜单鼠标/键盘入口、像素摄像机清屏与边界；
+- Demo 摄像机位置、默认暂停面板、缺失音效去重；
+- 无 Animator Controller 时的运行时兼容。
 
 命令行运行全部测试：
 
@@ -101,6 +105,8 @@ Assets/
 ```
 
 使用 `-runTests` 时不要同时传 `-quit`，否则 Unity 可能在 Test Runner 写结果前退出。
+
+运行 PlayMode 测试时把 `-testPlatform EditMode` 改为 `-testPlatform PlayMode`，并使用不同的结果/日志文件。
 
 ## 编辑器工具
 

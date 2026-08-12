@@ -134,6 +134,7 @@ namespace YuanHaiLu.Editor
         {
             var camObj = new GameObject("Main Camera");
             camObj.tag = "MainCamera";
+            camObj.transform.position = new Vector3(0f, 0f, -10f);
 
             var cam = camObj.AddComponent<Camera>();
             cam.orthographic = true;
@@ -739,7 +740,7 @@ namespace YuanHaiLu.Editor
         private static void CreateCanvasSettings()
         {
             // 确保EventSystem存在
-            if (Object.FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
+            if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {
                 var esObj = new GameObject("[EventSystem]");
                 esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();

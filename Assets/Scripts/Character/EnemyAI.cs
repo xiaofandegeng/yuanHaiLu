@@ -60,6 +60,7 @@ namespace YuanHaiLu.Character
         private static readonly int AnimMoveX = Animator.StringToHash("MoveX");
         private static readonly int AnimMoveY = Animator.StringToHash("MoveY");
         private static readonly int AnimIsAttacking = Animator.StringToHash("IsAttacking");
+        private bool CanAnimate => _anim != null && _anim.runtimeAnimatorController != null;
 
         private void Awake()
         {
@@ -196,7 +197,7 @@ namespace YuanHaiLu.Character
                 _attackTimer = attackDuration;
                 _attackCooldownTimer = attackCooldown;
 
-                if (_anim != null) _anim.SetBool(AnimIsAttacking, true);
+                if (CanAnimate) _anim.SetBool(AnimIsAttacking, true);
 
                 // 攻击判定
                 Vector2 attackCenter = (Vector2)transform.position + _lastDirection * attackRange;
@@ -214,7 +215,7 @@ namespace YuanHaiLu.Character
             }
             else if (_attackTimer <= 0f)
             {
-                if (_anim != null) _anim.SetBool(AnimIsAttacking, false);
+                if (CanAnimate) _anim.SetBool(AnimIsAttacking, false);
             }
         }
 
@@ -226,7 +227,7 @@ namespace YuanHaiLu.Character
 
         private void UpdateAnimator()
         {
-            if (_anim == null) return;
+            if (!CanAnimate) return;
             _anim.SetFloat(AnimMoveX, _lastDirection.x);
             _anim.SetFloat(AnimMoveY, _lastDirection.y);
             _anim.SetFloat(AnimSpeed, _rb.linearVelocity.sqrMagnitude > 0.01f ? 1f : 0f);
