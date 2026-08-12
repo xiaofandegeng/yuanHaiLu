@@ -133,6 +133,7 @@ namespace YuanHaiLu.GameSystem
 
         // === 物品数据库 ===
         private Dictionary<string, ItemData> _itemDatabase = new Dictionary<string, ItemData>();
+        private int _initialGold;
 
         public int Gold => gold;
         public int MaxSlots => maxSlots;
@@ -146,12 +147,10 @@ namespace YuanHaiLu.GameSystem
                 return;
             }
             Instance = this;
+            _initialGold = gold;
 
             // 初始化槽位
-            for (int i = 0; i < maxSlots; i++)
-            {
-                slots.Add(new InventorySlot());
-            }
+            EnsureSlotCount();
 
             // 加载物品数据库
             LoadItemDatabase();
@@ -162,6 +161,12 @@ namespace YuanHaiLu.GameSystem
         /// </summary>
         private void LoadItemDatabase()
         {
+            _itemDatabase.Clear();
+
+            // Demo 代码数据库是默认数据源，正式 Resources 资源可覆盖同 ID。
+            foreach (var pair in ItemDatabase.AllItems)
+                _itemDatabase[pair.Key] = pair.Value;
+
             ItemData[] items = Resources.LoadAll<ItemData>("Items");
             foreach (var item in items)
             {
@@ -353,7 +358,7 @@ namespace YuanHaiLu.GameSystem
             OnInventoryChanged?.Invoke();
         }
 
-        private void ApplyEquipmentStats()
+        private void ApplyEquipmentStats(bool adjustCurrentResources = true)
         {
             var player = GameObject.FindGameObjectWithTag("Player");
             if (player == null) return;
@@ -374,7 +379,7 @@ namespace YuanHaiLu.GameSystem
                 mp += item.bonusMaxMp;
             }
 
-            stats.SetEquipmentBonus(atk, def, agi, hp, mp);
+            stats.SetEquipmentBonus(atk, def, agi, hp, mp, adjustCurrentResources);
         }
 
         // === 学习武学 ===
@@ -482,17 +487,81 @@ namespace YuanHaiLu.GameSystem
 
         public void LoadSaveData(InventorySaveData data)
         {
-            for (int i = 0; i < maxSlots && i < data.slotItemIds.Length; i++)
+            if (data == null) return;
+
+            ResetSlots();
+
+            int itemIdCount = data.slotItemIds?.Length ?? 0;
+            int amountCount = data.slotAmounts?.Length ?? 0;
+            int savedSlotCount = Mathf.Min(maxSlots, Mathf.Min(itemIdCount, amountCount));
+
+            for (int i = 0; i < savedSlotCount; i++)
             {
-                slots[i].itemId = data.slotItemIds[i];
-                slots[i].amount = data.slotAmounts[i];
-                slots[i].itemData = GetItemData(data.slotItemIds[i]);
+                string itemId = data.slotItemIds[i];
+                int amount = data.slotAmounts[i];
+                if (string.IsNullOrEmpty(itemId) || amount <= 0) continue;
+
+                ItemData itemData = GetItemData(itemId);
+                if (itemData == null)
+                {
+                    Debug.LogWarning($"[Inventory] 存档中的物品不存在，已跳过: {itemId}");
+                    continue;
+                }
+
+                slots[i].itemId = itemId;
+                slots[i].amount = amount;
+                slots[i].itemData = itemData;
             }
-            equippedWeaponId = data.equippedWeapon;
-            equippedArmorId = data.equippedArmor;
-            equippedAccessoryId = data.equippedAccessory;
+
+            equippedWeaponId = NormalizeEquipmentId(data.equippedWeapon);
+            equippedArmorId = NormalizeEquipmentId(data.equippedArmor);
+            equippedAccessoryId = NormalizeEquipmentId(data.equippedAccessory);
             gold = data.gold;
+
+            ApplyEquipmentStats(false);
+            OnGoldChanged?.Invoke(gold);
             OnInventoryChanged?.Invoke();
+        }
+
+        public void ResetForNewGame()
+        {
+            ResetSlots();
+            equippedWeaponId = "";
+            equippedArmorId = "";
+            equippedAccessoryId = "";
+            gold = _initialGold;
+
+            ApplyEquipmentStats(false);
+            OnGoldChanged?.Invoke(gold);
+            OnInventoryChanged?.Invoke();
+        }
+
+        private void EnsureSlotCount()
+        {
+            if (slots == null)
+                slots = new List<InventorySlot>();
+
+            while (slots.Count < maxSlots)
+                slots.Add(new InventorySlot());
+
+            if (slots.Count > maxSlots)
+                slots.RemoveRange(maxSlots, slots.Count - maxSlots);
+        }
+
+        private void ResetSlots()
+        {
+            slots = new List<InventorySlot>(maxSlots);
+            for (int i = 0; i < maxSlots; i++)
+                slots.Add(new InventorySlot());
+        }
+
+        private string NormalizeEquipmentId(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId)) return "";
+            if (GetItemData(itemId) != null) return itemId;
+
+            Debug.LogWarning($"[Inventory] 存档中的装备不存在，已跳过: {itemId}");
+            return "";
         }
     }
 }
