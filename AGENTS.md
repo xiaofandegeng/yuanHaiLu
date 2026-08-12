@@ -1,243 +1,293 @@
-# AGENTS.md — 渊海录 项目交接与记忆
+# AGENTS.md — 渊海录项目交接与记忆
 
-> 本文件是接手本项目（开发者或 AI 助手）的**首选入口**。读完这一篇即可快速进入工作状态。
+> 本文件是接手本项目（开发者或 AI 助手）的首选入口。长期事实以本文件为准。
 > 最后更新：2026-08-12
-
----
 
 ## 0. 30 秒速览
 
 | 项 | 内容 |
 |----|------|
-| **项目** | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
-| **引擎** | Unity `6000.4.10f1`（2D 模板，**不是** URP） |
-| **平台** | macOS Apple Silicon（可扩 PC/WebGL/移动） |
-| **代码规模** | 44 个 C# 脚本 ≈ 10000 行 |
-| **状态** | Demo 可运行（烟柳镇场景）；框架完整，内容待填充 |
-| **版本控制** | Git（分支 `main`），`.gitignore` 已配置 |
-| **测试** | ⚠️ **无自动化测试套件**，只能手动在 Unity 中 Play 验证 |
-| **设计文档** | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`README.md`、`SETUP_GUIDE.md` |
-
----
+| 项目 | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
+| 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
+| 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
+| 代码规模 | 48 个运行时/编辑器 C# 文件，约 10,600 行；另有 5 个测试文件 |
+| 状态 | 烟柳镇 Demo 可运行；核心框架完整，内容和动画待填充 |
+| 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
+| 测试 | Unity Test Framework `1.6.0`；11 个 EditMode 测试 |
+| 设计文档 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/superpowers/specs/`、`README.md`、`SETUP_GUIDE.md` |
 
 ## 1. 如何运行
 
 ### 1.1 首次打开
-1. Unity Hub → Open → 选择本目录。
-2. 首次打开会触发导入与编译（1–3 分钟，生成 `Library/`）。
-3. 若 Console 出现编译错误，先确认用的是 `6000.4.10f1`。
 
-### 1.2 生成/重置场景
-场景由编辑器工具**程序化生成**，不在 Git 里维护"手工摆放"。如需重建：
+1. Unity Hub → Open → 选择本仓库根目录。
+2. 使用 Unity `6000.4.10f1`，等待首次导入和编译。
+3. Console 不应存在 C# 编译错误。
+
+### 1.2 场景
+
+场景可由编辑器工具程序化重建：
+
+```text
+Tools → 渊海录 → 生成主菜单场景
+Tools → 渊海录 → 生成Demo场景
 ```
-菜单栏 → Tools → 渊海录 → 生成主菜单场景
-菜单栏 → Tools → 渊海录 → 生成Demo场景
+
+对应实现：`Assets/Scripts/Editor/MainMenuSceneGenerator.cs` 与 `DemoSceneGenerator.cs`。
+
+Build Profiles / Build Settings 应包含：
+
+```text
+0  Assets/Scenes/MainMenu.unity
+1  Assets/Scenes/Demo_YanLiuTown.unity
 ```
-（实现：`Assets/Scripts/Editor/DemoSceneGenerator.cs` / `MainMenuSceneGenerator.cs`）
 
-### 1.3 运行
-- 双击 `Assets/Scenes/Demo_YanLiuTown.unity` → 按 **Play**。
+可从主菜单运行，也可直接打开 Demo；直接运行 Demo 默认按新游戏初始化。
 
-### 1.4 ⚠️ 关键操作守则
-- **修改 `ProjectSettings/` 下的 `.asset`（InputManager / TagManager 等）后，必须重启 Unity 编辑器**，改动才会被重新加载。
-- 精灵导入设置可用 `Tools → 渊海录 → 配置所有精灵为像素模式` 批量处理。
+### 1.3 关键操作守则
 
-### 1.5 操作键
+- 修改 `ProjectSettings/*.asset` 后必须重启 Unity，尤其是 InputManager 和 TagManager。
+- `.meta` 必须与 Unity 资源一起提交；不要提交 `Library/`、`Temp/`、日志、`.csproj`、`.sln`。
+- 精灵可用 `Tools → 渊海录 → 配置所有精灵为像素模式` 批量处理。
+
+### 1.4 操作键
+
 | 按键 | 功能 |
 |------|------|
 | WASD / 方向键 | 移动 |
-| **J** | 攻击（3 连击，可暴击） |
-| **Left Shift** | 冲刺 |
-| 数字键 **1–4** | 释放已装备武学（需先学会） |
-| Space / Enter | 对话推进；数字键 1–9 选对话分支 |
-| ESC | 暂停菜单 |
-| Tab / Q | 背包 / 任务日志（UI 已建） |
+| J | 攻击（3 连击，可暴击） |
+| K / E | 最近目标交互 |
+| Left Shift | 冲刺 |
+| 数字键 1–4 | 已装备武学 |
+| Space / Enter | 推进对话 |
+| 数字键 1–9 | 对话分支 |
+| Tab / Q | 背包 / 任务日志 |
+| ESC | 暂停 |
 
-> 输入轴定义在 `ProjectSettings/InputManager.asset`：`Horizontal/Vertical/Attack(J)/Dash(Shift)/Jump/Submit/Cancel`。**无 `Interact` 轴**（见 §5 已知问题）。
-
----
+Legacy Input Manager 中 `Interact` 只有一个轴：K 主键、E 备用键。
 
 ## 2. 架构总览
 
 ### 2.1 命名空间分层
-```
-YuanHaiLu.Core          核心层（无依赖）
-  ├─ GameConfig         全局常量（分辨率/速度/战斗/图层/排序层/标签名）
-  ├─ GameManager        单例 + 游戏状态机（DontDestroyOnLoad）
-  ├─ PixelPerfectCamera 像素完美渲染
-  ├─ CameraFollow       摄像机跟随 + 震屏
-  └─ SceneBootstrapper  场景引导（运行时校正图层/摄像机）
 
-YuanHaiLu.Character     角色（依赖 Core/Effects）
-  ├─ PlayerController   8 方向移动 + 冲刺 + Y 轴排序
-  ├─ PlayerCombat       连击/暴击/剑气判定（动画事件驱动判定帧）
-  ├─ CharacterStats     属性系统（基础值+装备加成分离，HP/MP/Stamina，升级）
-  ├─ EnemyAI            5 状态机：Idle/Patrol/Chase/Attack/Return
-  ├─ NPCBase            NPC 基类
-  ├─ MartialArtsSystem  武学系统（学习/装备/冷却/6 种招式执行）★武侠核心
-  ├─ MartialSkill       武学数据 ScriptableObject（+ Projectile 飞行物）
-  ├─ LevelSystem        等级成长
-  └─ CharacterAudio     角色音效
+```text
+YuanHaiLu.Core
+  GameConfig / GameManager / SceneBootstrapper / CameraFollow / PixelPerfectCamera
 
-YuanHaiLu.Effects       特效池（剑气轨迹/伤害数字/屏闪/命中火花）
+YuanHaiLu.Character
+  PlayerController / PlayerCombat / PlayerInteraction / CharacterStats
+  EnemyAI / NPCBase / MartialArtsSystem / MartialSkill / LevelSystem / CharacterAudio
 
-YuanHaiLu.Map           地图（TileMapManager/AreaTrigger/TeleportPoint/Destructible/ItemPickup/EventTrigger/SceneDirector）
+YuanHaiLu.Effects
+  EffectsManager（特效池、命中火花、伤害数字、剑气、屏闪）
 
-YuanHaiLu.Dialogue      DialogueManager（打字机+分支选择+条件+动作脚本）
+YuanHaiLu.Map
+  TileMapManager / AreaTrigger / TeleportPoint / Destructible
+  ItemPickup / EventTrigger / SceneDirector
 
-YuanHaiLu.GameSystem    系统层（依赖 Character/Core）
-  ├─ InventoryManager   背包/装备/金钱（+ ItemData SO 定义）
-  ├─ ItemDatabase       代码预置物品表（Demo 用，无需 SO 文件）
-  ├─ QuestManager       任务（+ QuestData SO / ActiveQuest / 多目标）
-  ├─ SaveManager        存档（PlayerPrefs + JSON）
-  ├─ MartialSkillDatabase 代码预置 11 个武学招式表
-  ├─ ShopManager / LootTable / AudioManager / GameTimeManager（昼夜）
-  ├─ ScreenTransition   屏幕转场
-  └─ PlayerDeathHandler 玩家死亡处理
+YuanHaiLu.Dialogue
+  DialogueManager（打字机、条件、动作、分支）
 
-YuanHaiLu.UI            HUD / MainMenu / InventoryUI / QuestUI / PauseMenu / DialogueUI
+YuanHaiLu.GameSystem
+  GlobalSystemsBootstrapper / SaveManager / InventoryManager / ItemDatabase
+  QuestManager / MartialSkillDatabase / ShopManager / LootTable
+  AudioManager / GameTimeManager / ScreenTransition / PlayerDeathHandler
 
-YuanHaiLu.Editor        编辑器工具（DemoSceneGenerator / MainMenuSceneGenerator / PixelArtImporter / ProjectInitializer / SetupBuildSettings）
+YuanHaiLu.UI
+  HUD / MainMenu / InventoryUI / QuestUI / PauseMenu / DialogueUI
 
-YuanHaiLu.Combat        仅 DamageCalculator（预留）
+YuanHaiLu.Editor
+  DemoSceneGenerator / MainMenuSceneGenerator / PixelArtImporter
+  ProjectInitializer / SetupBuildSettings
+
+YuanHaiLu.Combat
+  DamageCalculator（预留）
 ```
 
-### 2.2 核心设计模式
-- **单例管理器**：`GameManager` / `InventoryManager` / `QuestManager` / `DialogueManager` / `EffectsManager` / `AudioManager` 均 `Instance` + `DontDestroyOnLoad`。
-- **状态机**：`GameManager` 八态（Boot/MainMenu/Exploration/Dialogue/Combat/Menu/Cutscene/Paused），`CanPlayerMove()`/`CanPlayerAct()` 控制输入门；`EnemyAI` 五态。
-- **事件驱动**：大量 `event System.Action` 解耦（`OnHpChanged`、`OnQuestCompleted`、`OnDialogueEnd`、`OnSkillUsed` 等）。新增功能优先订阅事件，而非轮询。
-- **程序化场景生成**：`DemoSceneGenerator` 一键造出完整可玩场景（玩家/NPC/敌人/木箱/HUD/对话/暂停），是快速迭代的基础设施。
-- **动画事件驱动战斗判定**：`PlayerCombat.OnAttackHitFrame()` 由 Animator 的事件帧回调，而非定时器。
+### 2.2 核心模式
 
-### 2.3 数据流向（典型）
+- `GameManager` 同时维护游戏状态和场景进入模式。
+- `SceneEntryMode` 区分 `NewGame`、`LoadGame`、`SceneTransition`、`Active`；只有新游戏允许 `SceneDirector` 发放初始属性/武学/物资。
+- `GlobalSystemsBootstrapper` 是主菜单和游戏场景共用的管理器补全入口，确保 Save/Inventory/Quest/GameTime/Dialogue 各一个。
+- 管理器通过 `Instance` 和 `DontDestroyOnLoad` 跨场景；新增管理器应接入统一 Bootstrapper，不要在入口场景复制一套逻辑。
+- 系统通过 `event System.Action` 解耦，例如 HP、任务、对话、技能等事件。
+- 战斗判定帧由 Animator 事件调用 `PlayerCombat.OnAttackHitFrame()`。
+- `PlayerInteraction` 扫描最近的 `IInteractable`，受 `GameManager.CanPlayerAct()` 控制。
+
+### 2.3 典型存档恢复顺序
+
+```text
+LoadGame 读取并校验 JSON
+  → 设置 SceneEntryMode.LoadGame
+  → 注册具名 sceneLoaded 回调后加载场景
+  → 回调先解除订阅
+  → 恢复身份/等级/基础属性/HP/MP/位置
+  → 恢复背包/装备/金钱并重算派生属性
+  → 恢复武学和装备槽
+  → 恢复已完成任务
+  → 状态切到 Exploration
+  → SceneEntryMode.Active
 ```
-玩家按 J → PlayerCombat.HandleAttackInput()
-  → 动画事件 OnAttackHitFrame() → OverlapBox 检测敌人
-  → CharacterStats.TakeDamage() → OnHpChanged/OnDamaged 事件
-  → HUD 更新血条；EffectsManager 弹伤害数字；CameraFollow 震屏
-  → HP≤0 → OnDeath → 禁用碰撞/输入
-```
 
----
+`SaveData.saveVersion == 2` 保存基础属性，避免把装备加成重复当作基础值；旧/过渡存档有迁移路径。
 
-## 3. 关键约定（改动前必读）
+## 3. 关键约定
 
-### 3.1 像素规格（`GameConfig`）
-- 内部分辨率 `480×270`，`PPU=16`，瓦片 `16×16`，角色 `48×48`。
-- 精灵导入：Filter Mode = Point，Compression = None，无抗锯齿。
+### 3.1 像素规格
 
-### 3.2 SortingLayer（渲染层，从后到前）
-**必须与代码常量 `GameConfig.SORTING_*` 一致：**
-```
+- 内部分辨率 `480×270`，PPU `16`。
+- 瓦片 `16×16`，角色帧 `48×48`。
+- Filter Mode = Point，Compression = None，无抗锯齿，VSync = Don't Sync。
+
+### 3.2 Sorting Layer
+
+必须与 `GameConfig.SORTING_*` 一致：
+
+```text
 Ground → Environment → Character → Foreground → UI
 ```
-定义在 `ProjectSettings/TagManager.asset`。代码运行时按名字引用，名字写错会静默落到默认层。
 
 ### 3.3 物理 Layer
+
+```text
+6: Player
+7: Enemy
+8: NPC
+9: Environment
 ```
-6:Player  7:Enemy  8:NPC  9:Environment
+
+没有 `Interactable` 物理层；交互依赖接口过滤。
+
+### 3.4 脚本与数据位置
+
+| 类型 | 位置/命名空间 |
+|------|---------------|
+| 运行时脚本 | `Assets/Scripts/<子系统>/` / `YuanHaiLu.<子系统>` |
+| 系统脚本 | `Assets/Scripts/System/` / `YuanHaiLu.GameSystem` |
+| 编辑器工具 | `Assets/Scripts/Editor/` / `YuanHaiLu.Editor` |
+| 测试 | `Assets/Tests/EditMode/` / `YuanHaiLu.Tests.EditMode` |
+| 数据 SO | 定义在 System；实例放 `Assets/Resources/Items|Quests/` |
+
+系统命名空间禁止使用 `YuanHaiLu.System`，它会与 .NET `System` 冲突。
+
+### 3.5 物品和装备
+
+- `InventoryManager` 先加载 `ItemDatabase.AllItems` 代码表。
+- `Resources/Items` 下同 ID 的 ScriptableObject 会覆盖代码表，便于逐步内容化。
+- 普通装备允许按上限增量调整当前资源；读档装备重算使用 `adjustCurrentResources=false`，只 clamp，不治疗。
+- `LoadSaveData` 是替换式恢复：先清空槽位，再载入有效共同长度，未知 ID 跳过并警告。
+
+## 4. 开发与测试流程
+
+1. 修改代码和对应测试。
+2. 运行相关 EditMode 测试。
+3. 切回 Unity 触发编译，检查 Console。
+4. 涉及场景或输入时重启 Unity 后 Play 验证。
+5. 更新本文件或 `docs/` 中的长期事实。
+6. 提交前运行全量测试、批处理编译和 `git diff --check`。
+
+全部 EditMode 测试命令：
+
+```bash
+/Applications/Unity/Hub/Editor/6000.4.10f1/Unity.app/Contents/MacOS/Unity \
+  -batchmode \
+  -projectPath /absolute/path/to/yuanHaiLu \
+  -runTests \
+  -testPlatform EditMode \
+  -testResults /tmp/yuanHaiLu-editmode.xml \
+  -logFile /tmp/yuanHaiLu-editmode.log
 ```
-`LayerMask.GetMask("Enemy")` 等依赖这些。在 `ProjectSettings/TagManager.asset` 的 `layers:` 段。
 
-### 3.4 新增脚本的位置
-| 功能类型 | 目录 |
-|---------|------|
-| 运行时脚本 | `Assets/Scripts/<子系统>/`，命名空间 `YuanHaiLu.<子系统>` |
-| 编辑器工具 | `Assets/Scripts/Editor/`，命名空间 `YuanHaiLu.Editor` |
-| 数据 SO | `Assets/Scripts/System/`（定义），`Assets/Resources/Items|Quests/`（实例） |
+`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前测试覆盖场景入口、存档迁移/往返、背包装备、武学任务、交互幂等和全局系统补全。
 
-> ⚠️ 系统（System）脚本统一用命名空间 **`YuanHaiLu.GameSystem`**（不要用 `YuanHaiLu.System`，会与 .NET 的 `System` 冲突，曾导致 345 个编译错误）。
+## 5. 已知问题与未完成项
 
----
+### P0
 
-## 4. 开发流程
+当前没有已知的运行时阻塞 P0。新增功能后仍需在 Unity Play 中做端到端验证。
 
-1. 改代码 → 切回 Unity 触发编译 → 看 Console。
-2. 改场景 → 手动保存（Cmd+S）。
-3. 改 `ProjectSettings/*.asset` → **重启 Unity**。
-4. 验证靠 Play；重要改动后在 `docs/` 或本文件记录。
-5. 提交前：确认没把 `Library/`、日志、`.csproj` 提交（`.gitignore` 已兜底）。
+### P1 — 数据与内容
 
-### 编辑器菜单速查
-| 菜单 | 用途 |
-|------|------|
-| Tools/渊海录/生成Demo场景 | 一键造烟柳镇 |
-| Tools/渊海录/生成主菜单场景 | 一键造主菜单 |
-| Tools/渊海录/初始化项目设置 | 配置 Tags/Layers/SortingLayers |
-| Tools/渊海录/配置所有精灵为像素模式 | 批量精灵导入设置 |
-| Tools/渊海录/切分角色精灵表(48×48) | 精灵切片 |
-| Tools/渊海录/切分瓦片集(16×16) | 瓦片切片 |
+- 存档尚未包含活跃任务目标进度、敌人状态、拾取物状态、区域标志和其他世界状态。
+- `Assets/Sprites/Generated/` 和部分瓦片是程序生成的占位美术。
+- 没有正式 Animator Controller / 动画剪辑；代码虽写入参数，但当前动画不会完整播放。
+- 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
 
----
+### P2 — 增强
 
-## 5. 已知问题与未完成项（按优先级）
-
-### 🔴 P0 — 系统性缺口
-- **交互键系统缺失**：`Input.GetButtonDown("Interact")` 从未被读取，无玩家交互控制器。`NPCBase.OnInteract` / `EventTrigger.OnInteract` / `TeleportPoint.OnInteract`（`requireInteract=true` 默认）**无任何调用方** → 需手动按键的 NPC 对话/传送当前不可达。需新增 `PlayerInteraction` 组件：检测附近 `IInteractable` + 按 K 调用 `OnInteract`，并在 InputManager 加 `Interact(K)` 轴。
-- **存档系统不完整**：`SaveManager` 只存玩家属性+位置+章节。**背包/装备/任务/武学/世界标志均未存档**（`InventoryManager.GetSaveData`/`LoadSaveData` 已写但未被调用）。读档后视为"无装备"。
-
-### 🟡 P1 — 内容/打磨
-- **占位美术**：`Assets/Sprites/Generated/` 是 Python 生成的程序图（`tools/generate_sprite.py`）。需替换为真实像素精灵表。
-- **无 Animator 状态机**：玩家/敌人/NPC 的 Animator 参数（MoveX/MoveY/Speed/IsDashing/IsAttacking/AttackIndex）已在代码里 Set，但 `.controller` 资源与动画剪辑未建。当前动作靠代码逻辑，动画不播放。
-- **物品/任务仅代码预置**：`ItemDatabase`/`MartialSkillDatabase` 是代码表；`Assets/Resources/Items|Quests/` 里只有 `.md` 设计稿，无 `.asset` 实例。设计稿见 `item_database.md`/`quest_database.md`。
-- **Obsolete 字段**：`CharacterStats.learnedSkills`（`MartialSkillLegacy` 列表）已废弃、无读取方，保留仅为向后兼容，可安全删除。
-
-### 🟢 P2 — 增强
-- 天枢城等其余 5 个区域尚未开始（剧情见 `docs/02-story-design.md`）。
-- 商店 UI、武学技能树 UI、小地图、BOSS 战。
-- BGM/SFX 占位（`Assets/Audio/` 目录已建）。
-
----
+- 天枢城等后续 5 个区域未制作。
+- 商店 UI、武学技能树、小地图、BOSS 战待实现。
+- BGM/SFX 仍为空或占位。
 
 ## 6. 文件地图
 
-```
+```text
 yuanHaiLu/
 ├── Assets/
-│   ├── Scripts/                 44 个 .cs（见 §2.1 分层）
-│   ├── Scenes/                  MainMenu.unity + Demo_YanLiuTown.unity
-│   ├── Sprites/Generated/       占位像素图（待替换）
-│   ├── Resources/
-│   │   ├── Items/item_database.md       物品设计表（待做成 .asset）
-│   │   └── Quests/quest_database.md     任务设计表（待做成 .asset）
-│   ├── Prefabs/ Animations/ AnimatorControllers/ Audio/ Fonts/ Art/  （多为空/待填充）
-├── docs/                        美术风格 + 剧情大纲
-├── tools/                       Python 精灵/瓦片/地图生成脚本
-├── ProjectSettings/             ⚠️ 改动后需重启 Unity
-├── Packages/manifest.json       依赖清单（2D + 标准 module）
-├── README.md  SETUP_GUIDE.md
-├── AGENTS.md                    ← 本文件
-└── .gitignore
+│   ├── Scripts/                 48 个 .cs，约 10,600 行
+│   ├── Tests/EditMode/          11 个测试 + 测试工具
+│   ├── Scenes/                  MainMenu + Demo_YanLiuTown
+│   ├── Sprites/Generated/       占位精灵
+│   ├── Art/Tilesets/            瓦片与参考
+│   └── Resources/
+│       ├── Items/item_database.md
+│       └── Quests/quest_database.md
+├── docs/
+│   ├── 01-art-style-guide.md
+│   ├── 02-story-design.md
+│   └── superpowers/specs|plans/ 本次规格与实施计划
+├── tools/                       资源生成脚本
+├── ProjectSettings/             修改后需重启 Unity
+├── Packages/manifest.json
+├── README.md
+├── SETUP_GUIDE.md
+└── AGENTS.md                    本文件
 ```
 
----
+## 7. 修复历史（2026-08-12）
 
-## 7. 修复历史（本次会话 2026-08-12）
+### 第一批：Demo 运行阻塞
 
-### 第一批：让 Demo 能正常运行（4 项运行时阻塞）
-1. **InputManager 缺轴** → 在 `InputManager.asset` 追加 `Attack(J)` / `Dash(Left Shift)` 轴（原 18→20 轴）。
-2. **SortingLayer 名字不一致** → `TagManager.asset` 重写为 `Ground/Environment/Character/Foreground/UI`（对齐 `GameConfig.SORTING_*`）。
-3. **`CharacterStats.RestoreMp` 公式错误**（恒为满蓝）→ 改为 `Mathf.Min(currentMp + amount, maxMp)`。
-4. **远程招式飞行物无碰撞体** → `MartialArtsSystem.ExecuteRangedSkill` 为飞行物加 `CircleCollider2D{isTrigger=true, radius=0.3}`。
+1. 补 `Attack(J)`、`Dash(Left Shift)` 输入轴。
+2. SortingLayer 对齐 `Ground/Environment/Character/Foreground/UI`。
+3. 修复 `CharacterStats.RestoreMp` 恒定回满的问题。
+4. 为远程武学飞行物补触发碰撞体。
 
-### 第二批：功能完善 + 工程化（4 项）
-5. **重复 using** → 删除 `DialogueManager.cs`、`SaveManager.cs` 各一处重复引用。
-6. **武学快捷键与对话数字键冲突** → `MartialArtsSystem.Update()` 加 `CanPlayerAct()` 守卫，对话/暂停时不读技能键。
-7. **武学学习链路接通** → `InventoryManager.LearnSkill` 改为 `MartialSkillDatabase.Get` → `MartialArtsSystem.LearnSkill`（移除对废弃字段的引用）。
-8. **装备属性加成生效** → `CharacterStats` 引入"基础值+装备加成"分离（`RecomputeDerived`/`SetEquipmentBonus`/`SetBaseFromLoad`，`LevelUp` 改修基础值）；`InventoryManager.ApplyEquipmentStats` 累加三件装备加成；`SaveManager.LoadGame` 改用 `SetBaseFromLoad`。
+### 第二批：武学、装备和工程化
 
-### 工程化
-- 新增 `.gitignore`（Unity 标准，忽略 Library/Temp/Logs/csproj/sln 等，保留 .meta 与 .vscode）。
-- 清理根目录 14 个 `unity_*.log` 与 `.DS_Store`。
-- `git init`（分支 `main`）+ 初始提交。
+5. 清理重复 using。
+6. 武学快捷键增加状态守卫，避免与对话数字键冲突。
+7. 武学学习链路改接 `MartialSkillDatabase` → `MartialArtsSystem`。
+8. 属性拆分为基础值与装备加成，升级修改基础值。
+9. 建立 `.gitignore` 和 Git 仓库，清理临时日志。
 
----
+### 第三批：交互、可靠存档与启动生命周期
 
-## 8. 推送到 GitHub（待执行）
+10. 新增 `PlayerInteraction`，K/E 驱动统一 `IInteractable`；生成器、Bootstrapper、SceneDirector 三处幂等保障。
+11. 修复 NPC 使用不存在的 `Interactable` Layer；按键式 `EventTrigger` 接入接口。
+12. 背包合并代码物品库，恢复时清理残余槽位、忽略未知 ID，并正确重算装备属性。
+13. 武学和已完成任务改为 null-safe、去重、替换式恢复；新游戏可清理旧会话数据。
+14. 存档升级为 v2，保存基础属性、背包/装备/金钱、武学和已完成任务；提供旧存档迁移。
+15. 修复 `sceneLoaded` 在加载后才订阅且匿名回调不解除的问题，改为加载前注册、单次具名回调。
+16. `SceneDirector` 只在新游戏初始化，读档不再重置出生点或重复发初始物资。
+17. 新增 `GlobalSystemsBootstrapper`，修复主菜单进入 Demo 后管理器缺失；主菜单按钮运行时绑定，首场景名改为 `Demo_YanLiuTown`。
+18. 建立 EditMode 测试程序集和 11 个回归测试。
+
+## 8. 当前人工 QA 清单
+
+自动测试不能替代 Play 验证。涉及本批改动时至少检查：
+
+- 主菜单新游戏能进入 Demo。
+- K/E NPC 对话、手动事件和传送点可达。
+- 自动事件不显示交互提示，一次性事件不会再次成为目标。
+- 存档往返精确恢复位置、HP/MP、背包、装备、金钱、武学和已完成任务。
+- 读档不发初始物资、不覆盖位置；卸装后属性正确。
+- 后续场景加载不会重复应用旧存档。
+
+## 9. 推送到 GitHub（尚未执行）
 
 ```bash
-# 在 GitHub 新建空仓库 yuanHaiLu（不要勾选 README/license，避免冲突）
-git remote add origin git@github.com:<你的用户名>/yuanHaiLu.git
+git remote add origin git@github.com:<用户名>/yuanHaiLu.git
 git branch -M main
 git push -u origin main
 ```
