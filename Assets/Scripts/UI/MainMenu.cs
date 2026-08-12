@@ -4,6 +4,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using YuanHaiLu.Core;
 using YuanHaiLu.GameSystem;
+using YuanHaiLu.Art;
+using System;
+using System.Linq;
 
 namespace YuanHaiLu.UI
 {
@@ -17,8 +20,14 @@ namespace YuanHaiLu.UI
         [SerializeField] private GameObject settingsPanel;
         [SerializeField] private GameObject loadPanel;
 
+        [Header("角色选择")]
+        [SerializeField] private Image appearancePreview;
+        [SerializeField] private Text appearanceLabel;
+
         [Header("场景名")]
         [SerializeField] private string firstSceneName = "Demo_YanLiuTown";
+
+        public PlayerAppearance SelectedAppearance { get; private set; } = PlayerAppearance.Default;
 
         private void Start()
         {
@@ -32,6 +41,9 @@ namespace YuanHaiLu.UI
 
             GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
             gameManager.SetState(GameManager.GameState.MainMenu);
+            SelectedAppearance = gameManager.PlayerAppearance;
+            ResolveAppearanceUI();
+            RefreshAppearanceUI();
             BindMenuButtons();
         }
 
@@ -131,8 +143,80 @@ namespace YuanHaiLu.UI
                     case "Btn_退出":
                         Bind(button, OnQuit);
                         break;
+                    default:
+                        const string prefix = "Btn_角色_";
+                        if (button.gameObject.name.StartsWith(prefix, StringComparison.Ordinal))
+                        {
+                            string artId = button.gameObject.name.Substring(prefix.Length);
+                            BindAppearance(button, artId);
+                        }
+                        break;
                 }
             }
+        }
+
+        public void SelectAppearance(string artId)
+        {
+            if (!PlayerAppearance.TryParse(artId, out var appearance))
+                throw new ArgumentException($"Unknown formal player appearance '{artId}'.", nameof(artId));
+            var gameManager = GameManager.Instance;
+            if (gameManager == null)
+                throw new InvalidOperationException("GameManager is required to select a player appearance.");
+            gameManager.SetPlayerAppearance(appearance.ArtId);
+            SelectedAppearance = appearance;
+            ResolveAppearanceUI();
+            RefreshAppearanceUI();
+        }
+
+        private void ResolveAppearanceUI()
+        {
+            if (appearancePreview == null)
+                appearancePreview = GetComponentsInChildren<Image>(true)
+                    .FirstOrDefault(value => value.name == "CharacterPreview");
+            if (appearanceLabel == null)
+                appearanceLabel = GetComponentsInChildren<Text>(true)
+                    .FirstOrDefault(value => value.name == "CharacterSelectionLabel");
+        }
+
+        private void RefreshAppearanceUI()
+        {
+            if (appearanceLabel != null)
+                appearanceLabel.text = $"主角：{SelectedAppearance.DisplayName}";
+            if (appearancePreview != null)
+            {
+                var catalog = CharacterArtCatalog.LoadDefault();
+                if (!catalog.TryGet(SelectedAppearance.ArtId, out var entry) || entry.Prefab == null)
+                    throw new InvalidOperationException(
+                        $"Formal player preview is missing for '{SelectedAppearance.ArtId}'.");
+                var prefabRenderer = entry.Prefab.GetComponent<SpriteRenderer>();
+                if (prefabRenderer == null || prefabRenderer.sprite == null)
+                    throw new InvalidOperationException(
+                        $"Formal player prefab has no idle sprite for '{SelectedAppearance.ArtId}'.");
+                appearancePreview.sprite = prefabRenderer.sprite;
+                appearancePreview.preserveAspect = true;
+            }
+
+            const string prefix = "Btn_角色_";
+            foreach (var button in GetComponentsInChildren<Button>(true))
+            {
+                if (!button.name.StartsWith(prefix, StringComparison.Ordinal))
+                    continue;
+                bool selected = string.Equals(
+                    button.name.Substring(prefix.Length),
+                    SelectedAppearance.ArtId,
+                    StringComparison.Ordinal);
+                var colors = button.colors;
+                colors.normalColor = selected
+                    ? new Color(0.72f, 0.48f, 0.16f)
+                    : new Color(0.15f, 0.12f, 0.2f);
+                button.colors = colors;
+            }
+        }
+
+        private void BindAppearance(Button button, string artId)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => SelectAppearance(artId));
         }
 
         private static void Bind(Button button, UnityEngine.Events.UnityAction action)

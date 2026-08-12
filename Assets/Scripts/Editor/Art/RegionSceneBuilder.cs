@@ -90,36 +90,82 @@ namespace YuanHaiLu.Editor
 
             var ground = FindRole(tiles, id, layout.kind == "interior" ? "floor" : "ground", 0);
             var groundVariants = FindRoleVariants(tiles, id, layout.kind == "interior" ? "floor" : "ground");
+            var groundPositions = new List<Vector3Int>(layout.width * layout.height);
+            var groundTiles = new List<TileBase>(layout.width * layout.height);
             for (var y = 0; y < layout.height; y++)
             {
                 for (var x = 0; x < layout.width; x++)
                 {
                     var tile = groundVariants[(x * 7 + y * 11) % groundVariants.Count];
-                    maps["Ground"].SetTile(new Vector3Int(x, y, 0), tile);
+                    groundPositions.Add(new Vector3Int(x, y, 0));
+                    groundTiles.Add(tile);
                 }
             }
+            maps["Ground"].SetTiles(groundPositions.ToArray(), groundTiles.ToArray());
             if (layout.kind == "region" && TryFindRole(tiles, id, "water", 0, out var water))
             {
+                var waterPositions = new List<Vector3Int>(layout.width * 4);
+                var waterTiles = new List<TileBase>(layout.width * 4);
                 for (var y = 0; y < 4; y++)
                     for (var x = 0; x < layout.width; x++)
-                        maps["Water"].SetTile(new Vector3Int(x, y, 0), water);
+                    {
+                        waterPositions.Add(new Vector3Int(x, y, 0));
+                        waterTiles.Add(water);
+                    }
+                maps["Water"].SetTiles(waterPositions.ToArray(), waterTiles.ToArray());
             }
             if (TryFindRole(tiles, id, "road", 0, out var road))
             {
+                var roadPositions = new List<Vector3Int>();
+                var roadTiles = new List<TileBase>();
                 for (var y = 4; y < layout.height; y++)
                     for (var x = layout.width / 2 - 2; x <= layout.width / 2 + 1; x++)
-                        maps["Ground"].SetTile(new Vector3Int(x, y, 0), road);
+                    {
+                        roadPositions.Add(new Vector3Int(x, y, 0));
+                        roadTiles.Add(road);
+                    }
+                maps["Ground"].SetTiles(roadPositions.ToArray(), roadTiles.ToArray());
             }
             if (TryFindRole(tiles, id, layout.kind == "interior" ? "prop" : "decor", 0, out var decoration))
             {
+                var decorationPositions = new List<Vector3Int>(12);
+                var decorationTiles = new List<TileBase>(12);
                 for (var index = 0; index < 12; index++)
-                    maps["Lower Environment"].SetTile(
-                        new Vector3Int(2 + (index * 7) % Math.Max(3, layout.width - 4), 3 + (index * 5) % Math.Max(3, layout.height - 6), 0),
-                        decoration);
+                {
+                    decorationPositions.Add(new Vector3Int(
+                        2 + (index * 7) % Math.Max(3, layout.width - 4),
+                        3 + (index * 5) % Math.Max(3, layout.height - 6),
+                        0));
+                    decorationTiles.Add(decoration);
+                }
+                maps["Lower Environment"].SetTiles(
+                    decorationPositions.ToArray(),
+                    decorationTiles.ToArray());
             }
+
+            if (layout.kind == "interior")
+                PaintInteriorStructure(maps, tiles, id, layout.width, layout.height);
+            else
+                PaintRegionStructure(maps, tiles, id, layout.width, layout.height);
+
+            int groundCellCount = maps["Ground"].GetTilesBlock(
+                    new BoundsInt(0, 0, 0, layout.width, layout.height, 1))
+                .Count(tile => tile != null);
+            if (groundCellCount != layout.width * layout.height)
+                throw new InvalidOperationException(
+                    $"'{id}' populated {groundCellCount} of {layout.width * layout.height} ground cells.");
 
             AddLandmarks(id, layout, gridObject.transform);
             AddAnchors(layout, gridObject.transform);
+            foreach (var tilemap in maps.Values)
+            {
+                tilemap.CompressBounds();
+                tilemap.RefreshAllTiles();
+                EditorUtility.SetDirty(tilemap);
+                EditorUtility.SetDirty(tilemap.GetComponent<TilemapRenderer>());
+            }
+            EditorUtility.SetDirty(gridObject);
+            EditorUtility.SetDirty(definition);
             EditorSceneManager.MarkSceneDirty(scene);
             EnsureSceneFolder(layout.kind);
             EditorSceneManager.SaveScene(scene, ScenePath(id));
@@ -196,6 +242,107 @@ namespace YuanHaiLu.Editor
             if (values.Count == 0)
                 throw new InvalidOperationException($"'{id}' is missing required tile role '{role}'.");
             return values;
+        }
+
+        private static void PaintRegionStructure(
+            IReadOnlyDictionary<string, Tilemap> maps,
+            IReadOnlyDictionary<string, Tile> tiles,
+            string id,
+            int width,
+            int height)
+        {
+            var shore = FindRole(tiles, id, "shore", 0);
+            var shorePositions = Enumerable.Range(0, width)
+                .Select(x => new Vector3Int(x, 4, 0))
+                .ToArray();
+            maps["Lower Environment"].SetTiles(
+                shorePositions,
+                Enumerable.Repeat<TileBase>(shore, shorePositions.Length).ToArray());
+
+            var wall = FindRole(tiles, id, "wall", 0);
+            var wallAlt = FindRole(tiles, id, "wall", 1);
+            var roof = FindRole(tiles, id, "roof", 0);
+            var roofAlt = FindRole(tiles, id, "roof", 1);
+            var door = FindRole(tiles, id, "door", 0);
+            var window = FindRole(tiles, id, "window", 0);
+            PaintHouse(maps["Buildings"], 3, Math.Max(7, height - 7), wall, wallAlt, roof, roofAlt, door, window);
+            PaintHouse(maps["Buildings"], Math.Max(12, width - 10), Math.Max(7, height - 7),
+                wallAlt, wall, roofAlt, roof, door, window);
+        }
+
+        private static void PaintHouse(
+            Tilemap tilemap,
+            int left,
+            int bottom,
+            Tile wall,
+            Tile wallAlt,
+            Tile roof,
+            Tile roofAlt,
+            Tile door,
+            Tile window)
+        {
+            var positions = new List<Vector3Int>();
+            var values = new List<TileBase>();
+            for (var x = 0; x < 7; x++)
+            {
+                positions.Add(new Vector3Int(left + x, bottom + 2, 0));
+                values.Add(x % 2 == 0 ? roof : roofAlt);
+                positions.Add(new Vector3Int(left + x, bottom + 1, 0));
+                values.Add(x % 2 == 0 ? wall : wallAlt);
+                positions.Add(new Vector3Int(left + x, bottom, 0));
+                values.Add(x == 3 ? door : (x == 1 || x == 5 ? window : wall));
+            }
+            tilemap.SetTiles(positions.ToArray(), values.ToArray());
+        }
+
+        private static void PaintInteriorStructure(
+            IReadOnlyDictionary<string, Tilemap> maps,
+            IReadOnlyDictionary<string, Tile> tiles,
+            string id,
+            int width,
+            int height)
+        {
+            var walls = FindRoleVariants(tiles, id, "wall");
+            var wallPositions = new List<Vector3Int>();
+            var wallTiles = new List<TileBase>();
+            for (var x = 0; x < width; x++)
+            {
+                AddWallCell(x, 0);
+                AddWallCell(x, height - 1);
+            }
+            for (var y = 1; y < height - 1; y++)
+            {
+                AddWallCell(0, y);
+                AddWallCell(width - 1, y);
+            }
+            maps["Buildings"].SetTiles(wallPositions.ToArray(), wallTiles.ToArray());
+
+            var entry = FindRole(tiles, id, "entry", 0);
+            var exit = FindRole(tiles, id, "exit", 0);
+            maps["Buildings"].SetTiles(
+                new[]
+                {
+                    new Vector3Int(width / 2, 0, 0),
+                    new Vector3Int(width / 2, height - 1, 0)
+                },
+                new TileBase[] { entry, exit });
+
+            if (TryFindRole(tiles, id, "light", 0, out var light))
+            {
+                maps["Effects"].SetTiles(
+                    new[]
+                    {
+                        new Vector3Int(2, height - 3, 0),
+                        new Vector3Int(width - 3, height - 3, 0)
+                    },
+                    new TileBase[] { light, light });
+            }
+
+            void AddWallCell(int x, int y)
+            {
+                wallPositions.Add(new Vector3Int(x, y, 0));
+                wallTiles.Add(walls[(x * 3 + y * 5) % walls.Count]);
+            }
         }
 
         private static Tile FindRole(IReadOnlyDictionary<string, Tile> tiles, string id, string role, int variant)

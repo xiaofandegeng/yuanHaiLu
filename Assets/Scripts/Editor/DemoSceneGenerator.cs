@@ -11,6 +11,7 @@ using YuanHaiLu.Map;
 using YuanHaiLu.GameSystem;
 using YuanHaiLu.Effects;
 using YuanHaiLu.UI;
+using YuanHaiLu.Art;
 
 namespace YuanHaiLu.Editor
 {
@@ -24,19 +25,34 @@ namespace YuanHaiLu.Editor
         [MenuItem("Tools/渊海录/生成Demo场景")]
         public static void Generate()
         {
+            GenerateInternal(true);
+        }
+
+        public static void GenerateFromCommandLine()
+        {
+            GenerateInternal(false);
+            SetupBuildSettings.Setup();
+        }
+
+        private static void GenerateInternal(bool showDialog)
+        {
             Debug.Log("========================================");
             Debug.Log("  渊海录 Demo 场景生成器");
             Debug.Log("========================================");
 
-            // 创建新场景
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            // 以正式烟柳镇 Tilemap 场景为底稿，不再重画占位方块。
+            RegionSceneBuilder.Build("yanliu");
+            string scenePath = "Assets/Scenes/Demo_YanLiuTown.unity";
+            var formalScene = EditorSceneManager.OpenScene(
+                RegionSceneBuilder.ScenePath("yanliu"),
+                OpenSceneMode.Single);
+            EditorSceneManager.SaveScene(formalScene, scenePath, true);
+            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
 
             // 按顺序构建
             CreateGlobalManagers();
             CreateMainCamera();
-            CreateMapGround();
-            CreateMapWalls();
-            CreateMapDecorations();
+            CreateFormalColliders();
             CreatePlayer();
             CreateNPCs();
             CreateEnemies();
@@ -53,7 +69,6 @@ namespace YuanHaiLu.Editor
             directorObj.AddComponent<SceneDirector>();
 
             // 保存场景
-            string scenePath = "Assets/Scenes/Demo_YanLiuTown.unity";
             System.IO.Directory.CreateDirectory("Assets/Scenes");
             EditorSceneManager.SaveScene(scene, scenePath);
 
@@ -63,17 +78,14 @@ namespace YuanHaiLu.Editor
             Debug.Log($"  按 Play 即可运行！");
             Debug.Log($"========================================");
 
-            EditorUtility.DisplayDialog("Demo场景生成完成",
-                "烟柳镇 Demo 场景已生成！\n\n" +
-                "场景包含：\n" +
-                "• 玩家角色（WASD移动，J攻击，K交互）\n" +
-                "• 3个NPC（可对话）\n" +
-                "• 2组敌人（会追击攻击）\n" +
-                "• 可破坏木箱（掉落物品）\n" +
-                "• 事件触发器（北山山贼战斗）\n" +
-                "• HUD + 暂停菜单\n\n" +
-                "按 Play 运行即可体验！",
-                "太好了！");
+            if (showDialog)
+            {
+                EditorUtility.DisplayDialog("Demo场景生成完成",
+                    "正式烟柳镇 Demo 场景已生成！\n\n" +
+                    "包含正式 Tilemap、地标、主角、NPC、敌人、战斗、交互与 UI。\n" +
+                    "按 Play 运行即可体验。",
+                    "太好了！");
+            }
         }
 
         // ========== 全局管理器 ==========
@@ -134,7 +146,7 @@ namespace YuanHaiLu.Editor
         {
             var camObj = new GameObject("Main Camera");
             camObj.tag = "MainCamera";
-            camObj.transform.position = new Vector3(0f, 0f, -10f);
+            camObj.transform.position = new Vector3(20f, 12f, -10f);
 
             var cam = camObj.AddComponent<Camera>();
             cam.orthographic = true;
@@ -147,6 +159,27 @@ namespace YuanHaiLu.Editor
             camObj.AddComponent<CameraFollow>();
 
             Debug.Log("[Demo] 摄像机创建完成");
+        }
+
+        private static void CreateFormalColliders()
+        {
+            var root = new GameObject("FormalCollision");
+            root.layer = LayerMask.NameToLayer("Environment");
+            CreateInvisibleWall(root, "Boundary_West", new Vector2(-0.5f, 12f), new Vector2(1f, 25f));
+            CreateInvisibleWall(root, "Boundary_East", new Vector2(40.5f, 12f), new Vector2(1f, 25f));
+            CreateInvisibleWall(root, "Boundary_North", new Vector2(20f, 24.5f), new Vector2(42f, 1f));
+            CreateInvisibleWall(root, "RiverBank_South", new Vector2(20f, 3.5f), new Vector2(42f, 1f));
+            CreateInvisibleWall(root, "Landmark_Inn", new Vector2(8f, 12f), new Vector2(7f, 4f));
+            CreateInvisibleWall(root, "Landmark_Pharmacy", new Vector2(32f, 12f), new Vector2(7f, 4f));
+        }
+
+        private static void CreateInvisibleWall(GameObject parent, string name, Vector2 position, Vector2 size)
+        {
+            var wall = new GameObject(name);
+            wall.transform.SetParent(parent.transform);
+            wall.transform.position = position;
+            wall.layer = LayerMask.NameToLayer("Environment");
+            wall.AddComponent<BoxCollider2D>().size = size;
         }
 
         // ========== 地面 ==========
@@ -368,34 +401,9 @@ namespace YuanHaiLu.Editor
             player.tag = "Player";
             player.layer = LayerMask.NameToLayer("Player");
 
-            // 精灵（临时蓝色方块）
             var sr = player.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Character";
             sr.sortingOrder = 0;
-            sr.color = new Color(0.3f, 0.5f, 0.9f);
-
-            var tex = new Texture2D(48, 48);
-            for (int x = 0; x < 48; x++)
-                for (int y = 0; y < 48; y++)
-                {
-                    // 简易像素人物：头+身体+腿
-                    bool isHead = y > 30 && y < 44 && x > 14 && x < 34;
-                    bool isBody = y > 14 && y <= 30 && x > 10 && x < 38;
-                    bool isLegs = y > 2 && y <= 14 && x > 14 && x < 22;
-                    bool isLegs2 = y > 2 && y <= 14 && x > 26 && x < 34;
-
-                    if (isHead)
-                        tex.SetPixel(x, y, new Color(0.95f, 0.85f, 0.75f)); // 肤色
-                    else if (isBody)
-                        tex.SetPixel(x, y, new Color(0.2f, 0.3f, 0.6f));   // 蓝衣
-                    else if (isLegs || isLegs2)
-                        tex.SetPixel(x, y, new Color(0.3f, 0.25f, 0.2f));  // 裤子
-                    else
-                        tex.SetPixel(x, y, Color.clear);
-                }
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 48, 48), new Vector2(0.5f, 0f / 48f), 16);
 
             // 物理
             var rb = player.AddComponent<Rigidbody2D>();
@@ -409,6 +417,8 @@ namespace YuanHaiLu.Editor
             col.offset = new Vector2(0f, 0.6f);
 
             player.AddComponent<Animator>();
+            CharacterVisual.ApplyTo(player, PlayerAppearance.Default.ArtId);
+            player.AddComponent<PlayerAppearanceBinder>();
 
             // 组件
             player.AddComponent<PlayerController>();
@@ -431,7 +441,7 @@ namespace YuanHaiLu.Editor
             // 交互系统（K 键与 NPC/木箱/传送点交互）
             PlayerInteraction.EnsureOn(player);
 
-            player.transform.position = new Vector3(0, 0, 0);
+            player.transform.position = new Vector3(20.5f, 7.5f, 0);
 
             // 学会初始招式
             Debug.Log("[Demo] 玩家创建完成（含武学+升级系统）");
@@ -441,7 +451,7 @@ namespace YuanHaiLu.Editor
         private static void CreateNPCs()
         {
             // 客栈掌柜
-            CreateNPC("掌柜老赵", new Vector2(-6f, 2f), new Color(0.8f, 0.6f, 0.3f),
+            CreateNPC("掌柜老赵", "innkeeper_zhao", new Vector2(6.5f, 9f),
                 new string[] {
                     "客官您好！欢迎来到烟柳客栈。",
                     "最近北山上的山贼闹得厉害，商路都断了。",
@@ -450,7 +460,7 @@ namespace YuanHaiLu.Editor
                 });
 
             // 苏婉清（药铺）
-            CreateNPC("苏婉清", new Vector2(-6f, -7f), new Color(0.6f, 0.3f, 0.5f),
+            CreateNPC("苏婉清", "su_wanqing", new Vector2(30.5f, 9f),
                 new string[] {
                     "我是柳家药铺的苏婉清。",
                     "我父亲留下的这枚玉佩碎片……上面刻着奇怪的铭文。",
@@ -459,7 +469,7 @@ namespace YuanHaiLu.Editor
                 });
 
             // 钓鱼老翁
-            CreateNPC("钓鱼翁", new Vector2(10f, -5f), new Color(0.5f, 0.5f, 0.3f),
+            CreateNPC("钓鱼翁", "fishing_elder", new Vector2(34f, 5.5f),
                 new string[] {
                     "嗬……今天的鱼不太上钩啊。",
                     "年轻人，你也来钓鱼？",
@@ -470,7 +480,7 @@ namespace YuanHaiLu.Editor
             Debug.Log("[Demo] NPC创建完成");
         }
 
-        private static void CreateNPC(string name, Vector2 pos, Color color, string[] dialogue)
+        private static void CreateNPC(string name, string artId, Vector2 pos, string[] dialogue)
         {
             var npc = new GameObject($"NPC_{name}");
             npc.transform.position = pos;
@@ -479,25 +489,7 @@ namespace YuanHaiLu.Editor
 
             var sr = npc.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Character";
-            sr.color = color;
-
-            // 临时NPC精灵
-            var tex = new Texture2D(32, 32);
-            for (int x = 0; x < 32; x++)
-                for (int y = 0; y < 32; y++)
-                {
-                    bool isHead = y > 20 && y < 30 && x > 10 && x < 22;
-                    bool isBody = y > 6 && y <= 20 && x > 6 && x < 26;
-                    if (isHead)
-                        tex.SetPixel(x, y, new Color(0.95f, 0.85f, 0.75f));
-                    else if (isBody)
-                        tex.SetPixel(x, y, color);
-                    else
-                        tex.SetPixel(x, y, Color.clear);
-                }
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0f / 32f), 16);
+            CharacterVisual.ApplyTo(npc, artId);
 
             var col = npc.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
@@ -513,16 +505,16 @@ namespace YuanHaiLu.Editor
         private static void CreateEnemies()
         {
             // 第一组：镇外山贼
-            CreateEnemy("山贼甲", new Vector2(12f, 6f), 25, 6, new Color(0.6f, 0.2f, 0.2f));
-            CreateEnemy("山贼乙", new Vector2(13f, 8f), 25, 6, new Color(0.6f, 0.2f, 0.2f));
+            CreateEnemy("山贼甲", "yanliu_river_bandit", new Vector2(33f, 18f), 25, 6);
+            CreateEnemy("山贼乙", "yanliu_marsh_raider", new Vector2(35f, 20f), 25, 6);
 
             // 第二组：路匪
-            CreateEnemy("路匪", new Vector2(-12f, 6f), 35, 8, new Color(0.4f, 0.2f, 0.4f));
+            CreateEnemy("路匪", "yanliu_rebel_scout", new Vector2(6f, 19f), 35, 8);
 
             Debug.Log("[Demo] 敌人创建完成");
         }
 
-        private static void CreateEnemy(string name, Vector2 pos, int hp, int atk, Color color)
+        private static void CreateEnemy(string name, string artId, Vector2 pos, int hp, int atk)
         {
             var enemy = new GameObject($"Enemy_{name}");
             enemy.transform.position = pos;
@@ -531,24 +523,7 @@ namespace YuanHaiLu.Editor
 
             var sr = enemy.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Character";
-            sr.color = color;
-
-            var tex = new Texture2D(32, 32);
-            for (int x = 0; x < 32; x++)
-                for (int y = 0; y < 32; y++)
-                {
-                    bool isHead = y > 20 && y < 30 && x > 10 && x < 22;
-                    bool isBody = y > 6 && y <= 20 && x > 6 && x < 26;
-                    if (isHead)
-                        tex.SetPixel(x, y, new Color(0.95f, 0.85f, 0.75f));
-                    else if (isBody)
-                        tex.SetPixel(x, y, color);
-                    else
-                        tex.SetPixel(x, y, Color.clear);
-                }
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0f / 32f), 16);
+            CharacterVisual.ApplyTo(enemy, artId);
 
             var rb = enemy.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
@@ -576,9 +551,9 @@ namespace YuanHaiLu.Editor
         // ========== 可破坏物体 ==========
         private static void CreateDestructibles()
         {
-            CreateCrate(new Vector2(3f, 4f), new string[] { "herb_medicinal" });
-            CreateCrate(new Vector2(5f, 3f), new string[] { "food_mantou", "herb_spirit" });
-            CreateCrate(new Vector2(-3f, -4f), new string[] { });
+            CreateCrate(new Vector2(16f, 15f), new string[] { "herb_medicinal" });
+            CreateCrate(new Vector2(18f, 16f), new string[] { "food_mantou", "herb_spirit" });
+            CreateCrate(new Vector2(24f, 14f), new string[] { });
 
             Debug.Log("[Demo] 可破坏物体创建完成");
         }
@@ -592,20 +567,8 @@ namespace YuanHaiLu.Editor
             var sr = crate.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Environment";
             sr.sortingOrder = 2;
-            sr.color = new Color(0.7f, 0.5f, 0.2f);
-
-            var tex = new Texture2D(16, 16);
-            Color32 brown = new Color32(180, 130, 60, 255);
-            Color32 darkBrown = new Color32(120, 80, 30, 255);
-            for (int x = 0; x < 16; x++)
-                for (int y = 0; y < 16; y++)
-                {
-                    bool border = x == 0 || x == 15 || y == 0 || y == 15 || x == 7 || y == 7;
-                    tex.SetPixel(x, y, border ? darkBrown : brown);
-                }
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
+            var tiles = EnvironmentTileBuilder.LoadTiles("yanliu");
+            sr.sprite = tiles["yanliu__decor__0"].sprite;
 
             var col = crate.AddComponent<BoxCollider2D>();
             col.size = new Vector2(0.9f, 0.9f);
@@ -623,7 +586,7 @@ namespace YuanHaiLu.Editor
         {
             // 北山山贼BOSS战触发器
             var triggerObj = new GameObject("Event_BossFight");
-            triggerObj.transform.position = new Vector3(13f, 10f, 0);
+            triggerObj.transform.position = new Vector3(34f, 21f, 0);
 
             var col = triggerObj.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
@@ -637,6 +600,7 @@ namespace YuanHaiLu.Editor
                 new EventTrigger.WaveData
                 {
                     enemyName = "山贼",
+                    artId = "yanliu_river_bandit",
                     count = 3,
                     enemyHp = 20,
                     enemyAtk = 5,
@@ -645,6 +609,7 @@ namespace YuanHaiLu.Editor
                 new EventTrigger.WaveData
                 {
                     enemyName = "山贼头目",
+                    artId = "yanliu_rebel_gang_lord",
                     count = 1,
                     enemyHp = 60,
                     enemyAtk = 12,
@@ -659,14 +624,14 @@ namespace YuanHaiLu.Editor
         private static void CreateAreaExits()
         {
             // 北出口（通往北山）
-            CreateExit("Exit_North", new Vector3(0, 10f, 0), new Vector2(4f, 1f), "北山山道");
+            CreateExit("Exit_North", new Vector3(20f, 23f, 0), new Vector2(4f, 1f), "北山山道");
 
             // 南出口
-            CreateExit("Exit_South", new Vector3(0, -10f, 0), new Vector2(4f, 1f), "官道");
+            CreateExit("Exit_South", new Vector3(20f, 4.5f, 0), new Vector2(4f, 1f), "官道");
 
             // 区域入口提示（进入烟柳镇时显示地名）
             var areaEntry = new GameObject("AreaEntry_YanLiuTown");
-            areaEntry.transform.position = new Vector3(0, -8f, 0);
+            areaEntry.transform.position = new Vector3(20f, 6f, 0);
             var entryCol = areaEntry.AddComponent<BoxCollider2D>();
             entryCol.isTrigger = true;
             entryCol.size = new Vector2(20f, 2f);

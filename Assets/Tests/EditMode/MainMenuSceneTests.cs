@@ -1,9 +1,14 @@
 using System.Reflection;
+using System.Linq;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 using YuanHaiLu.GameSystem;
+using YuanHaiLu.Art;
+using YuanHaiLu.Core;
+using YuanHaiLu.Editor;
+using UnityEditor;
 
 namespace YuanHaiLu.Tests.EditMode
 {
@@ -42,6 +47,62 @@ namespace YuanHaiLu.Tests.EditMode
                 camera.transform.position.z,
                 Is.LessThanOrEqualTo(-camera.nearClipPlane),
                 "A 2D camera at z=0 clips every world sprite placed on z=0.");
+        }
+
+        [Test]
+        public void MainMenuContainsTwelveFormalAppearanceChoicesAndPreview()
+        {
+            EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity", OpenSceneMode.Single);
+
+            var appearanceButtons = Object.FindObjectsByType<Button>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(button => button.name.StartsWith("Btn_角色_"))
+                .ToArray();
+
+            Assert.That(appearanceButtons, Has.Length.EqualTo(12));
+            var preview = GameObject.Find("CharacterPreview")?.GetComponent<Image>();
+            Assert.That(preview, Is.Not.Null);
+            Assert.That(preview.sprite, Is.Not.Null);
+            Assert.That(AssetDatabase.Contains(preview.sprite), Is.True);
+            Assert.That(GameObject.Find("CharacterSelectionLabel")?.GetComponent<Text>(), Is.Not.Null);
+        }
+
+        [Test]
+        public void DemoUsesFormalYanliuSceneAndFormalCharacterBindings()
+        {
+            EditorSceneManager.OpenScene("Assets/Scenes/Demo_YanLiuTown.unity", OpenSceneMode.Single);
+
+            var definition = Object.FindAnyObjectByType<RegionSceneDefinition>();
+            Assert.That(definition, Is.Not.Null);
+            Assert.That(definition.SceneId, Is.EqualTo("yanliu"));
+
+            var player = GameObject.FindGameObjectWithTag("Player");
+            Assert.That(player, Is.Not.Null);
+            Assert.That(player.GetComponent<CharacterVisual>()?.ArtId,
+                Is.EqualTo(PlayerAppearance.Default.ArtId));
+
+            var visuals = Object.FindObjectsByType<CharacterVisual>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            Assert.That(visuals, Has.Length.GreaterThanOrEqualTo(7));
+            Assert.That(visuals.All(value => AssetDatabase.Contains(
+                value.GetComponent<SpriteRenderer>().sprite)), Is.True);
+        }
+
+        [Test]
+        public void BuildSettingsContainsMenuDemoAndAllTwentyThreeFormalScenes()
+        {
+            SetupBuildSettings.Setup();
+            var scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).ToArray();
+
+            Assert.That(scenes, Has.Length.EqualTo(25));
+            Assert.That(scenes[0].path, Is.EqualTo("Assets/Scenes/MainMenu.unity"));
+            Assert.That(scenes[1].path, Is.EqualTo("Assets/Scenes/Demo_YanLiuTown.unity"));
+            Assert.That(scenes.Count(scene => scene.path.StartsWith("Assets/Scenes/Regions/")),
+                Is.EqualTo(10));
+            Assert.That(scenes.Count(scene => scene.path.StartsWith("Assets/Scenes/Interiors/")),
+                Is.EqualTo(13));
         }
     }
 }

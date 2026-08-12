@@ -3,6 +3,7 @@ using YuanHaiLu.Core;
 using System;
 using YuanHaiLu.Character;
 using UnityEngine.SceneManagement;
+using YuanHaiLu.Art;
 
 namespace YuanHaiLu.GameSystem
 {
@@ -17,7 +18,9 @@ namespace YuanHaiLu.GameSystem
         private const string SAVE_KEY = "YuanHaiLu_SaveSlot_";
         private const string AUTO_SAVE_KEY = "YuanHaiLu_AutoSave";
         private const int BASE_STATS_SAVE_VERSION = 2;
-        private const int CURRENT_SAVE_VERSION = 3;
+        private const int QUEST_SAVE_VERSION = 3;
+        private const int APPEARANCE_SAVE_VERSION = 4;
+        private const int CURRENT_SAVE_VERSION = 4;
 
         private SaveData _pendingLoadData;
 
@@ -48,6 +51,8 @@ namespace YuanHaiLu.GameSystem
 
             // 玩家
             public string playerName;
+            // v4 起保存 12 套正式主角外观的稳定资源 ID。
+            public string playerArtId;
             public int level;
             public int exp;
             public int currentHp;
@@ -117,6 +122,7 @@ namespace YuanHaiLu.GameSystem
 
                 // 基本信息
                 playerName = GameManager.Instance.playerName,
+                playerArtId = GameManager.Instance.PlayerArtId,
                 level = stats.level,
                 exp = stats.exp,
                 currentHp = stats.currentHp,
@@ -244,6 +250,9 @@ namespace YuanHaiLu.GameSystem
             var gameManager = GameManager.Instance;
             var player = GameObject.FindGameObjectWithTag("Player");
             CharacterStats stats = null;
+            string playerArtId = ResolvePlayerArtId(saveData);
+
+            gameManager?.SetPlayerAppearance(playerArtId);
 
             if (player == null)
             {
@@ -252,6 +261,7 @@ namespace YuanHaiLu.GameSystem
             else
             {
                 player.transform.position = new Vector2(saveData.positionX, saveData.positionY);
+                CharacterVisual.ApplyTo(player, playerArtId);
 
                 stats = player.GetComponent<CharacterStats>();
                 if (stats == null)
@@ -300,7 +310,7 @@ namespace YuanHaiLu.GameSystem
 
             if (QuestManager.Instance != null)
             {
-                if (saveData.saveVersion >= CURRENT_SAVE_VERSION && saveData.quests != null)
+                if (saveData.saveVersion >= QUEST_SAVE_VERSION && saveData.quests != null)
                     QuestManager.Instance.LoadSaveData(saveData.quests);
                 else
                     QuestManager.Instance.LoadCompletedQuests(saveData.completedQuests);
@@ -368,6 +378,17 @@ namespace YuanHaiLu.GameSystem
 
             baseMaxHp = Mathf.Max(1, baseMaxHp);
             baseMaxMp = Mathf.Max(0, baseMaxMp);
+        }
+
+        internal static string ResolvePlayerArtId(SaveData saveData)
+        {
+            if (saveData != null &&
+                saveData.saveVersion >= APPEARANCE_SAVE_VERSION &&
+                PlayerAppearance.TryParse(saveData.playerArtId, out var appearance))
+            {
+                return appearance.ArtId;
+            }
+            return PlayerAppearance.Default.ArtId;
         }
 
         /// <summary>
