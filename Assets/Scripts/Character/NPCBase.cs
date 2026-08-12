@@ -1,4 +1,5 @@
 using UnityEngine;
+using YuanHaiLu.GameSystem;
 
 namespace YuanHaiLu.Character
 {
@@ -113,6 +114,10 @@ namespace YuanHaiLu.Character
         public virtual void OnInteract(GameObject player)
         {
             if (!interactable) return;
+
+            QuestGiver questGiver = GetComponent<QuestGiver>();
+            if (questGiver != null && questGiver.TryHandleInteraction(player))
+                return;
 
             string[] dialogue = GetCurrentDialogue();
             if (dialogue == null || dialogue.Length == 0)
