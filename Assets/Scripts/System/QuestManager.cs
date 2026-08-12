@@ -79,8 +79,21 @@ namespace YuanHaiLu.GameSystem
             CraftItem       // 制作物品
         }
 
-        public float Progress => (float)currentAmount / requiredAmount;
+        public float Progress => (float)currentAmount / Mathf.Max(1, requiredAmount);
         public string ProgressText => $"{currentAmount}/{requiredAmount}";
+
+        public QuestObjective CloneForRuntime()
+        {
+            return new QuestObjective
+            {
+                type = type,
+                targetId = targetId,
+                targetName = targetName,
+                requiredAmount = Mathf.Max(1, requiredAmount),
+                currentAmount = Mathf.Max(0, currentAmount),
+                completed = completed
+            };
+        }
     }
 
     /// <summary>
@@ -91,6 +104,7 @@ namespace YuanHaiLu.GameSystem
         public QuestData data;
         public QuestState state;
         public System.DateTime acceptTime;
+        public QuestObjective[] Objectives { get; }
 
         public enum QuestState
         {
@@ -106,11 +120,19 @@ namespace YuanHaiLu.GameSystem
             data = questData;
             state = QuestState.Active;
             acceptTime = System.DateTime.Now;
+            QuestObjective[] templates = questData?.objectives ?? Array.Empty<QuestObjective>();
+            Objectives = new QuestObjective[templates.Length];
+            for (int i = 0; i < templates.Length; i++)
+            {
+                Objectives[i] = templates[i]?.CloneForRuntime() ?? new QuestObjective();
+            }
+
+            CheckCompletion();
         }
 
         public bool AllObjectivesComplete()
         {
-            foreach (var obj in data.objectives)
+            foreach (var obj in Objectives)
             {
                 if (!obj.completed) return false;
             }
@@ -163,7 +185,7 @@ namespace YuanHaiLu.GameSystem
         // === 接取任务 ===
         public bool AcceptQuest(QuestData quest)
         {
-            if (quest == null) return false;
+            if (quest == null || string.IsNullOrEmpty(quest.questId)) return false;
 
             // 检查是否已完成
             if (completedQuestIds.Contains(quest.questId))
@@ -209,9 +231,23 @@ namespace YuanHaiLu.GameSystem
         /// </summary>
         public bool AcceptQuestById(string questId)
         {
-            // 尝试从预置任务模板中查找
-            var questData = new QuestData { questId = questId, questName = questId };
+            QuestData questData = QuestDatabase.Get(questId);
+            if (questData == null)
+            {
+                Debug.LogWarning($"[Quest] 任务模板不存在: {questId}");
+                return false;
+            }
+
             return AcceptQuest(questData);
+        }
+
+        public bool CanAcceptQuestById(string questId)
+        {
+            QuestData quest = QuestDatabase.Get(questId);
+            if (quest == null || completedQuestIds.Contains(questId)) return false;
+            if (activeQuests.Exists(active => active.data?.questId == questId)) return false;
+            if (activeQuests.Count >= maxActiveQuests) return false;
+            return CheckPrerequisites(quest);
         }
 
         // === 更新目标进度 ===
@@ -221,7 +257,7 @@ namespace YuanHaiLu.GameSystem
             {
                 if (quest.state != ActiveQuest.QuestState.Active) continue;
 
-                foreach (var obj in quest.data.objectives)
+                foreach (var obj in quest.Objectives)
                 {
                     if (obj.type == type && obj.targetId == targetId && !obj.completed)
                     {
@@ -350,12 +386,12 @@ namespace YuanHaiLu.GameSystem
         // === 查询 ===
         public ActiveQuest GetActiveQuest(string questId)
         {
-            return activeQuests.Find(q => q.data.questId == questId);
+            return activeQuests.Find(q => q.data?.questId == questId);
         }
 
         public bool IsQuestActive(string questId)
         {
-            return activeQuests.Exists(q => q.data.questId == questId);
+            return activeQuests.Exists(q => q.data?.questId == questId);
         }
 
         public bool IsQuestCompleted(string questId)

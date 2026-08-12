@@ -197,9 +197,9 @@ namespace YuanHaiLu.UI
                 Destroy(child.gameObject);
             }
 
-            if (quest.data.objectives == null) return;
+            if (quest.Objectives == null) return;
 
-            foreach (var obj in quest.data.objectives)
+            foreach (var obj in quest.Objectives)
             {
                 GameObject objEntry = objectiveEntryPrefab != null
                     ? Instantiate(objectiveEntryPrefab, objectivesContainer)
