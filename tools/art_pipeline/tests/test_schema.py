@@ -105,6 +105,59 @@ class SchemaTests(unittest.TestCase):
             self.assertEqual(load_character_manifest(character_path).characters[0].id, "player_male_swordsman")
             self.assertEqual(load_environment_manifest(environment_path).environments[0].id, "yanliu")
 
+    def test_reference_manifests_cover_both_swordsmen_and_yanliu(self):
+        project_root = Path(__file__).resolve().parents[3]
+        characters = load_character_manifest(
+            project_root
+            / "Assets"
+            / "ArtSource"
+            / "Characters"
+            / "Manifests"
+            / "reference-characters.json"
+        )
+        environments = load_environment_manifest(
+            project_root
+            / "Assets"
+            / "ArtSource"
+            / "Environment"
+            / "Manifests"
+            / "yanliu-reference.json"
+        )
+
+        self.assertEqual(
+            {recipe.id for recipe in characters.characters},
+            {"player_male_swordsman", "player_female_swordsman"},
+        )
+        self.assertEqual([recipe.id for recipe in environments.environments], ["yanliu"])
+        self.assertEqual(
+            {landmark.id for landmark in environments.environments[0].landmarks},
+            {"inn", "pharmacy", "arched_bridge"},
+        )
+
+    def test_reference_swordsmen_have_all_four_directions_for_required_actions(self):
+        project_root = Path(__file__).resolve().parents[3]
+        manifest = load_character_manifest(
+            project_root
+            / "Assets"
+            / "ArtSource"
+            / "Characters"
+            / "Manifests"
+            / "reference-characters.json"
+        )
+        required_actions = {
+            "idle", "walk", "dash", "attack_1", "attack_2", "attack_3",
+            "skill_1", "skill_2", "hurt", "dodge", "down", "death",
+        }
+        directions = {"down", "left", "right", "up"}
+
+        for recipe in manifest.characters:
+            self.assertEqual({row.name for row in recipe.animations}, required_actions)
+            for action in required_actions:
+                self.assertEqual(
+                    {row.direction for row in recipe.animations if row.name == action},
+                    directions,
+                )
+
 
 class PaletteTests(unittest.TestCase):
     def test_palette_group_requires_four_colors(self):
