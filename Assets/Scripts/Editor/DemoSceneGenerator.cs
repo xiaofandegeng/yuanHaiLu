@@ -427,6 +427,9 @@ namespace YuanHaiLu.Editor
             // 升级系统
             player.AddComponent<LevelSystem>();
 
+            // 交互系统（K 键与 NPC/木箱/传送点交互）
+            PlayerInteraction.EnsureOn(player);
+
             player.transform.position = new Vector3(0, 0, 0);
 
             // 学会初始招式
@@ -471,7 +474,7 @@ namespace YuanHaiLu.Editor
             var npc = new GameObject($"NPC_{name}");
             npc.transform.position = pos;
             npc.tag = "NPC";
-            npc.layer = LayerMask.NameToLayer("Interactable");
+            npc.layer = LayerMask.NameToLayer("NPC");
 
             var sr = npc.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Character";

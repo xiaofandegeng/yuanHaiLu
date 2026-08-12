@@ -12,7 +12,7 @@ namespace YuanHaiLu.Map
     /// 用于制作固定事件点（如BOSS战、剧情演出）
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
-    public class EventTrigger : MonoBehaviour
+    public class EventTrigger : MonoBehaviour, IInteractable
     {
         public enum TriggerType
         {
@@ -72,6 +72,15 @@ namespace YuanHaiLu.Map
         public void OnInteract(GameObject player)
         {
             TryTrigger(player);
+        }
+
+        /// <summary>
+        /// 仅当需要按键触发时，才作为可交互目标被检测
+        /// （自动触发型 requireInteract=false 仍走 OnTriggerEnter2D，不会被误提示）
+        /// </summary>
+        public bool CanInteract()
+        {
+            return requireInteract && !(hasTriggered && triggerOnce);
         }
 
         private void TryTrigger(GameObject player)

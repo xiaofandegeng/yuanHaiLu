@@ -29,6 +29,10 @@ namespace YuanHaiLu.Map
 
         private void Start()
         {
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+                PlayerInteraction.EnsureOn(player);
+
             if (playIntro && !_introPlayed)
             {
                 StartCoroutine(PlayIntroSequence());

@@ -143,6 +143,7 @@ namespace YuanHaiLu.Core
 
             // 确保在正确的层级
             player.layer = LayerMask.NameToLayer("Player");
+            PlayerInteraction.EnsureOn(player);
         }
 
         /// <summary>
@@ -230,7 +231,7 @@ namespace YuanHaiLu.Core
         {
             GameObject npc = new GameObject($"NPC_{name}");
             npc.transform.position = pos;
-            npc.layer = LayerMask.NameToLayer("Interactable");
+            npc.layer = LayerMask.NameToLayer("NPC");
 
             var sr = npc.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = GameConfig.SORTING_CHARACTER;
