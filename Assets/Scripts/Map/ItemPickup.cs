@@ -101,27 +101,35 @@ namespace YuanHaiLu.Map
 
         private void Pickup(GameObject player)
         {
-            // 加入背包
-            if (InventoryManager.Instance != null && !string.IsNullOrEmpty(itemId))
-            {
-                InventoryManager.Instance.AddItem(itemId, amount);
-            }
+            if (!TryAddToInventory(itemId, amount)) return;
 
             // 音效
             if (AudioManager.Instance != null)
                 AudioManager.Instance.PlaySFXRandomPitch(pickupSfx);
 
-            // 任务进度更新
-            if (QuestManager.Instance != null)
-            {
-                QuestManager.Instance.UpdateObjective(
-                    QuestObjective.ObjectiveType.CollectItem, itemId, amount);
-            }
-
             // 小弹出文字效果（可选）
             Debug.Log($"[ItemPickup] 拾取了 {itemId} x{amount}");
 
             Destroy(gameObject);
+        }
+
+        internal static bool TryAddToInventory(string targetItemId, int targetAmount)
+        {
+            if (InventoryManager.Instance == null ||
+                string.IsNullOrEmpty(targetItemId) ||
+                targetAmount <= 0)
+            {
+                return false;
+            }
+
+            if (!InventoryManager.Instance.AddItem(targetItemId, targetAmount))
+                return false;
+
+            QuestManager.Instance?.UpdateObjective(
+                QuestObjective.ObjectiveType.CollectItem,
+                targetItemId,
+                targetAmount);
+            return true;
         }
 
         private System.Collections.IEnumerator PopIn()

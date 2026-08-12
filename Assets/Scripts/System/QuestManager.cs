@@ -278,23 +278,23 @@ namespace YuanHaiLu.GameSystem
         }
 
         // === 完成任务 ===
-        public void CompleteQuest(string questId)
+        public bool CompleteQuest(string questId)
         {
-            ActiveQuest quest = activeQuests.Find(q => q.data.questId == questId);
+            ActiveQuest quest = activeQuests.Find(q => q.data?.questId == questId);
 
             if (quest == null || quest.state != ActiveQuest.QuestState.Completable)
             {
                 Debug.LogWarning($"[Quest] 任务无法完成: {questId}");
-                return;
+                return false;
             }
 
-            // 发放奖励
-            GrantRewards(quest.data);
-
-            // 标记完成
+            // 先记录完成状态，防止奖励或事件回调重入后重复结算。
             quest.state = ActiveQuest.QuestState.Completed;
             activeQuests.Remove(quest);
-            completedQuestIds.Add(questId);
+            if (!completedQuestIds.Contains(questId))
+                completedQuestIds.Add(questId);
+
+            GrantRewards(quest.data);
 
             // 解锁后续任务
             if (quest.data.unlockQuestIds != null)
@@ -307,6 +307,7 @@ namespace YuanHaiLu.GameSystem
 
             OnQuestCompleted?.Invoke(quest.data);
             Debug.Log($"[Quest] 任务完成: {quest.data.questName}！");
+            return true;
         }
 
         // === 奖励发放 ===
@@ -350,8 +351,20 @@ namespace YuanHaiLu.GameSystem
             // 武学
             if (!string.IsNullOrEmpty(quest.rewardSkillId))
             {
-                Debug.Log($"[Quest] 获得武学: {quest.rewardSkillId}");
-                // TODO: 通过 InventoryManager 学习武学
+                var skill = MartialSkillDatabase.Get(quest.rewardSkillId);
+                var martial = player.GetComponent<Character.MartialArtsSystem>();
+                if (skill == null)
+                {
+                    Debug.LogWarning($"[Quest] 奖励武学不存在: {quest.rewardSkillId}");
+                }
+                else if (martial == null)
+                {
+                    Debug.LogWarning("[Quest] 玩家缺少 MartialArtsSystem，无法发放武学奖励");
+                }
+                else if (martial.LearnSkill(skill))
+                {
+                    Debug.Log($"[Quest] 获得武学: {skill.skillName}");
+                }
             }
         }
 
