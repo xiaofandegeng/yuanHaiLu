@@ -53,11 +53,11 @@ namespace YuanHaiLu.Core
             }
             Instance = this;
             if (Application.isPlaying)
+            {
                 DontDestroyOnLoad(gameObject);
-
-            // 初始化子系统
-            Application.targetFrameRate = 60;
-            QualitySettings.vSyncCount = 0;
+                Application.targetFrameRate = 60;
+                QualitySettings.vSyncCount = 0;
+            }
         }
 
         private void Start()
