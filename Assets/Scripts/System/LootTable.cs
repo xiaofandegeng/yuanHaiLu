@@ -1,7 +1,6 @@
 using UnityEngine;
 using YuanHaiLu.Map;
 using System.Collections;
-using YuanHaiLu.Map;
 using YuanHaiLu.Core;
 using YuanHaiLu.Character;
 

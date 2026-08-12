@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.U2D.Sprites;
 using System.Linq;
 using System.IO;
 
@@ -118,31 +119,35 @@ namespace YuanHaiLu.Editor
             int rows = texture.height / cellH;
 
             // 生成切片数据
-            var metaData = new SpriteMetaData[cols * rows];
+            var spriteRects = new SpriteRect[cols * rows];
             int index = 0;
 
             for (int row = rows - 1; row >= 0; row--) // 从上到下
             {
                 for (int col = 0; col < cols; col++)
                 {
-                    metaData[index] = new SpriteMetaData
+                    spriteRects[index] = new SpriteRect
                     {
                         name = $"sprite_{row}_{col}",
                         rect = new Rect(col * cellW, row * cellH, cellW, cellH),
                         pivot = pivot,
-                        alignment = (int)SpriteAlignment.Center,
+                        alignment = SpriteAlignment.Custom,
+                        spriteID = GUID.Generate(),
                     };
                     index++;
                 }
             }
 
-            importer.spritesheet = metaData.Select(m => new SpriteMetaData
-            {
-                name = m.name,
-                rect = m.rect,
-                pivot = m.pivot,
-                alignment = m.alignment,
-            }).ToArray();
+            var factory = new SpriteDataProviderFactories();
+            factory.Init();
+            var dataProvider = factory.GetSpriteEditorDataProviderFromObject(texture);
+            dataProvider.InitSpriteEditorDataProvider();
+            dataProvider.SetSpriteRects(spriteRects);
+
+            var nameProvider = dataProvider.GetDataProvider<ISpriteNameFileIdDataProvider>();
+            nameProvider.SetNameFileIdPairs(spriteRects.Select(
+                spriteRect => new SpriteNameFileIdPair(spriteRect.name, spriteRect.spriteID)));
+            dataProvider.Apply();
 
             importer.SaveAndReimport();
 

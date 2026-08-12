@@ -1,7 +1,6 @@
 using UnityEngine;
 using YuanHaiLu.Core;
 using UnityEngine.UI;
-using YuanHaiLu.Core;
 using System.Collections.Generic;
 using YuanHaiLu.GameSystem;
 

@@ -43,6 +43,7 @@ namespace YuanHaiLu.Character
         public Vector2 LastDirection => _lastDirection;
         public bool IsMoving => _moveInput.sqrMagnitude > 0.01f;
         public bool IsDashing => _isDashing;
+        private bool CanAnimate => _anim != null && _anim.runtimeAnimatorController != null;
 
         private void Awake()
         {
@@ -140,6 +141,8 @@ namespace YuanHaiLu.Character
         // === 动画更新 ===
         private void UpdateAnimator()
         {
+            if (!CanAnimate) return;
+
             _anim.SetFloat(AnimMoveX, _lastDirection.x);
             _anim.SetFloat(AnimMoveY, _lastDirection.y);
             _anim.SetFloat(AnimSpeed, _moveInput.sqrMagnitude);
@@ -154,15 +157,18 @@ namespace YuanHaiLu.Character
             {
                 _moveInput = Vector2.zero;
                 _rb.linearVelocity = Vector2.zero;
-                _anim.SetFloat(AnimSpeed, 0f);
+                if (CanAnimate) _anim.SetFloat(AnimSpeed, 0f);
             }
         }
 
         public void FaceDirection(Vector2 direction)
         {
             _lastDirection = direction.normalized;
-            _anim.SetFloat(AnimMoveX, _lastDirection.x);
-            _anim.SetFloat(AnimMoveY, _lastDirection.y);
+            if (CanAnimate)
+            {
+                _anim.SetFloat(AnimMoveX, _lastDirection.x);
+                _anim.SetFloat(AnimMoveY, _lastDirection.y);
+            }
         }
 
         // === 碰撞排序（Y轴排序，让前方角色遮挡后方） ===

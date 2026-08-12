@@ -31,7 +31,7 @@ namespace YuanHaiLu.Character
 
         private void Start()
         {
-            _hud = FindObjectOfType<HUD>(true);
+            _hud = FindAnyObjectByType<HUD>(FindObjectsInactive.Include);
         }
 
         private void Update()

@@ -10,10 +10,10 @@
 | 项目 | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
-| 代码规模 | 48 个运行时/编辑器 C# 文件，约 10,600 行；另有 5 个测试文件 |
+| 代码规模 | 48 个运行时/编辑器 C# 文件，约 10,600 行；另有 8 个测试/测试工具文件 |
 | 状态 | 烟柳镇 Demo 可运行；核心框架完整，内容和动画待填充 |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
-| 测试 | Unity Test Framework `1.6.0`；14 个 EditMode 测试 |
+| 测试 | Unity Test Framework `1.6.0`；21 个 EditMode + 1 个 PlayMode 测试 |
 | 设计文档 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/superpowers/specs/`、`README.md`、`SETUP_GUIDE.md` |
 
 ## 1. 如何运行
@@ -165,7 +165,7 @@ Ground → Environment → Character → Foreground → UI
 | 运行时脚本 | `Assets/Scripts/<子系统>/` / `YuanHaiLu.<子系统>` |
 | 系统脚本 | `Assets/Scripts/System/` / `YuanHaiLu.GameSystem` |
 | 编辑器工具 | `Assets/Scripts/Editor/` / `YuanHaiLu.Editor` |
-| 测试 | `Assets/Tests/EditMode/` / `YuanHaiLu.Tests.EditMode` |
+| 测试 | `Assets/Tests/EditMode/`、`Assets/Tests/PlayMode/` |
 | 数据 SO | 定义在 System；实例放 `Assets/Resources/Items|Quests/` |
 
 系统命名空间禁止使用 `YuanHaiLu.System`，它会与 .NET `System` 冲突。
@@ -180,7 +180,7 @@ Ground → Environment → Character → Foreground → UI
 ## 4. 开发与测试流程
 
 1. 修改代码和对应测试。
-2. 运行相关 EditMode 测试。
+2. 运行相关 EditMode / PlayMode 测试。
 3. 切回 Unity 触发编译，检查 Console。
 4. 涉及场景或输入时重启 Unity 后 Play 验证。
 5. 更新本文件或 `docs/` 中的长期事实。
@@ -198,7 +198,7 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前测试覆盖场景入口、存档迁移/往返、背包装备、武学任务、交互幂等和全局系统补全。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前测试覆盖场景入口、存档迁移/往返、背包装备、武学任务、交互幂等、全局系统补全、菜单输入、摄像机呈现、暂停 UI 和无 Animator Controller 的运行时兼容。
 
 ## 5. 已知问题与未完成项
 
@@ -210,14 +210,14 @@ Ground → Environment → Character → Foreground → UI
 
 - 存档尚未包含活跃任务目标进度、敌人状态、拾取物状态、区域标志和其他世界状态。
 - `Assets/Sprites/Generated/` 和部分瓦片是程序生成的占位美术。
-- 没有正式 Animator Controller / 动画剪辑；代码虽写入参数，但当前动画不会完整播放。
+- 没有正式 Animator Controller / 动画剪辑；代码会跳过无 Controller 的 Animator 写入以避免告警，但动画仍不会完整播放。
 - 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
 
 ### P2 — 增强
 
 - 天枢城等后续 5 个区域未制作。
 - 商店 UI、武学技能树、小地图、BOSS 战待实现。
-- BGM/SFX 仍为空或占位。
+- BGM/SFX 仍为空或占位；同一缺失资源只警告一次，避免脚步音刷屏。
 
 ## 6. 文件地图
 
@@ -225,7 +225,8 @@ Ground → Environment → Character → Foreground → UI
 yuanHaiLu/
 ├── Assets/
 │   ├── Scripts/                 48 个 .cs，约 10,600 行
-│   ├── Tests/EditMode/          14 个测试 + 测试工具
+│   ├── Tests/EditMode/          21 个 EditMode 测试 + 测试工具
+│   ├── Tests/PlayMode/          1 个 PlayMode 测试
 │   ├── Scenes/                  MainMenu + Demo_YanLiuTown
 │   ├── Sprites/Generated/       占位精灵
 │   ├── Art/Tilesets/            瓦片与参考
@@ -275,16 +276,31 @@ yuanHaiLu/
 19. 审查阶段修复返回主菜单状态、无效新游戏场景提前清档、装备上限资源裁剪和直接 Play Demo 被锁在主菜单状态的问题。
 20. 统一项目初始化工具的 Layer/SortingLayer 基线，并把现有 Sprites/Tilesets 固定为 PPU 16、Point、无压缩导入。
 
+### 第四批：Unity 实机冒烟与呈现链路
+
+21. 主菜单 Canvas 补 `GraphicRaycaster`，并默认选择“新游戏”，鼠标和键盘 Enter 均可进入 Demo。
+22. 像素摄像机增加全屏清底摄像机，修复场景切换后视口外残留主菜单画面。
+23. 修复未配置摄像机边界的反向 Clamp，并把 Demo 主摄像机/生成器的 Z 位置改为 `-10`，世界精灵恢复可见。
+24. 玩家、战斗、敌人和 NPC 在 Animator Controller 缺失时跳过参数写入，消除每帧告警刷屏。
+25. `PauseMenu` 在引用为空时自动生成可见且可点击的继续、保存、返回主菜单面板。
+26. 音频管理器缓存缺失 BGM/SFX 结果，同一占位音效只警告一次。
+27. 移除项目未使用且已停止支持的 Unity IAP 4.15，启动时不再弹 Package Errors；同步清理重复 using、过期查找 API 和未使用字段告警。
+28. 测试扩展为 21 个 EditMode + 1 个 PlayMode；最终两组测试均全量通过。
+
 ## 8. 当前人工 QA 清单
 
 自动测试不能替代 Play 验证。涉及本批改动时至少检查：
 
 - 主菜单新游戏能进入 Demo。
+- Demo 世界、HUD 和像素视口正确显示，场景切换无残影。
 - K/E NPC 对话、手动事件和传送点可达。
+- WASD、J、Shift 和 ESC 可用；暂停时应显示默认暂停面板。
 - 自动事件不显示交互提示，一次性事件不会再次成为目标。
 - 存档往返精确恢复位置、HP/MP、背包、装备、金钱、武学和已完成任务。
 - 读档不发初始物资、不覆盖位置；卸装后属性正确。
 - 后续场景加载不会重复应用旧存档。
+
+2026-08-12 本轮已人工验证：主菜单 Enter → Demo、开场对话、世界显示、WASD、Shift、J、K（钓鱼翁对话）和暂停状态切换；Console 在进入 Demo 时为 0 warning / 0 error。暂停面板补齐后由 EditMode 回归测试验证，最终桌面复看因 macOS 自动锁屏未再次截图。
 
 ## 9. 推送到 GitHub（尚未执行）
 
