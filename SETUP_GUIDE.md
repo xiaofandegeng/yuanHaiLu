@@ -132,6 +132,15 @@ MartialArtsSystem（武学功能需要）
 
 `PlayerInteraction.EnsureOn` 是幂等入口；场景生成器、`SceneBootstrapper` 和 `SceneDirector` 都会调用它，因此既有 Demo 场景无需重新生成即可获得 K/E 交互。
 
+### 5.1 任务组件约定
+
+- `QuestDatabase` 已内置 `M01_01`–`M01_05` 稳定模板；`Resources/Quests` 下同 ID 的 `QuestData` 可覆盖代码模板。
+- 给任务 NPC 在 `NPCBase` 同物体添加 `QuestGiver`，配置 `questId` 与需要推进的 `interactionTargetId`。不要让 `QuestGiver` 实现 `IInteractable`。
+- 给普通敌人/Boss 添加 `QuestTarget`，配置 `objectiveType` 和稳定 `targetId`。
+- 区域目标配置 `AreaTrigger.questTargetId`；任务未接取时不会提前消耗一次性上报机会。
+- `ItemPickup` 和 `MartialArtsSystem.LearnSkill` 已自动在完整成功拾取/首次学习后上报。
+- v3 存档保存活跃任务与目标进度；v2 读取时清空活跃任务，只恢复已完成任务。
+
 ## 6. Animator 约定
 
 当前脚本会写入下列参数，但仓库尚未提供正式 Animator Controller 和动画剪辑：
@@ -148,6 +157,8 @@ AttackIndex Int
 创建控制器时必须沿用这些名字；攻击判定由动画事件调用 `PlayerCombat.OnAttackHitFrame()`。
 
 ## 7. 自动测试
+
+当前基线：43 个 EditMode、2 个 PlayMode 测试。
 
 在 macOS 上运行全部 EditMode 测试：
 
@@ -179,6 +190,8 @@ AttackIndex Int
   -logFile /tmp/yuanHaiLu-compile.log
 ```
 
+若日志出现 `Unsupported protocol version '1.18.1'` 或许可证连接长时间挂起，先完全退出 Unity Hub 并终止陈旧的 Unity 批处理进程，再重跑命令；GUI 验证时再重新打开 Hub。
+
 ## 8. Play 验证清单
 
 重启 Unity 后至少验证：
@@ -189,11 +202,11 @@ AttackIndex Int
 - [ ] 自动事件不显示交互提示；按键事件可以触发且一次性事件不会重复出现。
 - [ ] J 攻击、Shift 冲刺、数字键武学在探索状态可用。
 - [ ] ESC 显示暂停面板，再按 ESC 可继续游戏。
-- [ ] 存档后修改位置、HP/MP、背包、装备、金钱、武学和已完成任务，读档可精确恢复。
+- [ ] v3 存档后修改位置、HP/MP、背包、装备、金钱、武学、活跃任务和已完成任务，读档可精确恢复。
 - [ ] 读档不追加初始物资、不覆盖出生点；卸下装备后属性正确。
 - [ ] 再次加载其他场景不会重复应用旧存档。
 
-活跃任务和世界状态目前不在存档范围，不能把它们列为通过项。
+敌人、唯一拾取物、一次性事件、区域标志等世界状态目前不在存档范围，不能把它们列为通过项。五条主线模板尚未接入现有烟柳镇场景，场景端任务闭环留待阶段二。
 
 ## 9. 常见问题
 
@@ -201,7 +214,8 @@ AttackIndex Int
 - **K/E 无响应**：重启 Unity，并检查 `InputManager.asset` 中只有一个 `Interact` 轴。
 - **NPC 无法检测**：确认物理层为 `NPC`，Collider2D 可进入交互半径，组件实现 `IInteractable`。
 - **物品 ID 找不到**：`InventoryManager` 先加载 `ItemDatabase` 代码表，再用 `Resources/Items` 下同 ID 的 SO 覆盖。
-- **读档后属性叠加**：v2 存档应保存基础属性；装备加成由背包恢复后统一重算。
+- **读档后属性叠加**：v3 仍沿用 v2 的基础属性语义；装备加成由背包恢复后统一重算。
+- **任务读档警告**：未知任务模板/目标会跳过并警告，越界进度会钳制并警告；不要把这些警告静默删除。
 - **大量命名空间错误**：系统代码必须使用 `YuanHaiLu.GameSystem`，不要使用 `YuanHaiLu.System`。
 - **只有 HUD、没有地图**：确认 Demo 主摄像机位于 Z=-10；重新生成场景也应由生成器设置该位置。
 - **启动提示 Packages with Errors**：项目已移除未使用且停止支持的 IAP 4.15；若旧 Library 缓存仍显示，等待 Package Manager 完成刷新后重启 Unity。
