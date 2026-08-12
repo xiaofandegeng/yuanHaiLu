@@ -22,12 +22,23 @@ namespace YuanHaiLu.Core
             Paused
         }
 
+        public enum SceneEntryMode
+        {
+            NewGame,
+            LoadGame,
+            SceneTransition,
+            Active
+        }
+
         [Header("当前状态")]
         public GameState currentState = GameState.Boot;
 
         [Header("游戏数据")]
         public string playerName = "凌霜";
         public int chapterIndex = 1;
+
+        public SceneEntryMode CurrentSceneEntryMode { get; private set; } = SceneEntryMode.NewGame;
+        public bool ShouldInitializeNewGame => CurrentSceneEntryMode == SceneEntryMode.NewGame;
 
         // === 事件 ===
         public static event System.Action<GameState, GameState> OnStateChanged;
@@ -51,6 +62,12 @@ namespace YuanHaiLu.Core
         private void Start()
         {
             SetState(GameState.MainMenu);
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
         }
 
         /// <summary>
@@ -93,6 +110,16 @@ namespace YuanHaiLu.Core
         public bool CanPlayerAct()
         {
             return currentState == GameState.Exploration || currentState == GameState.Combat;
+        }
+
+        public void BeginSceneEntry(SceneEntryMode mode)
+        {
+            CurrentSceneEntryMode = mode;
+        }
+
+        public void CompleteSceneEntry()
+        {
+            CurrentSceneEntryMode = SceneEntryMode.Active;
         }
 
         // === 快捷方法 ===
