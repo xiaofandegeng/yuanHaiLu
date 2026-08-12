@@ -73,12 +73,15 @@ namespace YuanHaiLu.Map
         internal void ReportAreaReached()
         {
             if (string.IsNullOrEmpty(questTargetId)) return;
-            if (showOnce && _questProgressReported) return;
+            if (_questProgressReported) return;
 
-            _questProgressReported = true;
-            QuestManager.Instance?.UpdateObjective(
-                QuestObjective.ObjectiveType.ReachArea,
-                questTargetId);
+            QuestManager questManager = QuestManager.Instance;
+            if (questManager != null && questManager.UpdateObjective(
+                    QuestObjective.ObjectiveType.ReachArea,
+                    questTargetId))
+            {
+                _questProgressReported = true;
+            }
         }
 
         private System.Collections.IEnumerator TransitionToScene(GameObject player)

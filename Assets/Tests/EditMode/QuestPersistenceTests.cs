@@ -75,6 +75,15 @@ namespace YuanHaiLu.Tests.EditMode
         public void RestoreMatchesObjectivesByIdentityAndClampsProgress()
         {
             QuestManager manager = CreateQuestManager();
+            LogAssert.Expect(
+                LogType.Warning,
+                "[Quest] 存档中的任务进度越界，已钳制: M01_04/DefeatBoss:boss_heifeng=4");
+            LogAssert.Expect(
+                LogType.Warning,
+                "[Quest] 存档中的任务进度越界，已钳制: M01_04/KillEnemy:bandit=99");
+            LogAssert.Expect(
+                LogType.Warning,
+                "[Quest] 存档中的任务进度越界，已钳制: M01_04/ReachArea:north_mountain=8");
             manager.LoadSaveData(new QuestManager.QuestSaveData
             {
                 completedQuestIds = new[] { "M01_03" },
@@ -100,6 +109,39 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(restored.Objectives[1].currentAmount, Is.EqualTo(5));
             Assert.That(restored.Objectives[2].currentAmount, Is.EqualTo(1));
             Assert.That(restored.state, Is.EqualTo(ActiveQuest.QuestState.Completable));
+        }
+
+        [Test]
+        public void RestoreWarnsAndSkipsUnknownObjectiveRecords()
+        {
+            QuestManager manager = CreateQuestManager();
+            LogAssert.Expect(
+                LogType.Warning,
+                "[Quest] 存档中的任务目标不存在，已跳过: M01_01/KillEnemy:missing_target");
+
+            manager.LoadSaveData(new QuestManager.QuestSaveData
+            {
+                activeQuests = new[]
+                {
+                    new QuestManager.ActiveQuestSaveData
+                    {
+                        questId = "M01_01",
+                        state = ActiveQuest.QuestState.Active,
+                        objectives = new[]
+                        {
+                            Objective(
+                                QuestObjective.ObjectiveType.KillEnemy,
+                                "missing_target",
+                                1)
+                        }
+                    }
+                }
+            });
+
+            ActiveQuest restored = manager.GetActiveQuest("M01_01");
+            Assert.That(restored, Is.Not.Null);
+            Assert.That(restored.Objectives, Has.All.Matches<QuestObjective>(
+                objective => objective.currentAmount == 0));
         }
 
         [Test]
