@@ -14,7 +14,7 @@
 | 状态 | 正式美术第一阶段完成：97 角色、10 户外、13 室内、烟柳镇可玩 Demo |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
 | 测试 | 81 EditMode + 6 PlayMode + 34 Python 全通过 |
-| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md` |
+| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md` |
 
 ## 1. 如何运行
 
@@ -280,7 +280,9 @@ yuanHaiLu/
 ├── docs/
 │   ├── 01-art-style-guide.md
 │   ├── 02-story-design.md
-│   └── 03-art-production-handoff.md
+│   ├── 03-art-production-handoff.md
+│   ├── 04-external-ai-development-handoff.md
+│   └── 05-post-development-review-plan.md
 ├── tools/art_pipeline/          确定性美术 baker/validator（34 测试）
 ├── ProjectSettings/             修改后需重启 Unity
 ├── Packages/manifest.json
@@ -377,3 +379,12 @@ git remote add origin git@github.com:<用户名>/yuanHaiLu.git
 git branch -M main
 git push -u origin main
 ```
+
+## 10. 外部 AI 开发交接（2026-08-13）
+
+- 完整开发交接计划：`docs/04-external-ai-development-handoff.md`。
+- 开发完成后的独立审查与验证计划：`docs/05-post-development-review-plan.md`。
+- `main` 是唯一权威基线；`/Users/lhw/code/yuanHaiLu/.worktrees/full-art-production` 仅作为未提交素材来源。
+- 来源分支 `codex/full-art-production` 与 `main` 没有共同祖先，禁止直接 merge；必须按交接计划迁移到从最新 `main` 创建的新 `codex/` 分支。
+- 当前已知硬约束：默认外观及 v1–v3 迁移仍为 `player_female_swordsman`；不得覆盖 `QuestTarget` 成功推进后才锁定的修复；不得夹带 `ProjectSettings` 平台噪声和 Resolver `.meta` 删除。
+- 外部 AI 完成后不得自行宣告合并就绪；必须提供固定提交、测试 XML/日志、视觉截图和人工 QA 证据，再按审查计划独立复验。
