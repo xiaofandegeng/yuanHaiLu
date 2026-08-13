@@ -253,6 +253,7 @@ python3 -m tools.art_pipeline.validate --all
 - v4 已保存主角外观与活跃任务，但尚未保存敌人状态、唯一拾取物、一次性事件、区域标志和其他世界状态。
 - `M01_01`–`M01_05` 运行时模板已完成，但烟柳镇现有场景尚未配置对应 `QuestGiver`、区域目标、敌人目标和任务物品；这是阶段二内容接入任务。
 - 正式 97 角色和 23 环境已完成确定性第一版，但仍需要人工精修表情、攻击动作节奏、地标细节和区域独特构图。
+- 角色源模块库（`Assets/ArtSource/Characters/<层>/library/full/*.png`）**未纳入版本控制**：97 个角色中 92 个的 recipe 引用这些源 PNG，但仓库里只有 `beasts/` 与 `reference/`。已构建产物（97 sprite sheet / prefab / controller + `CharacterArtCatalog.asset`）已入库可用，但干净检出后 **Python 侧无法从源重建角色**，`test_every_recipe_uses_six_visible_editable_modules` 因此在干净检出上失败（既有状态，非回归）。
 - 角色 Controller/动画资源已生成；当前基础状态切换仅完整覆盖 down 向 idle/walk，四方向 BlendTree 和所有动作的运行时过渡仍可继续深化。
 - 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
 
