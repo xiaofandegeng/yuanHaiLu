@@ -93,21 +93,47 @@ namespace YuanHaiLu.Editor
 
         public static void CaptureMainMenu(string outputPath)
         {
+            if (string.IsNullOrWhiteSpace(outputPath))
+                throw new InvalidOperationException("MainMenu capture requires a non-empty output path.");
+
             EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity", OpenSceneMode.Single);
             var camera = Camera.main;
             var canvas = UnityEngine.Object.FindAnyObjectByType<Canvas>();
             var transforms = UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include);
-            var selector = transforms.First(value => value.name == "CharacterSelector").gameObject;
-            var buttons = transforms.First(value => value.name == "ButtonContainer").gameObject;
-            if (camera == null || canvas == null)
-                throw new InvalidOperationException("MainMenu requires a camera and canvas.");
-            selector.SetActive(true);
-            buttons.SetActive(false);
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = camera;
-            canvas.planeDistance = 1f;
-            Canvas.ForceUpdateCanvases();
-            WriteCameraPng(camera, outputPath);
+            var selector = transforms.FirstOrDefault(value => value.name == "CharacterSelector")?.gameObject;
+            var buttons = transforms.FirstOrDefault(value => value.name == "ButtonContainer")?.gameObject;
+            if (camera == null || canvas == null || selector == null || buttons == null)
+                throw new InvalidOperationException(
+                    "MainMenu requires a camera, canvas, CharacterSelector and ButtonContainer.");
+
+            // 捕获原状态，确保即使渲染中途抛出（无效路径、磁盘错误等），
+            // 也能在 finally 里把 UI/Canvas 还原，不污染 MainMenu 场景。
+            var state = new MainMenuCaptureState(
+                selector.activeSelf,
+                buttons.activeSelf,
+                canvas.renderMode,
+                canvas.worldCamera,
+                canvas.planeDistance);
+            try
+            {
+                selector.SetActive(true);
+                buttons.SetActive(false);
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = camera;
+                canvas.planeDistance = 1f;
+                Canvas.ForceUpdateCanvases();
+                WriteCameraPng(camera, outputPath);
+            }
+            finally
+            {
+                // WriteCameraPng 已负责 Camera.targetTexture / RenderTexture.active / antiAliasing；
+                // 这里只还原本方法动过的 UI 与 Canvas。
+                selector.SetActive(state.SelectorActive);
+                buttons.SetActive(state.ButtonsActive);
+                canvas.renderMode = state.CanvasRenderMode;
+                canvas.worldCamera = state.CanvasWorldCamera;
+                canvas.planeDistance = state.CanvasPlaneDistance;
+            }
         }
 
         private static void WriteCameraPng(Camera camera, string outputPath)
@@ -177,6 +203,60 @@ namespace YuanHaiLu.Editor
             {
                 UnityEngine.Object.DestroyImmediate(value);
             }
+        }
+
+        /// <summary>
+        /// MainMenu 场景里被 <see cref="CaptureMainMenu"/> 临时改动的状态快照，
+        /// 用于在捕获（含异常路径）后把场景还原到调用前，避免污染。
+        /// </summary>
+        public readonly struct MainMenuCaptureState : IEquatable<MainMenuCaptureState>
+        {
+            public readonly bool SelectorActive;
+            public readonly bool ButtonsActive;
+            public readonly RenderMode CanvasRenderMode;
+            public readonly Camera CanvasWorldCamera;
+            public readonly float CanvasPlaneDistance;
+
+            private MainMenuCaptureState(
+                bool selectorActive,
+                bool buttonsActive,
+                RenderMode canvasRenderMode,
+                Camera canvasWorldCamera,
+                float canvasPlaneDistance)
+            {
+                SelectorActive = selectorActive;
+                ButtonsActive = buttonsActive;
+                CanvasRenderMode = canvasRenderMode;
+                CanvasWorldCamera = canvasWorldCamera;
+                CanvasPlaneDistance = canvasPlaneDistance;
+            }
+
+            /// <summary>读取当前活动场景里的 MainMenu UI/Canvas 状态，缺对象时回退默认值。</summary>
+            public static MainMenuCaptureState Read()
+            {
+                var canvas = UnityEngine.Object.FindAnyObjectByType<Canvas>();
+                var transforms = UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include);
+                var selector = transforms.FirstOrDefault(value => value.name == "CharacterSelector")?.gameObject;
+                var buttons = transforms.FirstOrDefault(value => value.name == "ButtonContainer")?.gameObject;
+                return new MainMenuCaptureState(
+                    selector != null && selector.activeSelf,
+                    buttons != null && buttons.activeSelf,
+                    canvas != null ? canvas.renderMode : RenderMode.ScreenSpaceOverlay,
+                    canvas != null ? canvas.worldCamera : null,
+                    canvas != null ? canvas.planeDistance : 100f);
+            }
+
+            public bool Equals(MainMenuCaptureState other) =>
+                SelectorActive == other.SelectorActive
+                && ButtonsActive == other.ButtonsActive
+                && CanvasRenderMode == other.CanvasRenderMode
+                && ReferenceEquals(CanvasWorldCamera, other.CanvasWorldCamera)
+                && CanvasPlaneDistance == other.CanvasPlaneDistance;
+
+            public override bool Equals(object obj) => obj is MainMenuCaptureState other && Equals(other);
+
+            public override int GetHashCode() =>
+                HashCode.Combine(SelectorActive, ButtonsActive, CanvasRenderMode, CanvasWorldCamera, CanvasPlaneDistance);
         }
     }
 }

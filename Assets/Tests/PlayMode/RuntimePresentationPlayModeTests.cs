@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
@@ -88,6 +89,29 @@ namespace YuanHaiLu.Tests.PlayMode
 
             Object.Destroy(root);
             Object.Destroy(timeObject);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator UnknownWeatherIdThrowsBeforeMutatingControllerState()
+        {
+            var root = new GameObject("UnknownWeatherEnvironment");
+            var effects = new GameObject("Effects");
+            effects.transform.SetParent(root.transform);
+            var effectsTilemap = effects.AddComponent<Tilemap>();
+            effects.AddComponent<TilemapRenderer>();
+            var environment = root.AddComponent<RegionEnvironmentController>();
+            environment.ConfigureForEditor(true, "clear", effectsTilemap);
+
+            yield return null;
+
+            string originalWeather = environment.WeatherId;
+            Assert.Throws<System.ArgumentException>(
+                () => environment.ConfigureWeather("definitely_not_a_manifest_weather"));
+            // 未知天气必须在校验阶段就抛出，绝不允许偷偷回退或污染已配置的天气。
+            Assert.That(environment.WeatherId, Is.EqualTo(originalWeather));
+
+            Object.Destroy(root);
             yield return null;
         }
     }

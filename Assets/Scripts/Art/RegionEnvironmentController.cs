@@ -26,16 +26,52 @@ namespace YuanHaiLu.Art
         public string WeatherId => weatherId;
         public bool IsWeatherAnimated => weatherTilemap != null && weatherVelocity.sqrMagnitude > 0f;
 
+        /// <summary>
+        /// 精确天气档：键必须与 23 个环境 manifest 中声明的 weather ID 完全一致。
+        /// 未知 ID 不允许默认猜测，由 <see cref="ConfigureWeather"/> 抛出。
+        /// </summary>
+        private static readonly IReadOnlyDictionary<string, WeatherProfile> WeatherProfiles =
+            new Dictionary<string, WeatherProfile>(StringComparer.Ordinal)
+            {
+                { "clear",          new WeatherProfile(new Color(1f, 1f, 1f, 0f),       Vector2.zero) },
+                { "indoor_ambient", new WeatherProfile(new Color(0.95f, 0.82f, 0.58f, 0.12f), Vector2.zero) },
+                { "river_rain",     new WeatherProfile(new Color(0.65f, 0.82f, 1f, 0.28f),  new Vector2(-0.35f, -1.75f)) },
+                { "canal_rain",     new WeatherProfile(new Color(0.65f, 0.82f, 1f, 0.28f),  new Vector2(-0.35f, -1.75f)) },
+                { "snowfall",       new WeatherProfile(new Color(0.88f, 0.95f, 1f, 0.42f), new Vector2(0.18f, -0.55f)) },
+                { "sandstorm",      new WeatherProfile(new Color(0.95f, 0.72f, 0.38f, 0.32f), new Vector2(1.2f, 0.18f)) },
+                { "ember_wind",     new WeatherProfile(new Color(0.95f, 0.72f, 0.38f, 0.32f), new Vector2(1.2f, 0.18f)) },
+                { "poison_fog",     new WeatherProfile(new Color(0.55f, 0.8f, 0.48f, 0.3f),  new Vector2(0.28f, 0.04f)) },
+                { "summit_cloud",   new WeatherProfile(new Color(0.65f, 0.82f, 1f, 0.28f),  new Vector2(0.28f, 0.04f)) },
+                { "cloud_mist",     new WeatherProfile(new Color(0.65f, 0.82f, 1f, 0.28f),  new Vector2(0.28f, 0.04f)) },
+                { "mountain_fog",   new WeatherProfile(new Color(0.65f, 0.82f, 1f, 0.28f),  new Vector2(0.28f, 0.04f)) },
+                { "city_haze",      new WeatherProfile(new Color(0.65f, 0.82f, 1f, 0.28f),  new Vector2(0.28f, 0.04f)) },
+            };
+
         public void ConfigureForEditor(
             bool hasDayNight,
             string formalWeatherId,
             Tilemap effects)
         {
             supportsDayNight = hasDayNight;
-            weatherId = formalWeatherId;
             weatherTilemap = effects;
-            ConfigureWeatherMotion();
-            ApplyWeatherTint();
+            ConfigureWeather(formalWeatherId);
+        }
+
+        /// <summary>
+        /// 用精确 manifest 天气 ID 配置天气表现。未知 ID 抛 <see cref="ArgumentException"/>，
+        /// 不允许任何默认猜测。
+        /// </summary>
+        public void ConfigureWeather(string weatherId)
+        {
+            if (string.IsNullOrEmpty(weatherId) ||
+                !WeatherProfiles.TryGetValue(weatherId, out var profile))
+                throw new ArgumentException(
+                    "Unknown weather id '" + weatherId +
+                    "'; expected one of the weather ids declared across the 23 environment manifests.",
+                    nameof(weatherId));
+            this.weatherId = weatherId;
+            weatherVelocity = profile.Velocity;
+            ApplyWeatherTint(profile);
         }
 
         private void Start()
@@ -43,10 +79,9 @@ namespace YuanHaiLu.Art
             spriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
             tilemaps = GetComponentsInChildren<Tilemap>(true);
             weatherOrigin = weatherTilemap != null ? weatherTilemap.transform.localPosition : Vector3.zero;
-            ConfigureWeatherMotion();
+            ConfigureWeather(weatherId);
             if (!TryBindTimeManager())
                 ApplyPeriod(GameTimeManager.TimePeriod.Morning);
-            ApplyWeatherTint();
         }
 
         private void Update()
@@ -90,36 +125,10 @@ namespace YuanHaiLu.Art
             }
         }
 
-        private void ApplyWeatherTint()
+        private void ApplyWeatherTint(WeatherProfile profile)
         {
             if (weatherTilemap == null) return;
-            Color tint = weatherId.Contains("snow")
-                ? new Color(0.88f, 0.95f, 1f, 0.42f)
-                : weatherId.Contains("sand") || weatherId.Contains("ember")
-                    ? new Color(0.95f, 0.72f, 0.38f, 0.32f)
-                    : weatherId.Contains("poison")
-                        ? new Color(0.55f, 0.8f, 0.48f, 0.3f)
-                        : weatherId.Contains("indoor")
-                            ? new Color(0.95f, 0.82f, 0.58f, 0.12f)
-                            : new Color(0.65f, 0.82f, 1f, 0.28f);
-            weatherTilemap.color = tint;
-        }
-
-        private void ConfigureWeatherMotion()
-        {
-            if (weatherTilemap == null || weatherId.Contains("indoor"))
-            {
-                weatherVelocity = Vector2.zero;
-                return;
-            }
-            if (weatherId.Contains("rain"))
-                weatherVelocity = new Vector2(-0.35f, -1.75f);
-            else if (weatherId.Contains("snow"))
-                weatherVelocity = new Vector2(0.18f, -0.55f);
-            else if (weatherId.Contains("sand") || weatherId.Contains("ember"))
-                weatherVelocity = new Vector2(1.2f, 0.18f);
-            else
-                weatherVelocity = new Vector2(0.28f, 0.04f);
+            weatherTilemap.color = profile.Tint;
         }
 
         private void AnimateWeather(float deltaTime)
@@ -146,6 +155,19 @@ namespace YuanHaiLu.Art
                     return new Color(0.48f, 0.56f, 0.78f, 1f);
                 default:
                     return Color.white;
+            }
+        }
+
+        /// <summary>一个 manifest 天气 ID 对应的着色与漂移速度。</summary>
+        private readonly struct WeatherProfile
+        {
+            public Color Tint { get; }
+            public Vector2 Velocity { get; }
+
+            public WeatherProfile(Color tint, Vector2 velocity)
+            {
+                Tint = tint;
+                Velocity = velocity;
             }
         }
     }
