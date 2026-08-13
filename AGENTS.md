@@ -14,7 +14,7 @@
 | 状态 | 正式美术第一阶段完成：97 角色、10 户外、13 室内、烟柳镇可玩 Demo |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
 | 测试 | 81 EditMode + 6 PlayMode + 34 Python 全通过 |
-| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/superpowers/` |
+| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md` |
 
 ## 1. 如何运行
 
@@ -280,8 +280,7 @@ yuanHaiLu/
 ├── docs/
 │   ├── 01-art-style-guide.md
 │   ├── 02-story-design.md
-│   ├── 03-art-production-handoff.md
-│   └── superpowers/specs|plans/ 本次规格与实施计划
+│   └── 03-art-production-handoff.md
 ├── tools/art_pipeline/          确定性美术 baker/validator（34 测试）
 ├── ProjectSettings/             修改后需重启 Unity
 ├── Packages/manifest.json
