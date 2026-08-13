@@ -38,11 +38,18 @@ namespace YuanHaiLu.GameSystem
                 return;
             }
 
-            _reported = true;
-            QuestManager.Instance?.UpdateObjective(
+            // 与 AreaTrigger.ReportAreaReached 一致：仅当真正匹配到活跃任务目标时才锁定。
+            // 当前 CharacterStats.OnDeath 仅触发一次，故此改动功能上无变化，
+            // 仅为模式统一，并防御未来若 OnDeath 被重复触发导致的重复计数。
+            bool matched = QuestManager.Instance != null && QuestManager.Instance.UpdateObjective(
                 objectiveType,
                 targetId,
                 Mathf.Max(1, amount));
+
+            if (matched)
+            {
+                _reported = true;
+            }
         }
     }
 }
