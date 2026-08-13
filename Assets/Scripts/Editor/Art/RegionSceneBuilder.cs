@@ -62,6 +62,15 @@ namespace YuanHaiLu.Editor
             Debug.Log("[RegionSceneBuilder] generated 23 formal environment scenes.");
         }
 
+        /// <summary>
+        /// Command-line entry point for batch scene regeneration:
+        ///   Unity -batchmode -projectPath ... -executeMethod YuanHaiLu.Editor.RegionSceneBuilder.GenerateFromCommandLine -quit
+        /// </summary>
+        public static void GenerateFromCommandLine()
+        {
+            BuildAll();
+        }
+
         public static void Build(string id)
         {
             var layout = ReadLayout(LayoutPath(id));

@@ -30,6 +30,40 @@ class MapLayout:
     anchors: tuple
     required_landmarks: tuple
 
+    def structural_coordinate_signature(self):
+        """Deterministic signature of every declared structural coordinate.
+
+        Captures the full set of layer cells, collision cells, foreground spans,
+        anchors and required landmarks so two layouts that share the same scene
+        structure produce the same signature, and structurally distinct layouts
+        never collide.
+        """
+        parts = []
+        for layer_name in (
+            "Ground",
+            "Water",
+            "Lower Environment",
+            "Buildings",
+            "Foreground",
+        ):
+            cells = self.layers.get(layer_name, []) or []
+            rendered = "|".join(
+                "{0},{1},{2}".format(cell[0], cell[1], cell[2]) for cell in cells
+            )
+            parts.append("{0}={1}".format(layer_name, rendered))
+        parts.append("collisions={0}".format(sorted(self.collisions)))
+        parts.append("foreground={0}".format(tuple(self.foreground_spans)))
+        parts.append(
+            "anchors="
+            + "|".join(
+                "{0}:{1}:{2},{3}".format(anchor.id, anchor.type, anchor.x, anchor.y)
+                for anchor in sorted(self.anchors, key=lambda value: value.id)
+            )
+        )
+        parts.append("landmarks=" + "|".join(self.required_landmarks))
+        return "\n".join(parts)
+
+
 
 def load_map_layout(path):
     layout_path = Path(path)
@@ -66,6 +100,15 @@ def load_map_layout(path):
         tuple(anchors),
         tuple(payload.get("requiredLandmarks", [])),
     )
+
+
+def load_all_outdoor_layouts(project_root=None):
+    """Load every outdoor (region) layout declared under ArtSource/Environment/Layouts."""
+    from tools.art_pipeline.environment_roster import REGION_IDS
+
+    root = Path(project_root) if project_root else Path(__file__).resolve().parents[2]
+    layout_dir = root / "Assets" / "ArtSource" / "Environment" / "Layouts"
+    return [load_map_layout(layout_dir / "{}.json".format(region_id)) for region_id in REGION_IDS]
 
 
 def reachable_anchor_ids(layout):

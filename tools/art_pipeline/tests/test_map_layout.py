@@ -2,7 +2,11 @@ import unittest
 from pathlib import Path
 
 from tools.art_pipeline.environment_roster import INTERIOR_IDS, REGION_IDS
-from tools.art_pipeline.map_layout import load_map_layout, reachable_anchor_ids
+from tools.art_pipeline.map_layout import (
+    load_all_outdoor_layouts,
+    load_map_layout,
+    reachable_anchor_ids,
+)
 
 
 class MapLayoutTests(unittest.TestCase):
@@ -24,6 +28,14 @@ class MapLayoutTests(unittest.TestCase):
             self.assertEqual(required - reachable, set(), str(path))
             self.assertGreaterEqual(layout.width, 30 if layout.kind == "region" else 12)
             self.assertGreaterEqual(layout.height, 20 if layout.kind == "region" else 10)
+
+    def test_outdoor_structural_coordinate_signatures_are_unique(self):
+        layouts = load_all_outdoor_layouts()
+        self.assertEqual(len(layouts), len(REGION_IDS))
+        signatures = {
+            layout.id: layout.structural_coordinate_signature() for layout in layouts
+        }
+        self.assertEqual(len(set(signatures.values())), len(signatures))
 
 
 if __name__ == "__main__":
