@@ -36,10 +36,10 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void InvalidArtIdIsRejectedAndDefaultIsFormalMaleSwordsman()
+        public void InvalidArtIdIsRejectedAndDefaultIsFormalFemaleSwordsman()
         {
             Assert.That(PlayerAppearance.TryParse("missing_actor", out _), Is.False);
-            Assert.That(PlayerAppearance.Default.ArtId, Is.EqualTo("player_male_swordsman"));
+            Assert.That(PlayerAppearance.Default.ArtId, Is.EqualTo("player_female_swordsman"));
         }
     }
 }

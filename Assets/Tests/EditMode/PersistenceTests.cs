@@ -314,11 +314,11 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void InvalidVersionFourAppearanceWarnsAndFallsBackToMaleSwordsman()
+        public void InvalidVersionFourAppearanceWarnsAndFallsBackToFemaleSwordsman()
         {
             LogAssert.Expect(
                 LogType.Warning,
-                "[SaveManager] 存档中的玩家外观无效，已回退默认男剑客: missing_player");
+                "[SaveManager] 存档中的玩家外观无效，已回退默认女剑客: missing_player");
 
             string resolved = SaveManager.ResolvePlayerArtId(new SaveManager.SaveData
             {
@@ -326,7 +326,7 @@ namespace YuanHaiLu.Tests.EditMode
                 playerArtId = "missing_player"
             });
 
-            Assert.That(resolved, Is.EqualTo("player_male_swordsman"));
+            Assert.That(resolved, Is.EqualTo("player_female_swordsman"));
         }
     }
 }

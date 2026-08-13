@@ -389,7 +389,7 @@ namespace YuanHaiLu.GameSystem
                 return appearance.ArtId;
             }
             Debug.LogWarning(
-                $"[SaveManager] 存档中的玩家外观无效，已回退默认男剑客: " +
+                $"[SaveManager] 存档中的玩家外观无效，已回退默认女剑客: " +
                 $"{saveData.playerArtId ?? "<null>"}");
             return PlayerAppearance.Default.ArtId;
         }
