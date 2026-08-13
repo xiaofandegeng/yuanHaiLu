@@ -4,6 +4,7 @@ using YuanHaiLu.GameSystem;
 using YuanHaiLu.Character;
 using YuanHaiLu.Dialogue;
 using YuanHaiLu.UI;
+using YuanHaiLu.Art;
 
 namespace YuanHaiLu.Core
 {
@@ -115,6 +116,9 @@ namespace YuanHaiLu.Core
             PlayerInteraction.EnsureOn(player);
             if (player.GetComponent<MartialArtsSystem>() == null)
                 player.AddComponent<MartialArtsSystem>();
+            CharacterVisual.ApplyTo(player, GameManager.Instance.PlayerArtId);
+            if (player.GetComponent<PlayerAppearanceBinder>() == null)
+                player.AddComponent<PlayerAppearanceBinder>();
         }
 
         /// <summary>

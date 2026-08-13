@@ -23,11 +23,13 @@
 
 ## 3. 场景与运行
 
-仓库维护两个可运行场景：
+仓库维护 25 个 Build Settings 场景：
 
 ```text
 Assets/Scenes/MainMenu.unity
 Assets/Scenes/Demo_YanLiuTown.unity
+Assets/Scenes/Regions/*.unity（10 个）
+Assets/Scenes/Interiors/*.unity（13 个）
 ```
 
 需要重建时使用：
@@ -42,6 +44,8 @@ Tools → 渊海录 → 生成Demo场景
 ```text
 0  MainMenu
 1  Demo_YanLiuTown
+2–11  Regions
+12–24 Interiors
 ```
 
 日常运行可从 `MainMenu` 开始；需要快速调试场景时也可直接打开 `Demo_YanLiuTown`，它会按新游戏入口初始化。
@@ -78,7 +82,7 @@ Ground → Environment → Character → Foreground → UI
 | 内部分辨率 | `480 × 270` |
 | Pixels Per Unit | `16` |
 | 瓦片 | `16 × 16` |
-| 角色帧 | `48 × 48` |
+| 正式角色帧 | `32 × 32` |
 | Filter Mode | Point |
 | Compression | None |
 | Anti Aliasing | Disabled |
@@ -127,6 +131,8 @@ PlayerController
 CharacterStats
 PlayerCombat
 PlayerInteraction
+CharacterVisual
+PlayerAppearanceBinder
 MartialArtsSystem（武学功能需要）
 ```
 
@@ -139,11 +145,11 @@ MartialArtsSystem（武学功能需要）
 - 给普通敌人/Boss 添加 `QuestTarget`，配置 `objectiveType` 和稳定 `targetId`。
 - 区域目标配置 `AreaTrigger.questTargetId`；任务未接取时不会提前消耗一次性上报机会。
 - `ItemPickup` 和 `MartialArtsSystem.LearnSkill` 已自动在完整成功拾取/首次学习后上报。
-- v3 存档保存活跃任务与目标进度；v2 读取时清空活跃任务，只恢复已完成任务。
+- v4 存档保存正式主角外观、活跃任务与目标进度；v1–v3 缺失外观时迁移为女剑客。
 
 ## 6. Animator 约定
 
-当前脚本会写入下列参数，但仓库尚未提供正式 Animator Controller 和动画剪辑：
+正式角色 Controller 已生成，并沿用下列参数：
 
 ```text
 MoveX       Float
@@ -158,7 +164,15 @@ AttackIndex Int
 
 ## 7. 自动测试
 
-当前基线：43 个 EditMode、2 个 PlayMode 测试。
+当前基线：81 个 EditMode、6 个 PlayMode、34 个 Python 测试。
+
+正式美术验证：
+
+```bash
+python3 -m unittest discover -s tools/art_pipeline/tests -v
+python3 -m tools.art_pipeline.build --all
+python3 -m tools.art_pipeline.validate --all
+```
 
 在 macOS 上运行全部 EditMode 测试：
 
@@ -196,13 +210,14 @@ AttackIndex Int
 
 重启 Unity 后至少验证：
 
-- [ ] 主菜单“新游戏”进入 `Demo_YanLiuTown`。
-- [ ] Demo 地图、玩家和 NPC 可见，场景切换后视口外无主菜单残影。
+- [ ] 主菜单可见 12 个角色选择；切换外观后 idle 预览和金色选中态正确。
+- [ ] 主菜单“新游戏”进入 `Demo_YanLiuTown`，选择的外观保持。
+- [ ] Demo 正式地面、水岸、道路、桥、建筑、玩家和 NPC 可见，场景切换后视口外无残影。
 - [ ] NPC 附近出现提示，K 与 E 都能开始对话。
 - [ ] 自动事件不显示交互提示；按键事件可以触发且一次性事件不会重复出现。
 - [ ] J 攻击、Shift 冲刺、数字键武学在探索状态可用。
 - [ ] ESC 显示暂停面板，再按 ESC 可继续游戏。
-- [ ] v3 存档后修改位置、HP/MP、背包、装备、金钱、武学、活跃任务和已完成任务，读档可精确恢复。
+- [ ] v4 存档后修改外观、位置、HP/MP、背包、装备、金钱、武学、活跃任务和已完成任务，读档可精确恢复。
 - [ ] 读档不追加初始物资、不覆盖出生点；卸下装备后属性正确。
 - [ ] 再次加载其他场景不会重复应用旧存档。
 
@@ -214,8 +229,9 @@ AttackIndex Int
 - **K/E 无响应**：重启 Unity，并检查 `InputManager.asset` 中只有一个 `Interact` 轴。
 - **NPC 无法检测**：确认物理层为 `NPC`，Collider2D 可进入交互半径，组件实现 `IInteractable`。
 - **物品 ID 找不到**：`InventoryManager` 先加载 `ItemDatabase` 代码表，再用 `Resources/Items` 下同 ID 的 SO 覆盖。
-- **读档后属性叠加**：v3 仍沿用 v2 的基础属性语义；装备加成由背包恢复后统一重算。
+- **读档后属性叠加**：v4 仍沿用 v2 的基础属性语义；装备加成由背包恢复后统一重算。
 - **任务读档警告**：未知任务模板/目标会跳过并警告，越界进度会钳制并警告；不要把这些警告静默删除。
 - **大量命名空间错误**：系统代码必须使用 `YuanHaiLu.GameSystem`，不要使用 `YuanHaiLu.System`。
-- **只有 HUD、没有地图**：确认 Demo 主摄像机位于 Z=-10；重新生成场景也应由生成器设置该位置。
+- **只有地标、没有 Tilemap 地面**：运行 `RegionSceneBuilder` 重建；生成器必须批量调用 `Tilemap.SetTiles`，不能改回逐格 `SetTile`。
+- **只有 HUD、没有地图**：确认 Demo 主摄像机位于 Z=-10，并从正式烟柳镇场景重新生成 Demo。
 - **启动提示 Packages with Errors**：项目已移除未使用且停止支持的 IAP 4.15；若旧 Library 缓存仍显示，等待 Package Manager 完成刷新后重启 Unity。

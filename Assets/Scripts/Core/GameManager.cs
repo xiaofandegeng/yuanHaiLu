@@ -36,6 +36,11 @@ namespace YuanHaiLu.Core
         [Header("游戏数据")]
         public string playerName = "凌霜";
         public int chapterIndex = 1;
+        [SerializeField] private string playerArtId = PlayerAppearance.DefaultArtId;
+
+        public PlayerAppearance PlayerAppearance =>
+            YuanHaiLu.Core.PlayerAppearance.ParseOrDefault(playerArtId);
+        public string PlayerArtId => PlayerAppearance.ArtId;
 
         public SceneEntryMode CurrentSceneEntryMode { get; private set; } = SceneEntryMode.NewGame;
         public bool ShouldInitializeNewGame => CurrentSceneEntryMode == SceneEntryMode.NewGame;
@@ -52,6 +57,7 @@ namespace YuanHaiLu.Core
                 return;
             }
             Instance = this;
+            playerArtId = PlayerAppearance.ArtId;
             if (Application.isPlaying)
             {
                 DontDestroyOnLoad(gameObject);
@@ -121,6 +127,15 @@ namespace YuanHaiLu.Core
         public void CompleteSceneEntry()
         {
             CurrentSceneEntryMode = SceneEntryMode.Active;
+        }
+
+        public void SetPlayerAppearance(string artId)
+        {
+            if (!YuanHaiLu.Core.PlayerAppearance.TryParse(artId, out var appearance))
+                throw new System.ArgumentException(
+                    $"Unknown formal player appearance '{artId}'.",
+                    nameof(artId));
+            playerArtId = appearance.ArtId;
         }
 
         // === 快捷方法 ===

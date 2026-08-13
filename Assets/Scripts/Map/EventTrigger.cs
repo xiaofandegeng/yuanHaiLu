@@ -4,6 +4,7 @@ using YuanHaiLu.Core;
 using YuanHaiLu.Character;
 using YuanHaiLu.Dialogue;
 using YuanHaiLu.GameSystem;
+using YuanHaiLu.Art;
 
 namespace YuanHaiLu.Map
 {
@@ -177,7 +178,7 @@ namespace YuanHaiLu.Map
                 {
                     Vector2 spawnPos = (Vector2)transform.position +
                         Random.insideUnitCircle * wave.spawnRadius;
-                    SpawnEnemy(wave.enemyName, wave.enemyHp, wave.enemyAtk, spawnPos);
+                    SpawnEnemy(wave.enemyName, wave.artId, wave.enemyHp, wave.enemyAtk, spawnPos);
 
                     // 稍错开生成
                     if (i < wave.count - 1)
@@ -204,7 +205,7 @@ namespace YuanHaiLu.Map
             }
         }
 
-        private void SpawnEnemy(string name, int hp, int atk, Vector2 pos)
+        private void SpawnEnemy(string name, string artId, int hp, int atk, Vector2 pos)
         {
             GameObject enemy = new GameObject($"Enemy_{name}");
             enemy.transform.position = pos;
@@ -213,6 +214,8 @@ namespace YuanHaiLu.Map
 
             var sr = enemy.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Character";
+            CharacterVisual.ApplyTo(enemy,
+                string.IsNullOrEmpty(artId) ? "yanliu_river_bandit" : artId);
 
             var rb = enemy.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
@@ -282,6 +285,7 @@ namespace YuanHaiLu.Map
         public class WaveData
         {
             public string enemyName = "山贼";
+            public string artId = "yanliu_river_bandit";
             public int count = 3;
             public int enemyHp = 20;
             public int enemyAtk = 5;

@@ -9,6 +9,24 @@ namespace YuanHaiLu.Tests.PlayMode
     public class RuntimePresentationPlayModeTests
     {
         [UnityTest]
+        public IEnumerator PlayerCombatWaitsSafelyWhenGameManagerIsNotBootstrapped()
+        {
+            var player = new GameObject("UnbootstrappedPlayer");
+            player.AddComponent<SpriteRenderer>();
+            player.AddComponent<Animator>();
+            player.AddComponent<Rigidbody2D>();
+            player.AddComponent<PlayerController>();
+            player.AddComponent<CharacterStats>();
+            player.AddComponent<PlayerCombat>();
+
+            yield return null;
+
+            Assert.That(player.GetComponent<PlayerCombat>(), Is.Not.Null);
+            Object.Destroy(player);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator PlayerControllerWithoutAnimatorControllerDoesNotEmitWarnings()
         {
             int warningCount = 0;

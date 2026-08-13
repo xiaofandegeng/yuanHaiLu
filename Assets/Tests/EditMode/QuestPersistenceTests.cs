@@ -145,6 +145,58 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
+        public void VersionThreeLoadStillRestoresFullQuestPayload()
+        {
+            GameManager gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
+                TestSceneFactory.Create("GameManager"));
+            gameManager.BeginSceneEntry(GameManager.SceneEntryMode.LoadGame);
+            QuestManager quests = CreateQuestManager();
+            TestSceneFactory.CreatePlayer();
+            SaveManager saveManager = TestSceneFactory.AddComponentWithAwake<SaveManager>(
+                TestSceneFactory.Create("SaveManager"));
+
+            saveManager.ApplySaveDataToLoadedScene(new SaveManager.SaveData
+            {
+                saveVersion = 3,
+                playerName = "旧档",
+                level = 1,
+                baseAttack = 15,
+                baseDefense = 5,
+                baseAgility = 10,
+                baseMaxHp = 100,
+                baseMaxMp = 50,
+                currentHp = 100,
+                currentMp = 50,
+                chapterIndex = 1,
+                quests = new QuestManager.QuestSaveData
+                {
+                    completedQuestIds = new[] { "M01_03" },
+                    activeQuests = new[]
+                    {
+                        new QuestManager.ActiveQuestSaveData
+                        {
+                            questId = "M01_01",
+                            state = ActiveQuest.QuestState.Active,
+                            acceptTimeBinary = DateTime.Now.ToBinary(),
+                            objectives = new[]
+                            {
+                                Objective(
+                                    QuestObjective.ObjectiveType.ReachArea,
+                                    "yanliu_inn",
+                                    1)
+                            }
+                        }
+                    }
+                }
+            });
+
+            ActiveQuest restored = quests.GetActiveQuest("M01_01");
+            Assert.That(restored, Is.Not.Null);
+            Assert.That(restored.Objectives[0].currentAmount, Is.EqualTo(1));
+            Assert.That(quests.CompletedQuestIds, Is.EqualTo(new[] { "M01_03" }));
+        }
+
+        [Test]
         public void VersionTwoLoadClearsActiveStateAndRestoresCompletedIds()
         {
             GameManager gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
@@ -177,7 +229,7 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void SaveGameWritesVersionThreeQuestPayload()
+        public void SaveGameWritesVersionFourQuestAndAppearancePayload()
         {
             TestSceneFactory.AddComponentWithAwake<GameManager>(
                 TestSceneFactory.Create("GameManager"));
@@ -194,7 +246,8 @@ namespace YuanHaiLu.Tests.EditMode
 
             string json = PlayerPrefs.GetString($"YuanHaiLu_SaveSlot_{TestSaveSlot}");
             SaveManager.SaveData restored = JsonUtility.FromJson<SaveManager.SaveData>(json);
-            Assert.That(restored.saveVersion, Is.EqualTo(3));
+            Assert.That(restored.saveVersion, Is.EqualTo(4));
+            Assert.That(restored.playerArtId, Is.EqualTo(PlayerAppearance.Default.ArtId));
             Assert.That(restored.quests, Is.Not.Null);
             Assert.That(restored.quests.activeQuests, Has.Length.EqualTo(1));
             Assert.That(restored.quests.activeQuests[0].questId, Is.EqualTo("M01_01"));

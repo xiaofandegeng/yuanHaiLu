@@ -53,7 +53,8 @@ namespace YuanHaiLu.Character
 
         private void Update()
         {
-            if (!GameManager.Instance.CanPlayerAct()) return;
+            var gameManager = GameManager.Instance;
+            if (gameManager == null || !gameManager.CanPlayerAct()) return;
 
             HandleAttackInput();
             HandleAttackTimers();
