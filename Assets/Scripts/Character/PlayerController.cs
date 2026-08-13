@@ -43,6 +43,7 @@ namespace YuanHaiLu.Character
         public Vector2 LastDirection => _lastDirection;
         public bool IsMoving => _moveInput.sqrMagnitude > 0.01f;
         public bool IsDashing => _isDashing;
+        public bool IsInputEnabled => _inputEnabled;
         private bool CanAnimate => _anim != null && _anim.runtimeAnimatorController != null;
 
         private void Awake()

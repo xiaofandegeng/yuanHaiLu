@@ -13,9 +13,10 @@ namespace YuanHaiLu.Editor
         public const string EnvironmentCatalogPath = "Assets/Resources/Art/EnvironmentArtCatalog.asset";
 
         [MenuItem("Tools/渊海录/美术/重建正式美术目录")]
-        public static void RebuildAll()
+        public static void RebuildAll(bool applyImportRules = true)
         {
-            ArtImportRules.ApplyAllFormal();
+            if (applyImportRules)
+                ArtImportRules.ApplyAllFormal();
             var report = ArtAssetValidator.ValidateAll();
             if (!report.IsValid)
                 throw new InvalidOperationException(report.ToString());
@@ -56,7 +57,9 @@ namespace YuanHaiLu.Editor
                         AssetDatabase.LoadAssetAtPath<Texture2D>(previewPath),
                         metadata.id + "_reference",
                         kind,
-                        scenePath));
+                        scenePath,
+                        metadata.dayNight,
+                        metadata.weather));
                 }
             }
 

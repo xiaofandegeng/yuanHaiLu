@@ -48,8 +48,8 @@ namespace YuanHaiLu.Art
                 stableId,
                 "test",
                 Texture2D.whiteTexture,
-                null,
-                null,
+                new AnimatorOverrideController(),
+                new GameObject(stableId + "_test_prefab"),
                 Texture2D.whiteTexture);
         }
 
@@ -61,6 +61,10 @@ namespace YuanHaiLu.Art
                 throw new InvalidOperationException($"Character art '{id}' has no category.");
             if (sheet == null)
                 throw new InvalidOperationException($"Character art '{id}' has no formal sheet texture.");
+            if (controller == null)
+                throw new InvalidOperationException($"Character art '{id}' has no animator controller.");
+            if (prefab == null)
+                throw new InvalidOperationException($"Character art '{id}' has no prefab.");
             if (preview == null)
                 throw new InvalidOperationException($"Character art '{id}' has no preview texture.");
         }

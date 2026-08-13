@@ -23,6 +23,8 @@ namespace YuanHaiLu.UI
         [Header("角色选择")]
         [SerializeField] private Image appearancePreview;
         [SerializeField] private Text appearanceLabel;
+        [SerializeField] private GameObject appearancePanel;
+        [SerializeField] private GameObject mainButtonContainer;
 
         [Header("场景名")]
         [SerializeField] private string firstSceneName = "Demo_YanLiuTown";
@@ -44,7 +46,17 @@ namespace YuanHaiLu.UI
             SelectedAppearance = gameManager.PlayerAppearance;
             ResolveAppearanceUI();
             RefreshAppearanceUI();
+            SetAppearanceSelectionVisible(false);
             BindMenuButtons();
+        }
+
+        private void Update()
+        {
+            if (appearancePanel != null && appearancePanel.activeSelf &&
+                Input.GetButtonDown("Cancel"))
+            {
+                CancelAppearanceSelection();
+            }
         }
 
         /// <summary>
@@ -52,7 +64,21 @@ namespace YuanHaiLu.UI
         /// </summary>
         public void OnNewGame()
         {
-            Debug.Log("[MainMenu] 开始新游戏");
+            var gameManager = GameManager.Instance;
+            if (gameManager == null)
+            {
+                Debug.LogError("[MainMenu] GameManager 缺失，无法选择新游戏角色！");
+                return;
+            }
+            SelectedAppearance = gameManager.PlayerAppearance;
+            ResolveAppearanceUI();
+            RefreshAppearanceUI();
+            SetAppearanceSelectionVisible(true);
+        }
+
+        public void ConfirmNewGame()
+        {
+            Debug.Log("[MainMenu] 确认角色并开始新游戏");
 
             var gameManager = GameManager.Instance;
             if (gameManager == null)
@@ -68,6 +94,7 @@ namespace YuanHaiLu.UI
             }
 
             GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
+            gameManager.SetPlayerAppearance(SelectedAppearance.ArtId);
             InventoryManager.Instance?.ResetForNewGame();
             QuestManager.Instance?.ResetForNewGame();
             gameManager.playerName = "凌霜";
@@ -76,6 +103,15 @@ namespace YuanHaiLu.UI
             gameManager.SetState(GameManager.GameState.Exploration);
 
             SceneManager.LoadScene(firstSceneName);
+        }
+
+        public void CancelAppearanceSelection()
+        {
+            if (GameManager.Instance != null)
+                SelectedAppearance = GameManager.Instance.PlayerAppearance;
+            ResolveAppearanceUI();
+            RefreshAppearanceUI();
+            SetAppearanceSelectionVisible(false);
         }
 
         /// <summary>
@@ -143,6 +179,12 @@ namespace YuanHaiLu.UI
                     case "Btn_退出":
                         Bind(button, OnQuit);
                         break;
+                    case "Btn_确认角色":
+                        Bind(button, ConfirmNewGame);
+                        break;
+                    case "Btn_取消角色":
+                        Bind(button, CancelAppearanceSelection);
+                        break;
                     default:
                         const string prefix = "Btn_角色_";
                         if (button.gameObject.name.StartsWith(prefix, StringComparison.Ordinal))
@@ -159,10 +201,6 @@ namespace YuanHaiLu.UI
         {
             if (!PlayerAppearance.TryParse(artId, out var appearance))
                 throw new ArgumentException($"Unknown formal player appearance '{artId}'.", nameof(artId));
-            var gameManager = GameManager.Instance;
-            if (gameManager == null)
-                throw new InvalidOperationException("GameManager is required to select a player appearance.");
-            gameManager.SetPlayerAppearance(appearance.ArtId);
             SelectedAppearance = appearance;
             ResolveAppearanceUI();
             RefreshAppearanceUI();
@@ -176,6 +214,36 @@ namespace YuanHaiLu.UI
             if (appearanceLabel == null)
                 appearanceLabel = GetComponentsInChildren<Text>(true)
                     .FirstOrDefault(value => value.name == "CharacterSelectionLabel");
+            if (appearancePanel == null)
+                appearancePanel = transform.Find("CharacterSelector")?.gameObject ??
+                    GetComponentsInChildren<Transform>(true)
+                        .FirstOrDefault(value => value.name == "CharacterSelector")?.gameObject;
+            if (mainButtonContainer == null)
+                mainButtonContainer = GetComponentsInChildren<Transform>(true)
+                    .FirstOrDefault(value => value.name == "ButtonContainer")?.gameObject;
+        }
+
+        private void SetAppearanceSelectionVisible(bool visible)
+        {
+            ResolveAppearanceUI();
+            if (appearancePanel != null)
+                appearancePanel.SetActive(visible);
+            if (mainButtonContainer != null)
+                mainButtonContainer.SetActive(!visible);
+
+            var eventSystem = EventSystem.current;
+            if (eventSystem == null) return;
+            string targetName = visible
+                ? "Btn_角色_" + SelectedAppearance.ArtId
+                : "Btn_新游戏";
+            var target = GetComponentsInChildren<Button>(true)
+                .FirstOrDefault(button => button.name == targetName &&
+                                          button.gameObject.activeInHierarchy);
+            if (target == null && visible)
+                target = GetComponentsInChildren<Button>(true)
+                    .FirstOrDefault(button => button.name == "Btn_确认角色" &&
+                                              button.gameObject.activeInHierarchy);
+            eventSystem.SetSelectedGameObject(target != null ? target.gameObject : null);
         }
 
         private void RefreshAppearanceUI()

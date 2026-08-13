@@ -61,7 +61,34 @@ class CharacterRosterTests(unittest.TestCase):
             )
 
     def test_enemy_and_boss_scopes_are_exact(self):
-        self.assertEqual({recipe.id for recipe in build_enemy_recipes()}, set(ENEMY_IDS))
+        expected_enemies = {
+            "tianshu_market_thug",
+            "tianshu_shadow_tower_assassin",
+            "tianshu_corrupt_imperial_guard",
+            "tianshu_palace_pursuer",
+            "cangyue_mountain_bandit",
+            "cangyue_traitor_disciple",
+            "cangyue_stone_array_puppet",
+            "cangyue_fallen_monk",
+            "yanliu_river_bandit",
+            "yanliu_water_bandit",
+            "yanliu_smuggler",
+            "yanliu_rebel_marine",
+            "chisha_beidi_cavalry",
+            "chisha_desert_bandit",
+            "chisha_giant_scorpion",
+            "chisha_tomb_guard",
+            "youhuang_poison_insect",
+            "youhuang_gu_controlled_villager",
+            "youhuang_forbidden_soldier",
+            "youhuang_bamboo_assassin",
+            "hanyuan_snow_wolf",
+            "hanyuan_hunter_bandit",
+            "hanyuan_ice_tomb_guard",
+            "hanyuan_rebel_pursuer",
+        }
+        self.assertEqual(set(ENEMY_IDS), expected_enemies)
+        self.assertEqual({recipe.id for recipe in build_enemy_recipes()}, expected_enemies)
         self.assertEqual(len(build_enemy_recipes()), 24)
         self.assertEqual({recipe.id for recipe in build_boss_recipes()}, set(BOSS_IDS))
         self.assertEqual(len(build_boss_recipes()), 10)

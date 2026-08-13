@@ -15,7 +15,7 @@ namespace YuanHaiLu.Editor
         [MenuItem("Tools/渊海录/美术/重建正式环境Tile")]
         public static void RebuildAll()
         {
-            ArtImportRules.ApplyAllFormal();
+            ArtImportRules.ApplyAllFormal("environment");
             EnsureFolder("Assets/Tilemaps");
             EnsureFolder(TileRoot);
             foreach (var metadataPath in ArtImportRules.EnumerateMetadataAssetPaths())
@@ -37,12 +37,14 @@ namespace YuanHaiLu.Editor
                         AssetDatabase.CreateAsset(tile, path);
                     }
                     tile.sprite = sprite;
-                    tile.colliderType = Tile.ColliderType.None;
+                    tile.colliderType = IsStructuralRole(sprite.name)
+                        ? Tile.ColliderType.Grid
+                        : Tile.ColliderType.None;
                     EditorUtility.SetDirty(tile);
                 }
             }
             AssetDatabase.SaveAssets();
-            ArtCatalogBuilder.RebuildAll();
+            ArtCatalogBuilder.RebuildAll(false);
         }
 
         public static IReadOnlyDictionary<string, Tile> LoadTiles(string id)
@@ -60,6 +62,13 @@ namespace YuanHaiLu.Editor
         private static string TilePath(string id, string spriteName)
         {
             return $"{TileRoot}/{id}/{spriteName}.asset";
+        }
+
+        private static bool IsStructuralRole(string spriteName)
+        {
+            return spriteName.Contains("__wall__", StringComparison.Ordinal) ||
+                   spriteName.Contains("__roof__", StringComparison.Ordinal) ||
+                   spriteName.Contains("__window__", StringComparison.Ordinal);
         }
 
         private static void EnsureFolder(string path)

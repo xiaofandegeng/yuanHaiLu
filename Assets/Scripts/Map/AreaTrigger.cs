@@ -1,7 +1,7 @@
 using YuanHaiLu.GameSystem;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using YuanHaiLu.Core;
+using YuanHaiLu.Character;
 
 namespace YuanHaiLu.Map
 {
@@ -10,7 +10,7 @@ namespace YuanHaiLu.Map
     /// 挂载到区域边界空物体上，需要 Collider2D（Is Trigger）
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
-    public class AreaTrigger : MonoBehaviour
+    public class AreaTrigger : MonoBehaviour, IInteractable
     {
         [Header("区域信息")]
         public string areaName = "烟柳镇";
@@ -20,7 +20,9 @@ namespace YuanHaiLu.Map
         [Header("场景切换（可选）")]
         public bool triggersSceneChange = false;
         public string targetSceneName = "";
+        public string targetAnchorId = "entry";
         public Vector2 spawnPositionInTarget = Vector2.zero;
+        public bool requireInteractForSceneChange = true;
 
         public enum TransitionDirection { Up, Down, Left, Right, Custom }
         [Header("传送门方向")]
@@ -32,6 +34,10 @@ namespace YuanHaiLu.Map
 
         private bool _hasShown = false;
         private bool _questProgressReported = false;
+        private bool _transitionInProgress = false;
+
+        private static string pendingSceneId;
+        private static string pendingAnchorId;
 
         private void Awake()
         {
@@ -47,12 +53,45 @@ namespace YuanHaiLu.Map
 
             if (triggersSceneChange && !string.IsNullOrEmpty(targetSceneName))
             {
-                StartCoroutine(TransitionToScene(other.gameObject));
+                if (requireInteractForSceneChange)
+                    ShowAreaName();
+                else
+                    StartCoroutine(TransitionToScene(other.gameObject));
             }
             else
             {
                 ShowAreaName();
             }
+        }
+
+        public void OnInteract(GameObject player)
+        {
+            if (!CanInteract() || _transitionInProgress) return;
+            ReportAreaReached();
+            StartCoroutine(TransitionToScene(player));
+        }
+
+        public bool CanInteract()
+        {
+            return triggersSceneChange &&
+                   !string.IsNullOrEmpty(targetSceneName) &&
+                   !string.IsNullOrEmpty(targetAnchorId);
+        }
+
+        internal static bool TryConsumePendingSpawn(
+            string loadedSceneId,
+            out string anchorId)
+        {
+            if (string.Equals(pendingSceneId, loadedSceneId, System.StringComparison.Ordinal) &&
+                !string.IsNullOrEmpty(pendingAnchorId))
+            {
+                anchorId = pendingAnchorId;
+                pendingSceneId = null;
+                pendingAnchorId = null;
+                return true;
+            }
+            anchorId = null;
+            return false;
         }
 
         private void ShowAreaName()
@@ -87,6 +126,7 @@ namespace YuanHaiLu.Map
 
         private System.Collections.IEnumerator TransitionToScene(GameObject player)
         {
+            _transitionInProgress = true;
             // 锁定玩家输入
             var controller = player.GetComponent<Character.PlayerController>();
             if (controller != null) controller.SetInputEnabled(false);
@@ -105,29 +145,14 @@ namespace YuanHaiLu.Map
             if (saveManager != null) saveManager.SaveGame(-1);
 
             // 加载目标场景
-            Debug.Log($"[AreaTrigger] 切换场景: {targetSceneName}");
-
-            var gameManager = GameManager.Instance;
-
-            // 标记为"场景过渡"而非新游戏：SceneDirector 将跳过出生点/初始物资覆盖。
-            gameManager?.BeginSceneEntry(GameManager.SceneEntryMode.SceneTransition);
-
-            // 单次具名回调：新场景加载后把玩家放到指定入口。
-            // 闭包只捕获值类型与持久 GameManager 引用（不捕获 this），
-            // 因为 Single 加载会销毁当前场景的 AreaTrigger，协程随之停止。
-            Vector2 targetSpawn = spawnPositionInTarget;
-            System.Action<Scene, LoadSceneMode> onSceneLoaded = null;
-            onSceneLoaded = (scene, mode) =>
-            {
-                SceneManager.sceneLoaded -= onSceneLoaded;
-                var newPlayer = GameObject.FindGameObjectWithTag("Player");
-                if (newPlayer != null)
-                    newPlayer.transform.position = targetSpawn;
-                gameManager?.CompleteSceneEntry();
-            };
-            SceneManager.sceneLoaded += onSceneLoaded;
-
-            SceneManager.LoadScene(targetSceneName);
+            pendingSceneId = targetSceneName;
+            pendingAnchorId = targetAnchorId;
+            GameManager.Instance?.BeginSceneEntry(GameManager.SceneEntryMode.SceneTransition);
+            // 只跨本次 LoadScene 保留玩家；目标 SceneBootstrapper 落点完成后
+            // 会把对象重新归属目标场景，避免转场重建丢失 HP/等级/武学状态。
+            DontDestroyOnLoad(player);
+            Debug.Log($"[AreaTrigger] 切换场景: {targetSceneName}/{targetAnchorId}");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(targetSceneName);
         }
 
 #if UNITY_EDITOR

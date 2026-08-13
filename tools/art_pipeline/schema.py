@@ -134,6 +134,8 @@ class EnvironmentRecipe:
     tile_size: int
     modules: tuple
     landmarks: tuple = ()
+    supports_day_night: bool = True
+    weather: str = "clear"
 
     @classmethod
     def from_dict(cls, payload):
@@ -149,11 +151,17 @@ class EnvironmentRecipe:
         landmark_ids = [landmark.id for landmark in landmarks]
         if len(landmark_ids) != len(set(landmark_ids)):
             raise ManifestError("{} contains duplicate landmark id".format(art_id))
+        supports_day_night = payload.get("dayNight", True)
+        if not isinstance(supports_day_night, bool):
+            raise ManifestError("{} dayNight must be boolean".format(art_id))
+        weather = _stable_id(payload.get("weather", "clear"))
         return cls(
             art_id,
             tile_size,
             _module_names(payload.get("modules"), art_id),
             landmarks,
+            supports_day_night,
+            weather,
         )
 
 

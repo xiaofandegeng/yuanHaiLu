@@ -38,6 +38,8 @@ namespace YuanHaiLu.Character
         // === 动画参数 ===
         private static readonly int AnimIsAttacking = Animator.StringToHash("IsAttacking");
         private static readonly int AnimAttackIndex = Animator.StringToHash("AttackIndex");
+        private static readonly int AnimMoveX = Animator.StringToHash("MoveX");
+        private static readonly int AnimMoveY = Animator.StringToHash("MoveY");
         private bool CanAnimate => _anim != null && _anim.runtimeAnimatorController != null;
 
         // === 事件 ===
@@ -84,6 +86,9 @@ namespace YuanHaiLu.Character
 
             if (CanAnimate)
             {
+                Vector2 direction = ToCardinal(_controller.LastDirection);
+                _anim.SetFloat(AnimMoveX, direction.x);
+                _anim.SetFloat(AnimMoveY, direction.y);
                 _anim.SetBool(AnimIsAttacking, true);
                 _anim.SetInteger(AnimAttackIndex, _comboIndex);
             }
@@ -215,6 +220,13 @@ namespace YuanHaiLu.Character
             {
                 OnAttackAnimationEnd();
             }
+        }
+
+        private static Vector2 ToCardinal(Vector2 direction)
+        {
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+                return direction.x < 0f ? Vector2.left : Vector2.right;
+            return direction.y > 0f ? Vector2.up : Vector2.down;
         }
 
         // === 编辑器辅助 ===

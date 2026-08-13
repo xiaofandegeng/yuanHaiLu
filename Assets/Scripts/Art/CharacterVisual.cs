@@ -19,8 +19,9 @@ namespace YuanHaiLu.Art
         {
             if (target == null)
                 throw new ArgumentNullException(nameof(target));
-            var visual = target.GetComponent<CharacterVisual>() ??
-                target.AddComponent<CharacterVisual>();
+            var visual = target.GetComponent<CharacterVisual>();
+            if (visual == null)
+                visual = target.AddComponent<CharacterVisual>();
             visual.Apply(stableArtId);
             return visual;
         }

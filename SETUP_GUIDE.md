@@ -145,7 +145,7 @@ MartialArtsSystem（武学功能需要）
 - 给普通敌人/Boss 添加 `QuestTarget`，配置 `objectiveType` 和稳定 `targetId`。
 - 区域目标配置 `AreaTrigger.questTargetId`；任务未接取时不会提前消耗一次性上报机会。
 - `ItemPickup` 和 `MartialArtsSystem.LearnSkill` 已自动在完整成功拾取/首次学习后上报。
-- v4 存档保存正式主角外观、活跃任务与目标进度；v1–v3 缺失外观时迁移为女剑客。
+- v4 存档保存正式主角外观、活跃任务与目标进度；v1–v3 缺失外观时迁移为男剑客。
 
 ## 6. Animator 约定
 
@@ -164,7 +164,7 @@ AttackIndex Int
 
 ## 7. 自动测试
 
-当前基线：81 个 EditMode、6 个 PlayMode、34 个 Python 测试。
+当前基线：92 个 EditMode、10 个 PlayMode、35 个 Python 测试。
 
 正式美术验证：
 
@@ -173,6 +173,9 @@ python3 -m unittest discover -s tools/art_pipeline/tests -v
 python3 -m tools.art_pipeline.build --all
 python3 -m tools.art_pipeline.validate --all
 ```
+
+视觉基线位于 `Assets/Tests/VisualBaselines/`。有意接受画面变化时使用
+`Tools → 渊海录 → 美术 → 重建全部视觉基线`；该操作需要真实图形设备，批处理时不要传 `-nographics`。
 
 在 macOS 上运行全部 EditMode 测试：
 
@@ -218,6 +221,7 @@ python3 -m tools.art_pipeline.validate --all
 - [ ] J 攻击、Shift 冲刺、数字键武学在探索状态可用。
 - [ ] ESC 显示暂停面板，再按 ESC 可继续游戏。
 - [ ] v4 存档后修改外观、位置、HP/MP、背包、装备、金钱、武学、活跃任务和已完成任务，读档可精确恢复。
+- [ ] 从任一正式区域进入传送点后，目标场景加载且玩家落在对应锚点；读档位置不会被默认出生点覆盖。
 - [ ] 读档不追加初始物资、不覆盖出生点；卸下装备后属性正确。
 - [ ] 再次加载其他场景不会重复应用旧存档。
 

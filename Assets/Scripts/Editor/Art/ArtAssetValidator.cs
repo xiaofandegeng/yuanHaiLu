@@ -29,6 +29,32 @@ namespace YuanHaiLu.Editor
 
     public static class ArtAssetValidator
     {
+        [Serializable]
+        private sealed class ManifestEntry
+        {
+            public string id;
+        }
+
+        [Serializable]
+        private sealed class FormalManifest
+        {
+            public string outputDirectory;
+            public bool perRecipeDirectory;
+            public ManifestEntry[] characters;
+            public ManifestEntry[] environments;
+        }
+
+        private static readonly string[] FormalManifestPaths =
+        {
+            "Assets/ArtSource/Characters/Manifests/player-roster.json",
+            "Assets/ArtSource/Characters/Manifests/named-roster.json",
+            "Assets/ArtSource/Characters/Manifests/npc-roster.json",
+            "Assets/ArtSource/Characters/Manifests/enemy-roster.json",
+            "Assets/ArtSource/Characters/Manifests/boss-roster.json",
+            "Assets/ArtSource/Environment/Manifests/regions.json",
+            "Assets/ArtSource/Environment/Manifests/interiors.json"
+        };
+
         [MenuItem("Tools/渊海录/美术/验证正式美术")]
         public static void ValidateFromMenu()
         {
@@ -41,7 +67,9 @@ namespace YuanHaiLu.Editor
         public static ArtValidationReport ValidateAll()
         {
             var report = new ArtValidationReport();
-            foreach (var metadataPath in ArtImportRules.EnumerateMetadataAssetPaths())
+            string[] metadataPaths = ArtImportRules.EnumerateMetadataAssetPaths();
+            ValidateFormalScope(metadataPaths, report);
+            foreach (var metadataPath in metadataPaths)
             {
                 try
                 {
@@ -52,9 +80,51 @@ namespace YuanHaiLu.Editor
                     report.Add($"{metadataPath}: {exception.Message}");
                 }
             }
-            if (ArtImportRules.EnumerateMetadataAssetPaths().Length == 0)
+            if (metadataPaths.Length == 0)
                 report.Add("No formal .art.json metadata files were found under Assets/Art.");
             return report;
+        }
+
+        private static void ValidateFormalScope(
+            IReadOnlyCollection<string> actualPaths,
+            ArtValidationReport report)
+        {
+            var expected = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (string manifestPath in FormalManifestPaths)
+            {
+                if (!File.Exists(manifestPath))
+                {
+                    report.Add($"Missing formal manifest '{manifestPath}'.");
+                    continue;
+                }
+                var manifest = JsonUtility.FromJson<FormalManifest>(File.ReadAllText(manifestPath));
+                if (manifest == null || string.IsNullOrEmpty(manifest.outputDirectory))
+                {
+                    report.Add($"Invalid formal manifest '{manifestPath}'.");
+                    continue;
+                }
+                foreach (var entry in manifest.characters ?? Array.Empty<ManifestEntry>())
+                    expected[$"{manifest.outputDirectory}/{entry.id}.art.json"] = entry.id;
+                foreach (var entry in manifest.environments ?? Array.Empty<ManifestEntry>())
+                {
+                    string directory = manifest.perRecipeDirectory
+                        ? $"{manifest.outputDirectory}/{entry.id}"
+                        : manifest.outputDirectory;
+                    expected[$"{directory}/{entry.id}_tileset.art.json"] = entry.id;
+                }
+            }
+
+            var actual = new HashSet<string>(actualPaths, StringComparer.Ordinal);
+            foreach (string missing in expected.Keys.Where(path => !actual.Contains(path)))
+                report.Add($"Missing formal metadata '{missing}'.");
+            foreach (string unexpected in actual.Where(path => !expected.ContainsKey(path)))
+                report.Add($"Unexpected formal metadata '{unexpected}'.");
+            foreach (var pair in expected.Where(pair => actual.Contains(pair.Key)))
+            {
+                var metadata = ArtImportRules.ReadMetadataAtPath(pair.Key);
+                if (!string.Equals(metadata.id, pair.Value, StringComparison.Ordinal))
+                    report.Add($"'{pair.Key}' declares id '{metadata.id}', expected '{pair.Value}'.");
+            }
         }
 
         private static void ValidateMetadata(string metadataPath, ArtValidationReport report)

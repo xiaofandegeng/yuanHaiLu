@@ -61,11 +61,20 @@ namespace YuanHaiLu.Tests.EditMode
                 .ToArray();
 
             Assert.That(appearanceButtons, Has.Length.EqualTo(12));
-            var preview = GameObject.Find("CharacterPreview")?.GetComponent<Image>();
+            var allTransforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include);
+            var preview = allTransforms.First(value => value.name == "CharacterPreview")
+                .GetComponent<Image>();
             Assert.That(preview, Is.Not.Null);
             Assert.That(preview.sprite, Is.Not.Null);
             Assert.That(AssetDatabase.Contains(preview.sprite), Is.True);
-            Assert.That(GameObject.Find("CharacterSelectionLabel")?.GetComponent<Text>(), Is.Not.Null);
+            Assert.That(allTransforms.First(value => value.name == "CharacterSelectionLabel")
+                .GetComponent<Text>(), Is.Not.Null);
+            Assert.That(allTransforms.First(value => value.name == "Btn_确认角色")
+                .GetComponent<Button>(), Is.Not.Null);
+            Assert.That(allTransforms.First(value => value.name == "Btn_取消角色")
+                .GetComponent<Button>(), Is.Not.Null);
+            Assert.That(allTransforms.First(value => value.name == "CharacterSelector")
+                .gameObject.activeSelf, Is.False);
         }
 
         [Test]
@@ -93,16 +102,11 @@ namespace YuanHaiLu.Tests.EditMode
         [Test]
         public void BuildSettingsContainsMenuDemoAndAllTwentyThreeFormalScenes()
         {
-            SetupBuildSettings.Setup();
             var scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).ToArray();
+            var canonical = SetupBuildSettings.CanonicalScenePaths();
 
             Assert.That(scenes, Has.Length.EqualTo(25));
-            Assert.That(scenes[0].path, Is.EqualTo("Assets/Scenes/MainMenu.unity"));
-            Assert.That(scenes[1].path, Is.EqualTo("Assets/Scenes/Demo_YanLiuTown.unity"));
-            Assert.That(scenes.Count(scene => scene.path.StartsWith("Assets/Scenes/Regions/")),
-                Is.EqualTo(10));
-            Assert.That(scenes.Count(scene => scene.path.StartsWith("Assets/Scenes/Interiors/")),
-                Is.EqualTo(13));
+            CollectionAssert.AreEqual(canonical, scenes.Select(scene => scene.path).ToArray());
         }
     }
 }

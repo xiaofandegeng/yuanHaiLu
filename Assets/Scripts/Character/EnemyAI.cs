@@ -199,24 +199,34 @@ namespace YuanHaiLu.Character
 
                 if (CanAnimate) _anim.SetBool(AnimIsAttacking, true);
 
-                // 攻击判定
-                Vector2 attackCenter = (Vector2)transform.position + _lastDirection * attackRange;
-                Collider2D[] hits = Physics2D.OverlapCircleAll(attackCenter, attackRange * 0.6f,
-                    LayerMask.GetMask("Player"));
-
-                foreach (var hit in hits)
-                {
-                    var playerStats = hit.GetComponent<CharacterStats>();
-                    if (playerStats != null && playerStats.IsAlive)
-                    {
-                        playerStats.TakeDamage(_stats.attack, _stats);
-                    }
-                }
             }
             else if (_attackTimer <= 0f)
             {
                 if (CanAnimate) _anim.SetBool(AnimIsAttacking, false);
             }
+        }
+
+        // 由正式攻击 AnimationClip 的事件帧调用。
+        public void OnAttackHitFrame()
+        {
+            Vector2 attackCenter = (Vector2)transform.position + _lastDirection * attackRange;
+            Collider2D[] hits = Physics2D.OverlapCircleAll(
+                attackCenter,
+                attackRange * 0.6f,
+                LayerMask.GetMask("Player"));
+            foreach (var hit in hits)
+            {
+                var playerStats = hit.GetComponent<CharacterStats>();
+                if (playerStats != null && playerStats.IsAlive)
+                    playerStats.TakeDamage(_stats.attack, _stats);
+            }
+        }
+
+        // 由正式攻击 AnimationClip 的结束事件调用；计时器仍作为安全兜底。
+        public void OnAttackAnimationEnd()
+        {
+            _attackTimer = 0f;
+            if (CanAnimate) _anim.SetBool(AnimIsAttacking, false);
         }
 
         private void SetNewPatrolTarget()

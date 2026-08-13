@@ -16,7 +16,7 @@ namespace YuanHaiLu.Editor
         private const string PrefabRoot = "Assets/Prefabs/Characters";
         private const string AnimationRoot = "Assets/Animations/Characters";
         private const string StampPath = AnimationRoot + "/formal-character-build.txt";
-        private const string BuilderVersion = "character-builder-v2";
+        private const string BuilderVersion = "character-builder-v3";
 
         [MenuItem("Tools/渊海录/美术/重建角色动画与Prefab")]
         public static void RebuildAll()
@@ -36,7 +36,7 @@ namespace YuanHaiLu.Editor
             if (!force && IsCurrent(stamp, metadataPaths.Length))
                 return;
 
-            ArtImportRules.ApplyAllFormal();
+            ArtImportRules.ApplyAllFormal("character");
             var report = ArtAssetValidator.ValidateAll();
             if (!report.IsValid)
                 throw new InvalidOperationException(report.ToString());
@@ -61,7 +61,7 @@ namespace YuanHaiLu.Editor
             File.WriteAllText(StampPath, stamp, Encoding.UTF8);
             AssetDatabase.ImportAsset(StampPath, ImportAssetOptions.ForceUpdate);
             AssetDatabase.SaveAssets();
-            ArtCatalogBuilder.RebuildAll();
+            ArtCatalogBuilder.RebuildAll(false);
             Debug.Log($"[CharacterAnimationBuilder] generated={metadataPaths.Length}");
         }
 
@@ -100,7 +100,7 @@ namespace YuanHaiLu.Editor
             }
             if (states.TryGetValue("idle_down", out var idle))
                 stateMachine.defaultState = idle;
-            AddBasicTransitions(states);
+            AddDirectionalTransitions(stateMachine, states);
             EditorUtility.SetDirty(controller);
 
             var prefabObject = new GameObject(metadata.id);
@@ -183,18 +183,90 @@ namespace YuanHaiLu.Editor
             controller.AddParameter("AttackIndex", AnimatorControllerParameterType.Int);
         }
 
-        private static void AddBasicTransitions(IReadOnlyDictionary<string, AnimatorState> states)
+        private static void AddDirectionalTransitions(
+            AnimatorStateMachine stateMachine,
+            IReadOnlyDictionary<string, AnimatorState> states)
         {
-            if (!states.TryGetValue("idle_down", out var idle) || !states.TryGetValue("walk_down", out var walk))
+            foreach (var direction in new[] { "down", "left", "right", "up" })
+            {
+                for (var combo = 0; combo < 3; combo++)
+                {
+                    AddAnyStateTransition(
+                        stateMachine,
+                        states,
+                        $"attack_{combo + 1}_{direction}",
+                        direction,
+                        transition =>
+                        {
+                            transition.AddCondition(AnimatorConditionMode.If, 0f, "IsAttacking");
+                            transition.AddCondition(AnimatorConditionMode.Equals, combo, "AttackIndex");
+                        });
+                }
+
+                AddAnyStateTransition(
+                    stateMachine,
+                    states,
+                    $"dash_{direction}",
+                    direction,
+                    transition =>
+                    {
+                        transition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsAttacking");
+                        transition.AddCondition(AnimatorConditionMode.If, 0f, "IsDashing");
+                    });
+                AddAnyStateTransition(
+                    stateMachine,
+                    states,
+                    $"walk_{direction}",
+                    direction,
+                    transition =>
+                    {
+                        transition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsAttacking");
+                        transition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsDashing");
+                        transition.AddCondition(AnimatorConditionMode.Greater, 0.01f, "Speed");
+                    });
+                AddAnyStateTransition(
+                    stateMachine,
+                    states,
+                    $"idle_{direction}",
+                    direction,
+                    transition =>
+                    {
+                        transition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsAttacking");
+                        transition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsDashing");
+                        transition.AddCondition(AnimatorConditionMode.Less, 0.01f, "Speed");
+                    });
+            }
+        }
+
+        private static void AddAnyStateTransition(
+            AnimatorStateMachine stateMachine,
+            IReadOnlyDictionary<string, AnimatorState> states,
+            string stateName,
+            string direction,
+            Action<AnimatorStateTransition> configure)
+        {
+            if (!states.TryGetValue(stateName, out var destination))
                 return;
-            var toWalk = idle.AddTransition(walk);
-            toWalk.hasExitTime = false;
-            toWalk.duration = 0f;
-            toWalk.AddCondition(AnimatorConditionMode.Greater, 0.01f, "Speed");
-            var toIdle = walk.AddTransition(idle);
-            toIdle.hasExitTime = false;
-            toIdle.duration = 0f;
-            toIdle.AddCondition(AnimatorConditionMode.Less, 0.01f, "Speed");
+            var transition = stateMachine.AddAnyStateTransition(destination);
+            transition.hasExitTime = false;
+            transition.duration = 0f;
+            transition.canTransitionToSelf = false;
+            configure(transition);
+            switch (direction)
+            {
+                case "left":
+                    transition.AddCondition(AnimatorConditionMode.Less, -0.5f, "MoveX");
+                    break;
+                case "right":
+                    transition.AddCondition(AnimatorConditionMode.Greater, 0.5f, "MoveX");
+                    break;
+                case "up":
+                    transition.AddCondition(AnimatorConditionMode.Greater, 0.5f, "MoveY");
+                    break;
+                default:
+                    transition.AddCondition(AnimatorConditionMode.Less, -0.5f, "MoveY");
+                    break;
+            }
         }
 
         private static string BuildStamp(IEnumerable<string> metadataPaths)

@@ -240,8 +240,8 @@ namespace YuanHaiLu.Editor
             var gridObject = new GameObject("CharacterChoiceGrid");
             gridObject.transform.SetParent(panel.transform, false);
             var gridRect = gridObject.AddComponent<RectTransform>();
-            gridRect.anchorMin = new Vector2(0.04f, 0.04f);
-            gridRect.anchorMax = new Vector2(0.96f, 0.34f);
+            gridRect.anchorMin = new Vector2(0.04f, 0.22f);
+            gridRect.anchorMax = new Vector2(0.96f, 0.52f);
             gridRect.offsetMin = Vector2.zero;
             gridRect.offsetMax = Vector2.zero;
             var grid = gridObject.AddComponent<GridLayoutGroup>();
@@ -253,6 +253,54 @@ namespace YuanHaiLu.Editor
 
             foreach (var appearance in PlayerAppearance.All)
                 CreateAppearanceButton(gridObject, appearance);
+
+            CreateSelectorActionButton(
+                panel,
+                "确认角色",
+                new Vector2(0.08f, 0.04f),
+                new Vector2(0.46f, 0.18f),
+                new Color(0.72f, 0.48f, 0.16f));
+            CreateSelectorActionButton(
+                panel,
+                "取消角色",
+                new Vector2(0.54f, 0.04f),
+                new Vector2(0.92f, 0.18f),
+                new Color(0.18f, 0.16f, 0.24f));
+            panel.SetActive(false);
+        }
+
+        private static void CreateSelectorActionButton(
+            GameObject parent,
+            string label,
+            Vector2 anchorMin,
+            Vector2 anchorMax,
+            Color color)
+        {
+            var buttonObject = new GameObject("Btn_" + label);
+            buttonObject.transform.SetParent(parent.transform, false);
+            var rect = buttonObject.AddComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            var image = buttonObject.AddComponent<Image>();
+            image.color = color;
+            var button = buttonObject.AddComponent<Button>();
+            button.targetGraphic = image;
+
+            var textObject = new GameObject("Text");
+            textObject.transform.SetParent(buttonObject.transform, false);
+            var textRect = textObject.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+            var text = textObject.AddComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 10;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.text = label == "确认角色" ? "确认并启程" : "返回";
         }
 
         private static void CreateAppearanceButton(GameObject parent, PlayerAppearance appearance)

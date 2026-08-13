@@ -382,12 +382,15 @@ namespace YuanHaiLu.GameSystem
 
         internal static string ResolvePlayerArtId(SaveData saveData)
         {
-            if (saveData != null &&
-                saveData.saveVersion >= APPEARANCE_SAVE_VERSION &&
-                PlayerAppearance.TryParse(saveData.playerArtId, out var appearance))
+            if (saveData == null || saveData.saveVersion < APPEARANCE_SAVE_VERSION)
+                return PlayerAppearance.Default.ArtId;
+            if (PlayerAppearance.TryParse(saveData.playerArtId, out var appearance))
             {
                 return appearance.ArtId;
             }
+            Debug.LogWarning(
+                $"[SaveManager] 存档中的玩家外观无效，已回退默认男剑客: " +
+                $"{saveData.playerArtId ?? "<null>"}");
             return PlayerAppearance.Default.ArtId;
         }
 

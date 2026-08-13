@@ -24,7 +24,16 @@ namespace YuanHaiLu.Tests.EditMode
         public void TearDown()
         {
             if (characterCatalog != null)
+            {
+                foreach (var entry in characterCatalog.Entries)
+                {
+                    if (entry?.Controller != null && !AssetDatabase.Contains(entry.Controller))
+                        UnityEngine.Object.DestroyImmediate(entry.Controller);
+                    if (entry?.Prefab != null && !AssetDatabase.Contains(entry.Prefab))
+                        UnityEngine.Object.DestroyImmediate(entry.Prefab);
+                }
                 UnityEngine.Object.DestroyImmediate(characterCatalog);
+            }
             if (environmentCatalog != null)
                 UnityEngine.Object.DestroyImmediate(environmentCatalog);
         }
@@ -86,6 +95,24 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
+        public void CharacterCatalogRejectsMissingDerivedControllerOrPrefab()
+        {
+            characterCatalog = ScriptableObject.CreateInstance<CharacterArtCatalog>();
+            characterCatalog.SetEntriesForEditor(new[]
+            {
+                CharacterArtEntry.Create(
+                    "player_male_swordsman",
+                    ArtAssetId.CharacterCategory.Player,
+                    Texture2D.whiteTexture,
+                    null,
+                    null,
+                    Texture2D.whiteTexture)
+            });
+
+            Assert.That(() => characterCatalog.RebuildLookup(), Throws.InvalidOperationException);
+        }
+
+        [Test]
         public void EnvironmentCatalogRejectsDuplicateRegionIds()
         {
             environmentCatalog = ScriptableObject.CreateInstance<EnvironmentArtCatalog>();
@@ -109,7 +136,6 @@ namespace YuanHaiLu.Tests.EditMode
         [Test]
         public void FormalCharacterTextureUsesExactPixelImportSettings()
         {
-            ArtImportRules.Apply(TestCharacterPath);
             var importer = (TextureImporter)AssetImporter.GetAtPath(TestCharacterPath);
 
             Assert.That(importer.spritePixelsPerUnit, Is.EqualTo(16f));
@@ -125,7 +151,6 @@ namespace YuanHaiLu.Tests.EditMode
         [Test]
         public void FormalTilesetUsesMetadataSpriteNames()
         {
-            ArtImportRules.Apply(TestTilesetPath);
             var names = AssetDatabase.LoadAllAssetsAtPath(TestTilesetPath)
                 .OfType<Sprite>()
                 .Select(sprite => sprite.name)
@@ -139,34 +164,17 @@ namespace YuanHaiLu.Tests.EditMode
         [Test]
         public void FormalArtValidatorReportsNoReferenceSliceErrors()
         {
-            ArtImportRules.ApplyAllFormal();
             var report = ArtAssetValidator.ValidateAll();
 
             Assert.That(report.Errors, Is.Empty, report.ToString());
         }
 
         [Test]
-        public void FormalBatchImportLeavesUndeclaredLegacyTexturesUntouched()
+        public void UndeclaredLegacyTextureIsOutsideFormalMetadataContract()
         {
             const string legacyPath = "Assets/Art/Tilesets/yanliu_town_demo.png";
-            var importer = (TextureImporter)AssetImporter.GetAtPath(legacyPath);
-            var before = new
-            {
-                importer.textureType,
-                importer.spriteImportMode,
-                importer.filterMode,
-                importer.mipmapEnabled,
-                importer.textureCompression
-            };
-
-            ArtImportRules.ApplyAllFormal();
-            importer = (TextureImporter)AssetImporter.GetAtPath(legacyPath);
-
-            Assert.That(importer.textureType, Is.EqualTo(before.textureType));
-            Assert.That(importer.spriteImportMode, Is.EqualTo(before.spriteImportMode));
-            Assert.That(importer.filterMode, Is.EqualTo(before.filterMode));
-            Assert.That(importer.mipmapEnabled, Is.EqualTo(before.mipmapEnabled));
-            Assert.That(importer.textureCompression, Is.EqualTo(before.textureCompression));
+            Assert.That(System.IO.File.Exists(System.IO.Path.ChangeExtension(legacyPath, ".art.json")),
+                Is.False);
         }
 
         [Test]

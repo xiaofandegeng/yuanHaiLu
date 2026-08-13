@@ -86,6 +86,24 @@ def _bake_landmarks(recipe, output_dir):
                 "foregroundCut": landmark.foreground_cut,
             }
         )
+        if landmark.foreground_cut > 0:
+            entries.append(
+                {
+                    "name": "{}__landmark__{}__foreground".format(
+                        recipe.id, landmark.id
+                    ),
+                    "id": landmark.id + "_foreground",
+                    "rect": [
+                        cursor_x,
+                        y,
+                        module.width,
+                        landmark.foreground_cut,
+                    ],
+                    "pivot": [0.5, 0.0],
+                    "collision": [0, 0, 0, 0],
+                    "foregroundCut": 0,
+                }
+            )
         cursor_x += module.width
 
     landmark_hash = _image_hash(sheet.image)
@@ -146,6 +164,8 @@ def bake_environment(recipe, output_dir):
         "width": canvas.image.width,
         "height": canvas.image.height,
         "tileSize": tile_size,
+        "dayNight": recipe.supports_day_night,
+        "weather": recipe.weather,
         "sprites": sprites,
         "landmarkImage": landmark_path.name if landmark_path else None,
         "landmarkSha256": landmark_hash,

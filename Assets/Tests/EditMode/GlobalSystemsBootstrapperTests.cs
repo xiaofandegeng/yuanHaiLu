@@ -46,6 +46,16 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
+        public void GameTimeManagerInitializesPeriodFromItsConfiguredHour()
+        {
+            var manager = TestSceneFactory.AddComponentWithAwake<GameTimeManager>(
+                TestSceneFactory.Create("GameTimeManager"));
+
+            Assert.That(manager.hour, Is.EqualTo(8));
+            Assert.That(manager.CurrentPeriod, Is.EqualTo(GameTimeManager.TimePeriod.Morning));
+        }
+
+        [Test]
         public void MainMenuStartPutsPersistentGameManagerBackInMenuState()
         {
             var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
@@ -99,6 +109,7 @@ namespace YuanHaiLu.Tests.EditMode
                 LogType.Error,
                 "[MainMenu] 场景不在 Build Settings 中: Missing_Scene_For_Test");
             menu.OnNewGame();
+            menu.ConfirmNewGame();
 
             Assert.That(inventory.Gold, Is.EqualTo(150));
             Assert.That(gameManager.playerName, Is.EqualTo("当前角色"));
@@ -107,7 +118,7 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void MainMenuAppearanceSelectionUpdatesPersistentGameManager()
+        public void MainMenuAppearanceSelectionIsPendingUntilConfirmation()
         {
             var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
                 TestSceneFactory.Create("GameManager"));
@@ -116,7 +127,12 @@ namespace YuanHaiLu.Tests.EditMode
             menu.SelectAppearance("player_male_hidden_weapon");
 
             Assert.That(menu.SelectedAppearance.ArtId, Is.EqualTo("player_male_hidden_weapon"));
-            Assert.That(gameManager.PlayerArtId, Is.EqualTo("player_male_hidden_weapon"));
+            Assert.That(gameManager.PlayerArtId, Is.EqualTo(PlayerAppearance.Default.ArtId));
+
+            menu.CancelAppearanceSelection();
+
+            Assert.That(menu.SelectedAppearance, Is.EqualTo(PlayerAppearance.Default));
+            Assert.That(gameManager.PlayerArtId, Is.EqualTo(PlayerAppearance.Default.ArtId));
         }
 
         private static void InvokePrivate(object target, string methodName)
