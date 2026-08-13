@@ -50,6 +50,7 @@ namespace YuanHaiLu.Editor
                     instance.name = entry.Id;
                     instance.transform.SetParent(roots[category]);
                     instance.transform.position = new Vector3((index % 12) * 2f, y - (index / 12) * 2.4f, 0f);
+                    CreateLabel(instance.transform, entry.Id);
                 }
                 y -= ((entries.Length + 11) / 12) * 2.4f + 1.5f;
             }
@@ -63,6 +64,27 @@ namespace YuanHaiLu.Editor
         public static void GenerateFromCommandLine()
         {
             Generate();
+        }
+
+        /// <summary>
+        /// 在每个角色 Prefab 上方生成一个显示稳定 ID 的 <see cref="TextMesh"/>，
+        /// SortingLayer=UI 以确保总览里标签始终盖在角色之上，便于人工核对外观与 ID。
+        /// </summary>
+        private static void CreateLabel(Transform parent, string stableId)
+        {
+            var labelObject = new GameObject(stableId + "__label");
+            labelObject.transform.SetParent(parent, false);
+            labelObject.transform.localPosition = new Vector3(0f, 1.4f, 0f);
+            var text = labelObject.AddComponent<TextMesh>();
+            text.text = stableId;
+            text.fontSize = 24;
+            text.characterSize = 0.28f;
+            text.anchor = TextAnchor.LowerCenter;
+            text.alignment = TextAlignment.Center;
+            text.color = new Color(1f, 1f, 1f, 0.92f);
+            var labelRenderer = labelObject.GetComponent<MeshRenderer>();
+            labelRenderer.sortingLayerName = "UI";
+            labelRenderer.sortingOrder = 10;
         }
     }
 }

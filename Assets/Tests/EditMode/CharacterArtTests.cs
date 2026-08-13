@@ -72,5 +72,45 @@ namespace YuanHaiLu.Tests.EditMode
                 Object.DestroyImmediate(target);
             }
         }
+
+        [Test]
+        public void CharacterShowcaseWindowExposesFixedActionAndScaleVocabulary()
+        {
+            // 动作词表必须与正式角色 Animator 状态前缀一致（attack_1/skill_1 带下划线）。
+            Assert.That(CharacterShowcaseWindow.SupportedActions, Is.EquivalentTo(new[]
+            {
+                "idle", "walk", "dash",
+                "attack_1", "attack_2", "attack_3",
+                "skill_1", "skill_2",
+                "hurt", "death",
+            }));
+            Assert.That(CharacterShowcaseWindow.SupportedScales, Is.EquivalentTo(new[] { 1, 4, 8 }));
+        }
+
+        [Test]
+        public void CharacterShowcaseWindowRejectsUnknownActionsAndScales()
+        {
+            var window = ScriptableObject.CreateInstance<CharacterShowcaseWindow>();
+            try
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(() => window.PreviewAction("fly"), Throws.ArgumentException);
+                    Assert.That(() => window.PreviewAction(string.Empty), Throws.ArgumentException);
+                    Assert.That(() => window.SetPreviewScale(2), Throws.ArgumentException);
+                    Assert.That(() => window.SetPreviewScale(0), Throws.ArgumentException);
+                });
+
+                // 已知值不得抛异常；未绑定 Animator 时为安全 no-op。
+                Assert.That(() => window.PreviewAction("attack_1"), Throws.Nothing);
+                Assert.That(() => window.SetPreviewScale(8), Throws.Nothing);
+                Assert.That(window.PreviewScale, Is.EqualTo(8));
+                Assert.That(window.CurrentAction, Is.EqualTo("attack_1"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
     }
 }

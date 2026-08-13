@@ -95,5 +95,48 @@ namespace YuanHaiLu.Tests.PlayMode
             }
             yield return null;
         }
+
+        [UnityTest]
+        public IEnumerator ShowcaseActionVocabularyMapsToRealAnimatorStates()
+        {
+            // 这组动作与 CharacterShowcaseWindow.SupportedActions 对齐（带下划线，
+            // 与 Animator 状态命名 attack_1_down / skill_1_down 等一致）。
+            var showcaseActions = new[]
+            {
+                "idle", "walk", "dash",
+                "attack_1", "attack_2", "attack_3",
+                "skill_1", "skill_2",
+                "hurt", "death",
+            };
+            var catalog = CharacterArtCatalog.LoadDefault();
+            Assert.That(catalog.TryGet("player_female_mystic", out var entry), Is.True);
+            var instance = Object.Instantiate(entry.Prefab);
+            try
+            {
+                var animator = instance.GetComponent<Animator>();
+                Assert.That(animator, Is.Not.Null);
+                Assert.That(animator.runtimeAnimatorController, Is.Not.Null);
+
+                // player_female_mystic 声明了全部核心动作，因此总览词表里的每一项
+                // 都必须映射到一个真实存在的 Animator 状态。
+                foreach (var action in showcaseActions)
+                {
+                    string state = action + "_down";
+                    Assert.That(
+                        animator.HasState(0, Animator.StringToHash(state)),
+                        Is.True,
+                        "showcase action '" + action + "' must map to Animator state '" + state + "'.");
+                }
+
+                animator.Play("idle_down", 0, 0f);
+                animator.Update(0f);
+                yield return null;
+                Assert.That(animator.GetCurrentAnimatorStateInfo(0).IsName("idle_down"), Is.True);
+            }
+            finally
+            {
+                Object.Destroy(instance);
+            }
+        }
     }
 }
