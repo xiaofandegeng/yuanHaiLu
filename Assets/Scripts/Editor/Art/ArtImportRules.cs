@@ -28,6 +28,9 @@ namespace YuanHaiLu.Editor
         public string sha256;
         public string landmarkImage;
         public string landmarkSha256;
+        public string variantOf;
+        public string stateId;
+        public string weather;
         public int frameSize;
         public int tileSize;
         public string[] blockingTileRoles;

@@ -70,7 +70,8 @@ namespace YuanHaiLu.Editor
                 ValidateTexture(landmarkPath, metadata.landmarkSha256, metadata.landmarks, report);
             }
 
-            if (string.Equals(metadata.kind, "environment", StringComparison.Ordinal))
+            if (string.Equals(metadata.kind, "environment", StringComparison.Ordinal) &&
+                string.IsNullOrEmpty(metadata.variantOf))
             {
                 var previewPath = Path.Combine(directory, metadata.id + "_reference.png").Replace('\\', '/');
                 ValidatePreview(previewPath, report);

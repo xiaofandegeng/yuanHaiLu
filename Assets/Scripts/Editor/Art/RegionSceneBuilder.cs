@@ -135,9 +135,16 @@ namespace YuanHaiLu.Editor
                 throw new InvalidOperationException(
                     $"'{id}' populated {groundCellCount} declared ground cells.");
 
-            AddLandmarks(id, layout, gridObject.transform);
+            var landmarkRenderers = AddLandmarks(id, layout, gridObject.transform);
             AddAnchors(layout, gridObject.transform);
             AddDeclaredColliders(layout, gridObject.transform);
+            if (string.Equals(id, "prologue_village", StringComparison.Ordinal))
+                AddPrologueEnvironmentController(
+                    gridObject,
+                    layout,
+                    maps.Values,
+                    tiles,
+                    landmarkRenderers);
             foreach (var tilemap in maps.Values)
             {
                 tilemap.CompressBounds();
@@ -187,7 +194,7 @@ namespace YuanHaiLu.Editor
             return layout;
         }
 
-        private static void AddLandmarks(string id, LayoutJson layout, Transform root)
+        private static List<SpriteRenderer> AddLandmarks(string id, LayoutJson layout, Transform root)
         {
             var metadataPath = layout.kind == "interior"
                 ? $"Assets/Art/Environment/Interiors/{id}/{id}_tileset.art.json"
@@ -196,6 +203,7 @@ namespace YuanHaiLu.Editor
             var imagePath = Path.Combine(Path.GetDirectoryName(metadataPath) ?? string.Empty, metadata.landmarkImage).Replace('\\', '/');
             var sprites = AssetDatabase.LoadAllAssetsAtPath(imagePath).OfType<Sprite>()
                 .ToDictionary(sprite => sprite.name, StringComparer.Ordinal);
+            var renderers = new List<SpriteRenderer>();
             foreach (var landmarkId in layout.requiredLandmarks ?? Array.Empty<string>())
             {
                 var spriteName = $"{id}__landmark__{landmarkId}";
@@ -208,7 +216,68 @@ namespace YuanHaiLu.Editor
                 var renderer = instance.AddComponent<SpriteRenderer>();
                 renderer.sprite = sprite;
                 renderer.sortingOrder = 35;
+                renderers.Add(renderer);
             }
+            return renderers;
+        }
+
+        private static void AddPrologueEnvironmentController(
+            GameObject root,
+            LayoutJson layout,
+            IEnumerable<Tilemap> maps,
+            IReadOnlyDictionary<string, Tile> normalTiles,
+            IReadOnlyList<SpriteRenderer> normalLandmarks)
+        {
+            const string BurnedId = "prologue_village_burned";
+            var burnedTiles = EnvironmentTileBuilder.LoadTiles(BurnedId);
+            if (burnedTiles.Count == 0)
+                throw new InvalidOperationException("Missing baked prologue burned Tile assets.");
+            var normalPrefix = "prologue_village__";
+            var swaps = new List<EnvironmentTileSwap>();
+            foreach (var pair in normalTiles)
+            {
+                if (!pair.Key.StartsWith(normalPrefix, StringComparison.Ordinal)) continue;
+                var burnedKey = BurnedId + "__" + pair.Key.Substring(normalPrefix.Length);
+                if (!burnedTiles.TryGetValue(burnedKey, out var burned))
+                    throw new InvalidOperationException($"Missing burned Tile '{burnedKey}'.");
+                swaps.Add(new EnvironmentTileSwap { normal = pair.Value, burned = burned });
+            }
+            var burnedLandmarks = LoadLandmarkSprites(BurnedId, "prologue_village", layout);
+            if (burnedLandmarks.Count != normalLandmarks.Count)
+                throw new InvalidOperationException("Prologue normal/burned landmark counts do not match.");
+            var landmarkSwaps = normalLandmarks.Select((renderer, index) => new EnvironmentLandmarkSwap
+            {
+                renderer = renderer,
+                normal = renderer.sprite,
+                burned = burnedLandmarks[index]
+            });
+            var controller = root.AddComponent<RegionEnvironmentController>();
+            controller.ConfigureForEditor(
+                maps,
+                swaps,
+                landmarkSwaps,
+                "clear",
+                "ember_wind");
+        }
+
+        private static List<Sprite> LoadLandmarkSprites(string metadataId, string directoryId, LayoutJson layout)
+        {
+            var root = layout.kind == "interior" ? "Interiors" : "Regions";
+            var metadataPath = $"Assets/Art/Environment/{root}/{directoryId}/{metadataId}_tileset.art.json";
+            var metadata = ArtImportRules.ReadMetadataAtPath(metadataPath);
+            var imagePath = Path.Combine(Path.GetDirectoryName(metadataPath) ?? string.Empty, metadata.landmarkImage)
+                .Replace('\\', '/');
+            var sprites = AssetDatabase.LoadAllAssetsAtPath(imagePath).OfType<Sprite>()
+                .ToDictionary(sprite => sprite.name, StringComparer.Ordinal);
+            return (layout.requiredLandmarks ?? Array.Empty<string>())
+                .Select(landmarkId =>
+                {
+                    var spriteName = $"{metadataId}__landmark__{landmarkId}";
+                    if (!sprites.TryGetValue(spriteName, out var sprite))
+                        throw new InvalidOperationException($"Missing formal landmark '{spriteName}'.");
+                    return sprite;
+                })
+                .ToList();
         }
 
         private static void AddAnchors(LayoutJson layout, Transform root)

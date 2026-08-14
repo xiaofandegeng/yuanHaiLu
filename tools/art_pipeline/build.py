@@ -55,6 +55,11 @@ def build_manifest(manifest_path, output_dir=None):
             )
             baked = bake_environment(recipe, recipe_destination)
             result = result.plus(baked.changed)
+            for variant in recipe.state_variants:
+                if variant.id == "normal":
+                    continue
+                baked_variant = bake_environment(recipe.variant_recipe(variant.id), recipe_destination)
+                result = result.plus(baked_variant.changed)
         return result
 
     raise ValueError("manifest '{}' contains neither characters nor environments".format(manifest_path))

@@ -126,5 +126,85 @@ namespace YuanHaiLu.Tests.EditMode
                 Assert.That(tile.colliderType, Is.EqualTo(expected), tile.sprite.name);
             }
         }
+
+        [Test]
+        public void PrologueSceneProvidesAnEnvironmentStateController()
+        {
+            RegionSceneBuilder.Build("prologue_village");
+            var scene = SceneManager.GetSceneByPath(RegionSceneBuilder.ScenePath("prologue_village"));
+            try
+            {
+                var root = scene.GetRootGameObjects()
+                    .Single(value => value.GetComponent<RegionSceneDefinition>() != null);
+                Assert.That(
+                    root.GetComponents<MonoBehaviour>().Select(component => component.GetType().Name),
+                    Does.Contain("RegionEnvironmentController"));
+            }
+            finally
+            {
+                EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            }
+        }
+
+        [Test]
+        public void BurnedProloguePreservesNavigationAndReplacesPersistentArt()
+        {
+            RegionSceneBuilder.Build("prologue_village");
+            var scene = SceneManager.GetSceneByPath(RegionSceneBuilder.ScenePath("prologue_village"));
+            try
+            {
+                var root = scene.GetRootGameObjects()
+                    .Single(value => value.GetComponent<RegionSceneDefinition>() != null);
+                var definition = root.GetComponent<RegionSceneDefinition>();
+                var controller = root.GetComponent<RegionEnvironmentController>();
+                var anchorsBefore = definition.Anchors
+                    .Select(anchor => anchor.Id + "@" + anchor.Cell.x + "," + anchor.Cell.y)
+                    .ToArray();
+                var collisionsBefore = root.GetComponentsInChildren<BoxCollider2D>(true)
+                    .Select(collider => collider.transform.position + "|" + collider.size)
+                    .OrderBy(value => value, System.StringComparer.Ordinal)
+                    .ToArray();
+                var tilesBefore = root.GetComponentsInChildren<Tilemap>(true)
+                    .SelectMany(map => map.GetTilesBlock(map.cellBounds))
+                    .Where(tile => tile != null)
+                    .Select(tile => tile.name)
+                    .ToArray();
+                var spritesBefore = root.GetComponentsInChildren<SpriteRenderer>(true)
+                    .Select(renderer => renderer.sprite.name)
+                    .ToArray();
+
+                controller.SetEnvironmentState("burned");
+
+                Assert.That(controller.CurrentEnvironmentState, Is.EqualTo("burned"));
+                Assert.That(controller.CurrentWeatherId, Is.EqualTo("ember_wind"));
+                CollectionAssert.AreEqual(anchorsBefore, definition.Anchors
+                    .Select(anchor => anchor.Id + "@" + anchor.Cell.x + "," + anchor.Cell.y)
+                    .ToArray());
+                CollectionAssert.AreEqual(collisionsBefore, root.GetComponentsInChildren<BoxCollider2D>(true)
+                    .Select(collider => collider.transform.position + "|" + collider.size)
+                    .OrderBy(value => value, System.StringComparer.Ordinal)
+                    .ToArray());
+                CollectionAssert.AreNotEqual(tilesBefore, root.GetComponentsInChildren<Tilemap>(true)
+                    .SelectMany(map => map.GetTilesBlock(map.cellBounds))
+                    .Where(tile => tile != null)
+                    .Select(tile => tile.name)
+                    .ToArray());
+                CollectionAssert.AreNotEqual(spritesBefore, root.GetComponentsInChildren<SpriteRenderer>(true)
+                    .Select(renderer => renderer.sprite.name)
+                    .ToArray());
+                Assert.That(() => controller.SetEnvironmentState("rainy"), Throws.ArgumentException);
+
+                controller.SetEnvironmentState("normal");
+                CollectionAssert.AreEqual(tilesBefore, root.GetComponentsInChildren<Tilemap>(true)
+                    .SelectMany(map => map.GetTilesBlock(map.cellBounds))
+                    .Where(tile => tile != null)
+                    .Select(tile => tile.name)
+                    .ToArray());
+            }
+            finally
+            {
+                EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            }
+        }
     }
 }

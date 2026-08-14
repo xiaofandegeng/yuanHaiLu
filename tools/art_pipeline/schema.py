@@ -129,12 +129,35 @@ class LandmarkRecipe:
 
 
 @dataclass(frozen=True)
+class EnvironmentStateVariant:
+    id: str
+    tileset_suffix: str
+    weather: str
+    source_directory: str
+
+    @classmethod
+    def from_dict(cls, state_id, payload):
+        if state_id not in ("normal", "burned") or not isinstance(payload, dict):
+            raise ManifestError("environment state variants must be normal or burned objects")
+        suffix = payload.get("tilesetSuffix")
+        weather = payload.get("weather")
+        source_directory = payload.get("sourceDirectory")
+        if not all(isinstance(value, str) and value for value in (suffix, weather, source_directory)):
+            raise ManifestError("{} environment variant requires tilesetSuffix, weather and sourceDirectory".format(state_id))
+        return cls(state_id, suffix, weather, source_directory)
+
+
+@dataclass(frozen=True)
 class EnvironmentRecipe:
     id: str
     tile_size: int
     modules: tuple
     landmarks: tuple = ()
     blocking_tile_roles: tuple = ()
+    state_variants: tuple = ()
+    variant_of: str = ""
+    state_id: str = "normal"
+    weather: str = ""
 
     @classmethod
     def from_dict(cls, payload):
@@ -167,12 +190,51 @@ class EnvironmentRecipe:
                     art_id, ", ".join(sorted(unknown_blocking))
                 )
             )
+        variant_payload = payload.get("stateVariants")
+        if art_id == "prologue_village":
+            if not isinstance(variant_payload, dict) or set(variant_payload) != {"normal", "burned"}:
+                raise ManifestError("prologue_village requires normal and burned stateVariants")
+            state_variants = tuple(
+                EnvironmentStateVariant.from_dict(state_id, variant_payload[state_id])
+                for state_id in ("normal", "burned")
+            )
+        elif variant_payload is not None:
+            raise ManifestError("{} may not declare stateVariants".format(art_id))
+        else:
+            state_variants = ()
         return cls(
             art_id,
             tile_size,
             _module_names(payload.get("modules"), art_id),
             landmarks,
             tuple(blocking_roles),
+            state_variants,
+        )
+
+    def variant_recipe(self, state_id):
+        variant = next((item for item in self.state_variants if item.id == state_id), None)
+        if variant is None:
+            raise ManifestError("{} has no {} environment variant".format(self.id, state_id))
+        module_root = Path(variant.source_directory)
+        landmarks = tuple(
+            LandmarkRecipe(
+                landmark.id,
+                str(module_root / Path(landmark.module).name),
+                landmark.collision,
+                landmark.foreground_cut,
+            )
+            for landmark in self.landmarks
+        )
+        return EnvironmentRecipe(
+            "{}_{}".format(self.id, variant.tileset_suffix),
+            self.tile_size,
+            tuple(str(module_root / Path(module).name) for module in self.modules),
+            landmarks,
+            self.blocking_tile_roles,
+            (),
+            self.id,
+            state_id,
+            variant.weather,
         )
 
 

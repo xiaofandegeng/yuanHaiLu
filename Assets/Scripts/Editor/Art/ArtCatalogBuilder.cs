@@ -42,6 +42,8 @@ namespace YuanHaiLu.Editor
                 }
                 else if (string.Equals(metadata.kind, "environment", StringComparison.Ordinal))
                 {
+                    if (!string.IsNullOrEmpty(metadata.variantOf))
+                        continue;
                     var tilesetPath = Path.Combine(directory, metadata.image).Replace('\\', '/');
                     var landmarkPath = Path.Combine(directory, metadata.landmarkImage).Replace('\\', '/');
                     var previewPath = Path.Combine(directory, metadata.id + "_reference.png").Replace('\\', '/');

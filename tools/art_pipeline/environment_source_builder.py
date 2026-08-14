@@ -22,6 +22,20 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DESIGN_PATH = (
     PROJECT_ROOT / "Assets" / "ArtSource" / "Environment" / "Designs" / "environment-designs.json"
 )
+PROLOGUE_NORMAL_SOURCE_DIRECTORY = "Assets/ArtSource/Environment/Regions/prologue_village/formal"
+PROLOGUE_BURNED_SOURCE_DIRECTORY = "Assets/ArtSource/Environment/Regions/prologue_village/burned/formal"
+PROLOGUE_STATE_VARIANTS = {
+    "normal": {
+        "tilesetSuffix": "normal",
+        "weather": "clear",
+        "sourceDirectory": PROLOGUE_NORMAL_SOURCE_DIRECTORY,
+    },
+    "burned": {
+        "tilesetSuffix": "burned",
+        "weather": "ember_wind",
+        "sourceDirectory": PROLOGUE_BURNED_SOURCE_DIRECTORY,
+    },
+}
 
 
 REGION_PROFILES = {
@@ -106,6 +120,7 @@ def _seed_design_records():
             "tileRoles": sorted({_role(path) for path in recipe.modules}),
             "landmarks": [landmark.id for landmark in recipe.landmarks],
             "blockingTileRoles": ["wall", "roof"],
+            **({"stateVariants": PROLOGUE_STATE_VARIANTS} if art_id == "prologue_village" else {}),
         })
     for art_id in INTERIOR_IDS:
         geometry, weather, palette = INTERIOR_PROFILES[art_id]
@@ -125,6 +140,12 @@ def ensure_design_records(path=DESIGN_PATH):
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(_seed_design_records(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    else:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        prologue = next(item for item in payload["environments"] if item["id"] == "prologue_village")
+        if prologue.get("stateVariants") != PROLOGUE_STATE_VARIANTS:
+            prologue["stateVariants"] = PROLOGUE_STATE_VARIANTS
+            path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return load_environment_designs(path)
 
 
@@ -316,6 +337,45 @@ def _draw_landmark(design, landmark_id, size):
     return image
 
 
+def _burned_design(normal_design):
+    return EnvironmentDesign(
+        normal_design.id,
+        normal_design.kind,
+        ((27, 25, 24), (55, 48, 43), (93, 75, 62), (153, 66, 36), (226, 156, 74)),
+        "burned_" + normal_design.geometry_key,
+        "ember_wind",
+        normal_design.tile_roles,
+        normal_design.landmarks,
+        normal_design.blocking_tile_roles,
+    )
+
+
+def _draw_burned_tile(design, role, variant):
+    image = _draw_tile(_burned_design(design), role, variant)
+    draw = ImageDraw.Draw(image)
+    ash = (23, 21, 20, 255)
+    ember = (226, 112, 45, 255)
+    for index in range(3):
+        x = (variant * 5 + index * 6) % 16
+        y = 3 + (variant * 3 + index * 4) % 12
+        draw.rectangle((x, y, min(15, x + 2), y), fill=ash)
+    if role in ("roof", "wall", "decor", "prop"):
+        draw.point(((variant * 7 + 2) % 16, (variant * 5 + 5) % 16), fill=ember)
+    return image
+
+
+def _draw_burned_landmark(design, landmark_id, size):
+    image = _draw_landmark(_burned_design(design), landmark_id, size)
+    draw = ImageDraw.Draw(image)
+    width, height = size
+    for index in range(7):
+        x = 6 + (index * 13 + len(landmark_id) * 3) % (width - 12)
+        y = height - 12 - (index % 3) * 8
+        draw.rectangle((x, y, min(width - 1, x + 3), min(height - 1, y + 2)), fill=(0, 0, 0, 0))
+    draw.rectangle((width // 2 - 2, height - 12, width // 2 + 2, height - 7), fill=(226, 112, 45, 255))
+    return image
+
+
 def _write_png(path, image):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -335,11 +395,16 @@ def _rewrite_manifest_blocking_roles(designs):
         payload = json.loads(path.read_text(encoding="utf-8"))
         for environment in payload["environments"]:
             environment["blockingTileRoles"] = list(designs[environment["id"]].blocking_tile_roles)
+            if environment["id"] == "prologue_village":
+                environment["stateVariants"] = PROLOGUE_STATE_VARIANTS
+            else:
+                environment.pop("stateVariants", None)
         path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def build_environment_sources(designs):
     """Rewrite every manifest-declared 16px module and landmark source image."""
+    _rewrite_manifest_blocking_roles(designs)
     recipes = (*build_region_recipes(), *build_interior_recipes())
     expected_ids = {recipe.id for recipe in recipes}
     if set(designs) != expected_ids:
@@ -357,7 +422,21 @@ def build_environment_sources(designs):
                 (96, 72) if design.kind == "region" else (80, 56),
             )
             _write_png(module_path, _draw_landmark(design, landmark.id, size))
-    _rewrite_manifest_blocking_roles(designs)
+        if recipe.id == "prologue_village":
+            for module_path in recipe.modules:
+                burned_path = PROJECT_ROOT / PROLOGUE_BURNED_SOURCE_DIRECTORY / Path(module_path).name
+                _write_png(burned_path, _draw_burned_tile(design, _role(module_path), _variant(module_path)))
+            for landmark in recipe.landmarks:
+                normal_path = PROJECT_ROOT / landmark.module
+                burned_path = PROJECT_ROOT / PROLOGUE_BURNED_SOURCE_DIRECTORY / Path(landmark.module).name
+                _write_png(
+                    burned_path,
+                    _draw_burned_landmark(
+                        design,
+                        landmark.id,
+                        _existing_size(normal_path, (96, 72)),
+                    ),
+                )
     return len(recipes)
 
 
