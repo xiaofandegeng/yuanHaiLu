@@ -13,7 +13,7 @@
 | 代码规模 | 68 个运行时/编辑器 C# 文件；另有 19 个测试/测试工具文件 |
 | 状态 | 正式像素美术第二轮完成：97 角色、10 个独立构图户外、13 室内、序章 normal/burned、烟柳镇可玩 Demo |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
-| 测试 | 100 EditMode + 7 PlayMode + 45 Python 全通过 |
+| 测试 | 101 EditMode + 7 PlayMode + 45 Python 全通过 |
 | 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md` |
 
 ## 1. 如何运行
@@ -230,7 +230,7 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前全量基线为 EditMode 100/100、PlayMode 7/7、Python 45/45。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前全量基线为 EditMode 101/101、PlayMode 7/7、Python 45/45。
 
 美术确定性验证：
 
@@ -268,7 +268,7 @@ python3 -m tools.art_pipeline.validate --all
 yuanHaiLu/
 ├── Assets/
 │   ├── Scripts/                 68 个运行时/编辑器 .cs
-│   ├── Tests/EditMode/          100 个测试用例
+│   ├── Tests/EditMode/          101 个测试用例
 │   ├── Tests/PlayMode/          7 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
 │   ├── Art/                     97 角色 + 23 环境输出和验收图
@@ -363,7 +363,7 @@ yuanHaiLu/
 48. 环境 source builder 为各区域生成专属植被/地形簇与叙事地标轮廓；环境仍是纯 2D、16×16 Tile，角色全部维持 32×32 帧。
 49. 序章 `RegionEnvironmentController` 只替换 normal/burned 的 Tile 与地标精灵；碰撞、锚点和场景 ID 不变，天气精确为 `clear` / `ember_wind`。
 50. 新增 `VisualRegressionCapture`：固定 480×270 截图，在 finally 中恢复活动场景、Canvas、相机目标、RenderTexture 和抗锯齿；临时审查图输出到 `/private/tmp/yuanhailu-art-review/`，尚非用户人工批准的仓库基线。
-51. 实际验证：Python 45/45、EditMode 100/100、PlayMode 7/7；`build --all` 为 `built=0 skipped=121`，全资产校验通过。
+51. 实际验证：Python 45/45、EditMode 101/101、PlayMode 7/7；`build --all` 为 `built=0 skipped=121`，全资产校验通过。
 
 ## 8. 当前人工 QA 清单
 

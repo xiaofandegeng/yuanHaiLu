@@ -36,15 +36,19 @@ namespace YuanHaiLu.Editor
             Scene captureScene = default;
             var addedScene = false;
             GameObject cameraObject = null;
+            RegionEnvironmentController environmentController = null;
+            string previousEnvironmentState = null;
             try
             {
                 captureScene = OpenForCapture(RegionSceneBuilder.ScenePath(sceneId), out addedScene);
-                var controller = captureScene.GetRootGameObjects()
+                environmentController = captureScene.GetRootGameObjects()
                     .Select(root => root.GetComponent<RegionEnvironmentController>())
                     .FirstOrDefault(value => value != null);
-                if (controller != null && environmentState != "normal")
-                    controller.SetEnvironmentState(environmentState);
-                else if (controller == null && environmentState != "normal")
+                if (environmentController != null)
+                    previousEnvironmentState = environmentController.CurrentEnvironmentState;
+                if (environmentController != null && environmentState != "normal")
+                    environmentController.SetEnvironmentState(environmentState);
+                else if (environmentController == null && environmentState != "normal")
                     throw new ArgumentException(
                         $"'{sceneId}' has no environment state '{environmentState}'.",
                         nameof(environmentState));
@@ -54,6 +58,9 @@ namespace YuanHaiLu.Editor
             }
             finally
             {
+                if (environmentController != null && previousEnvironmentState != null &&
+                    environmentController.CurrentEnvironmentState != previousEnvironmentState)
+                    environmentController.SetEnvironmentState(previousEnvironmentState);
                 if (cameraObject != null) UnityEngine.Object.DestroyImmediate(cameraObject);
                 if (addedScene && captureScene.IsValid() && captureScene.isLoaded)
                     EditorSceneManager.CloseScene(captureScene, true);

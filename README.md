@@ -93,7 +93,7 @@ Assets/
 
 ## 自动验证
 
-项目使用 Unity Test Framework `1.6.0`，当前全量结果为 **100 个 EditMode + 7 个 PlayMode 全通过**；Python 美术流水线另有 **45 个测试**。覆盖：
+项目使用 Unity Test Framework `1.6.0`，当前全量结果为 **101 个 EditMode + 7 个 PlayMode 全通过**；Python 美术流水线另有 **45 个测试**。覆盖：
 
 - 场景进入模式；
 - 背包/装备和资源值恢复；

@@ -63,7 +63,7 @@ python3 -m tools.art_pipeline.validate --all
 ## 测试基线
 
 ```text
-Unity EditMode: 100/100
+Unity EditMode: 101/101
 Unity PlayMode:  7/7
 Python:          45/45
 Art build:       built=0 skipped=121

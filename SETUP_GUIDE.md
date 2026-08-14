@@ -164,7 +164,7 @@ AttackIndex Int
 
 ## 7. 自动测试
 
-当前基线：100 个 EditMode、7 个 PlayMode、45 个 Python 测试。
+当前基线：101 个 EditMode、7 个 PlayMode、45 个 Python 测试。
 
 正式美术验证：
 
