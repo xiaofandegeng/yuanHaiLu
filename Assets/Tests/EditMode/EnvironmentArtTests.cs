@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 using YuanHaiLu.Art;
 using YuanHaiLu.Editor;
@@ -70,6 +71,37 @@ namespace YuanHaiLu.Tests.EditMode
             finally
             {
                 EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        [TestCase("yanliu")]
+        [TestCase("cangyue")]
+        [TestCase("inn")]
+        [TestCase("tomb")]
+        public void RegionSceneUsesOnlyDeclaredLayoutCellsAndCollisionRuns(string id)
+        {
+            RegionSceneBuilder.Build(id);
+            var scene = SceneManager.GetSceneByPath(RegionSceneBuilder.ScenePath(id));
+            try
+            {
+                Assert.That(scene.isLoaded, Is.True, id + " must remain open after generation.");
+                var root = scene.GetRootGameObjects()
+                    .Single(value => value.GetComponent<RegionSceneDefinition>() != null);
+                foreach (var tilemap in root.GetComponentsInChildren<Tilemap>(true))
+                {
+                    Assert.That(
+                        tilemap.GetTilesBlock(tilemap.cellBounds).Count(tile => tile != null),
+                        Is.EqualTo(RegionSceneBuilder.DeclaredLayerCellCount(id, tilemap.name)),
+                        id + " " + tilemap.name + " must have no formula-generated cells.");
+                }
+                Assert.That(
+                    root.GetComponentsInChildren<BoxCollider2D>(true).Length,
+                    Is.EqualTo(RegionSceneBuilder.DeclaredCollisionRunCount(id)),
+                    id + " collision objects must correspond one-to-one with declared runs.");
+            }
+            finally
+            {
+                EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             }
         }
     }

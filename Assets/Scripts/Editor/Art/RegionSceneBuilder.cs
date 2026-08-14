@@ -21,12 +21,49 @@ namespace YuanHaiLu.Editor
     }
 
     [Serializable]
+    internal sealed class LayoutCellJson
+    {
+        public int x;
+        public int y;
+        public string token;
+    }
+
+    [Serializable]
+    internal sealed class LayoutLayerJson
+    {
+        public string name;
+        public LayoutCellJson[] cells;
+    }
+
+    [Serializable]
+    internal sealed class LayoutCollisionJson
+    {
+        public int x;
+        public int y;
+        public int width;
+        public int height;
+    }
+
+    [Serializable]
+    internal sealed class ForegroundSpanJson
+    {
+        public int fromX;
+        public int fromY;
+        public int toX;
+        public int toY;
+        public string token;
+    }
+
+    [Serializable]
     internal sealed class LayoutJson
     {
         public string id;
         public string kind;
         public int width;
         public int height;
+        public LayoutLayerJson[] layers;
+        public LayoutCollisionJson[] collisions;
+        public ForegroundSpanJson[] foregroundSpans;
         public LayoutAnchorJson[] anchors;
         public string[] requiredLandmarks;
     }
@@ -88,75 +125,19 @@ namespace YuanHaiLu.Editor
                 maps[LayerNames[index]] = tilemap;
             }
 
-            var ground = FindRole(tiles, id, layout.kind == "interior" ? "floor" : "ground", 0);
-            var groundVariants = FindRoleVariants(tiles, id, layout.kind == "interior" ? "floor" : "ground");
-            var groundPositions = new List<Vector3Int>(layout.width * layout.height);
-            var groundTiles = new List<TileBase>(layout.width * layout.height);
-            for (var y = 0; y < layout.height; y++)
-            {
-                for (var x = 0; x < layout.width; x++)
-                {
-                    var tile = groundVariants[(x * 7 + y * 11) % groundVariants.Count];
-                    groundPositions.Add(new Vector3Int(x, y, 0));
-                    groundTiles.Add(tile);
-                }
-            }
-            maps["Ground"].SetTiles(groundPositions.ToArray(), groundTiles.ToArray());
-            if (layout.kind == "region" && TryFindRole(tiles, id, "water", 0, out var water))
-            {
-                var waterPositions = new List<Vector3Int>(layout.width * 4);
-                var waterTiles = new List<TileBase>(layout.width * 4);
-                for (var y = 0; y < 4; y++)
-                    for (var x = 0; x < layout.width; x++)
-                    {
-                        waterPositions.Add(new Vector3Int(x, y, 0));
-                        waterTiles.Add(water);
-                    }
-                maps["Water"].SetTiles(waterPositions.ToArray(), waterTiles.ToArray());
-            }
-            if (TryFindRole(tiles, id, "road", 0, out var road))
-            {
-                var roadPositions = new List<Vector3Int>();
-                var roadTiles = new List<TileBase>();
-                for (var y = 4; y < layout.height; y++)
-                    for (var x = layout.width / 2 - 2; x <= layout.width / 2 + 1; x++)
-                    {
-                        roadPositions.Add(new Vector3Int(x, y, 0));
-                        roadTiles.Add(road);
-                    }
-                maps["Ground"].SetTiles(roadPositions.ToArray(), roadTiles.ToArray());
-            }
-            if (TryFindRole(tiles, id, layout.kind == "interior" ? "prop" : "decor", 0, out var decoration))
-            {
-                var decorationPositions = new List<Vector3Int>(12);
-                var decorationTiles = new List<TileBase>(12);
-                for (var index = 0; index < 12; index++)
-                {
-                    decorationPositions.Add(new Vector3Int(
-                        2 + (index * 7) % Math.Max(3, layout.width - 4),
-                        3 + (index * 5) % Math.Max(3, layout.height - 6),
-                        0));
-                    decorationTiles.Add(decoration);
-                }
-                maps["Lower Environment"].SetTiles(
-                    decorationPositions.ToArray(),
-                    decorationTiles.ToArray());
-            }
-
-            if (layout.kind == "interior")
-                PaintInteriorStructure(maps, tiles, id, layout.width, layout.height);
-            else
-                PaintRegionStructure(maps, tiles, id, layout.width, layout.height);
+            foreach (var layerName in LayerNames)
+                ApplyDeclaredLayer(maps[layerName], tiles, id, layout, layerName);
 
             int groundCellCount = maps["Ground"].GetTilesBlock(
                     new BoundsInt(0, 0, 0, layout.width, layout.height, 1))
                 .Count(tile => tile != null);
-            if (groundCellCount != layout.width * layout.height)
+            if (groundCellCount != DeclaredLayerCellCount(layout, "Ground"))
                 throw new InvalidOperationException(
-                    $"'{id}' populated {groundCellCount} of {layout.width * layout.height} ground cells.");
+                    $"'{id}' populated {groundCellCount} declared ground cells.");
 
             AddLandmarks(id, layout, gridObject.transform);
             AddAnchors(layout, gridObject.transform);
+            AddDeclaredColliders(layout, gridObject.transform);
             foreach (var tilemap in maps.Values)
             {
                 tilemap.CompressBounds();
@@ -169,6 +150,16 @@ namespace YuanHaiLu.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EnsureSceneFolder(layout.kind);
             EditorSceneManager.SaveScene(scene, ScenePath(id));
+        }
+
+        public static int DeclaredLayerCellCount(string id, string layerName)
+        {
+            return DeclaredLayerCellCount(ReadLayout(LayoutPath(id)), layerName);
+        }
+
+        public static int DeclaredCollisionRunCount(string id)
+        {
+            return (ReadLayout(LayoutPath(id)).collisions ?? Array.Empty<LayoutCollisionJson>()).Length;
         }
 
         public static string ScenePath(string id)
@@ -232,129 +223,107 @@ namespace YuanHaiLu.Editor
             }
         }
 
-        private static List<Tile> FindRoleVariants(IReadOnlyDictionary<string, Tile> tiles, string id, string role)
-        {
-            var prefix = $"{id}__{role}__";
-            var values = tiles.Where(pair => pair.Key.StartsWith(prefix, StringComparison.Ordinal))
-                .OrderBy(pair => pair.Key, StringComparer.Ordinal)
-                .Select(pair => pair.Value)
-                .ToList();
-            if (values.Count == 0)
-                throw new InvalidOperationException($"'{id}' is missing required tile role '{role}'.");
-            return values;
-        }
-
-        private static void PaintRegionStructure(
-            IReadOnlyDictionary<string, Tilemap> maps,
+        private static void ApplyDeclaredLayer(
+            Tilemap tilemap,
             IReadOnlyDictionary<string, Tile> tiles,
             string id,
-            int width,
-            int height)
-        {
-            var shore = FindRole(tiles, id, "shore", 0);
-            var shorePositions = Enumerable.Range(0, width)
-                .Select(x => new Vector3Int(x, 4, 0))
-                .ToArray();
-            maps["Lower Environment"].SetTiles(
-                shorePositions,
-                Enumerable.Repeat<TileBase>(shore, shorePositions.Length).ToArray());
-
-            var wall = FindRole(tiles, id, "wall", 0);
-            var wallAlt = FindRole(tiles, id, "wall", 1);
-            var roof = FindRole(tiles, id, "roof", 0);
-            var roofAlt = FindRole(tiles, id, "roof", 1);
-            var door = FindRole(tiles, id, "door", 0);
-            var window = FindRole(tiles, id, "window", 0);
-            PaintHouse(maps["Buildings"], 3, Math.Max(7, height - 7), wall, wallAlt, roof, roofAlt, door, window);
-            PaintHouse(maps["Buildings"], Math.Max(12, width - 10), Math.Max(7, height - 7),
-                wallAlt, wall, roofAlt, roof, door, window);
-        }
-
-        private static void PaintHouse(
-            Tilemap tilemap,
-            int left,
-            int bottom,
-            Tile wall,
-            Tile wallAlt,
-            Tile roof,
-            Tile roofAlt,
-            Tile door,
-            Tile window)
+            LayoutJson layout,
+            string layerName)
         {
             var positions = new List<Vector3Int>();
             var values = new List<TileBase>();
-            for (var x = 0; x < 7; x++)
+            var authored = FindLayer(layout, layerName);
+            foreach (var cell in authored?.cells ?? Array.Empty<LayoutCellJson>())
             {
-                positions.Add(new Vector3Int(left + x, bottom + 2, 0));
-                values.Add(x % 2 == 0 ? roof : roofAlt);
-                positions.Add(new Vector3Int(left + x, bottom + 1, 0));
-                values.Add(x % 2 == 0 ? wall : wallAlt);
-                positions.Add(new Vector3Int(left + x, bottom, 0));
-                values.Add(x == 3 ? door : (x == 1 || x == 5 ? window : wall));
+                ValidateCell(layout, cell.x, cell.y, layerName);
+                positions.Add(new Vector3Int(cell.x, cell.y, 0));
+                values.Add(ResolveDeclaredTile(tiles, id, cell.token));
             }
-            tilemap.SetTiles(positions.ToArray(), values.ToArray());
-        }
-
-        private static void PaintInteriorStructure(
-            IReadOnlyDictionary<string, Tilemap> maps,
-            IReadOnlyDictionary<string, Tile> tiles,
-            string id,
-            int width,
-            int height)
-        {
-            var walls = FindRoleVariants(tiles, id, "wall");
-            var wallPositions = new List<Vector3Int>();
-            var wallTiles = new List<TileBase>();
-            for (var x = 0; x < width; x++)
+            if (string.Equals(layerName, "Foreground", StringComparison.Ordinal))
             {
-                AddWallCell(x, 0);
-                AddWallCell(x, height - 1);
-            }
-            for (var y = 1; y < height - 1; y++)
-            {
-                AddWallCell(0, y);
-                AddWallCell(width - 1, y);
-            }
-            maps["Buildings"].SetTiles(wallPositions.ToArray(), wallTiles.ToArray());
-
-            var entry = FindRole(tiles, id, "entry", 0);
-            var exit = FindRole(tiles, id, "exit", 0);
-            maps["Buildings"].SetTiles(
-                new[]
+                foreach (var span in layout.foregroundSpans ?? Array.Empty<ForegroundSpanJson>())
                 {
-                    new Vector3Int(width / 2, 0, 0),
-                    new Vector3Int(width / 2, height - 1, 0)
-                },
-                new TileBase[] { entry, exit });
-
-            if (TryFindRole(tiles, id, "light", 0, out var light))
-            {
-                maps["Effects"].SetTiles(
-                    new[]
+                    foreach (var position in EnumerateSpan(layout, span))
                     {
-                        new Vector3Int(2, height - 3, 0),
-                        new Vector3Int(width - 3, height - 3, 0)
-                    },
-                    new TileBase[] { light, light });
+                        positions.Add(position);
+                        values.Add(ResolveDeclaredTile(tiles, id, span.token));
+                    }
+                }
             }
-
-            void AddWallCell(int x, int y)
-            {
-                wallPositions.Add(new Vector3Int(x, y, 0));
-                wallTiles.Add(walls[(x * 3 + y * 5) % walls.Count]);
-            }
+            if (positions.Count > 0)
+                tilemap.SetTiles(positions.ToArray(), values.ToArray());
         }
 
-        private static Tile FindRole(IReadOnlyDictionary<string, Tile> tiles, string id, string role, int variant)
+        private static int DeclaredLayerCellCount(LayoutJson layout, string layerName)
         {
-            if (!TryFindRole(tiles, id, role, variant, out var tile))
-                throw new InvalidOperationException($"'{id}' is missing tile '{role}' variant {variant}.");
+            var positions = new HashSet<Vector3Int>(
+                (FindLayer(layout, layerName)?.cells ?? Array.Empty<LayoutCellJson>())
+                .Select(cell => new Vector3Int(cell.x, cell.y, 0)));
+            if (string.Equals(layerName, "Foreground", StringComparison.Ordinal))
+                foreach (var span in layout.foregroundSpans ?? Array.Empty<ForegroundSpanJson>())
+                    positions.UnionWith(EnumerateSpan(layout, span));
+            return positions.Count;
+        }
+
+        private static LayoutLayerJson FindLayer(LayoutJson layout, string layerName)
+        {
+            return (layout.layers ?? Array.Empty<LayoutLayerJson>())
+                .SingleOrDefault(layer => string.Equals(layer.name, layerName, StringComparison.Ordinal));
+        }
+
+        private static Tile ResolveDeclaredTile(IReadOnlyDictionary<string, Tile> tiles, string id, string token)
+        {
+            if (string.IsNullOrEmpty(token) || !tiles.TryGetValue($"{id}__{token}", out var tile))
+                throw new InvalidOperationException($"'{id}' layout references missing tile '{token}'.");
             return tile;
         }
 
-        private static bool TryFindRole(IReadOnlyDictionary<string, Tile> tiles, string id, string role, int variant, out Tile tile)
+        private static void ValidateCell(LayoutJson layout, int x, int y, string layerName)
         {
-            return tiles.TryGetValue($"{id}__{role}__{variant}", out tile);
+            if (x < 0 || x >= layout.width || y < 0 || y >= layout.height)
+                throw new InvalidDataException($"{layout.id} {layerName} cell ({x}, {y}) is out of bounds.");
+        }
+
+        private static IEnumerable<Vector3Int> EnumerateSpan(LayoutJson layout, ForegroundSpanJson span)
+        {
+            ValidateCell(layout, span.fromX, span.fromY, "Foreground span");
+            ValidateCell(layout, span.toX, span.toY, "Foreground span");
+            var x = span.fromX;
+            var y = span.fromY;
+            yield return new Vector3Int(x, y, 0);
+            while (x != span.toX)
+            {
+                x += Math.Sign(span.toX - x);
+                yield return new Vector3Int(x, y, 0);
+            }
+            while (y != span.toY)
+            {
+                y += Math.Sign(span.toY - y);
+                yield return new Vector3Int(x, y, 0);
+            }
+        }
+
+        private static void AddDeclaredColliders(LayoutJson layout, Transform root)
+        {
+            var collisionRoot = new GameObject("Layout Collisions");
+            collisionRoot.transform.SetParent(root);
+            var environmentLayer = LayerMask.NameToLayer("Environment");
+            if (environmentLayer >= 0) collisionRoot.layer = environmentLayer;
+            foreach (var run in layout.collisions ?? Array.Empty<LayoutCollisionJson>())
+            {
+                if (run.width <= 0 || run.height <= 0)
+                    throw new InvalidDataException($"{layout.id} has an empty collision run.");
+                ValidateCell(layout, run.x, run.y, "Collision");
+                ValidateCell(layout, run.x + run.width - 1, run.y + run.height - 1, "Collision");
+                var colliderObject = new GameObject($"Collision_{run.x}_{run.y}");
+                colliderObject.transform.SetParent(collisionRoot.transform);
+                colliderObject.transform.position = new Vector3(
+                    run.x + run.width * 0.5f,
+                    run.y + run.height * 0.5f,
+                    0f);
+                var collider = colliderObject.AddComponent<BoxCollider2D>();
+                collider.size = new Vector2(run.width, run.height);
+            }
         }
 
         private static void EnsureSceneFolder(string kind)
