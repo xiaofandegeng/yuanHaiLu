@@ -43,6 +43,23 @@ class MapLayoutTests(unittest.TestCase):
             "outdoor maps must differ by authored coordinates, not merely palette or IDs",
         )
 
+    def test_outdoor_landmarks_use_unique_spatial_compositions(self):
+        project_root = Path(__file__).resolve().parents[3]
+        layout_root = project_root / "Assets" / "ArtSource" / "Environment" / "Layouts"
+        compositions = {}
+        for region in REGION_IDS:
+            layout = load_map_layout(layout_root / (region + ".json"))
+            compositions[region] = tuple(
+                (anchor.x, anchor.y)
+                for anchor in layout.anchors
+                if anchor.id in layout.required_landmarks
+            )
+        self.assertEqual(
+            len(set(compositions.values())),
+            len(REGION_IDS),
+            "landmarks must be staged differently in each outdoor region",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

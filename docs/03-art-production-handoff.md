@@ -1,6 +1,6 @@
 # 正式美术生产与主流程交接
 
-> 更新时间：2026-08-13  
+> 更新时间：2026-08-14  
 > 对应规格：`docs/superpowers/specs/2026-08-12-full-art-production-design.md`  
 > 对应计划：`docs/superpowers/plans/2026-08-12-full-character-art.md`、`2026-08-12-full-environment-art.md`、`2026-08-12-art-integration-qa.md`
 
@@ -13,6 +13,9 @@
 - 每个正式环境场景有 Ground、Water、Lower Environment、Buildings、Character、Foreground、Effects 七层 Tilemap，以及可达 entry/exit/interior 锚点。
 - 主菜单支持 12 套外观选择；v4 存档持久化 `playerArtId`；菜单进入 Demo 后外观保持。
 - `Demo_YanLiuTown` 使用正式烟柳镇 Tilemap、地标、桥、水岸、建筑和正式角色资源，不再由生成器创建临时像素块。
+- 十个户外区域已改为独立地标构图：城门/市集、山寺/云桥、运河/客栈、烽火台、竹祠、冰湖墓、宗祠古树、河道遗迹、剑宗索桥、碑林祭坛不再共用固定的一排坐标。
+- 序章村庄提供 `normal` / `burned` 两态；只替换持久 Tile 与地标精灵，锚点与碰撞保持不变，焚毁态使用 `ember_wind` 天气 ID。
+- 新增固定 `480×270` 临时视觉捕获；每次捕获后恢复打开场景、活动场景、Canvas、相机目标、RenderTexture 和抗锯齿设置。
 
 ## 资源入口
 
@@ -60,14 +63,21 @@ python3 -m tools.art_pipeline.validate --all
 ## 测试基线
 
 ```text
-Unity EditMode: 81/81
-Unity PlayMode:  6/6
-Python:         34/34
-Art build:      built=0 skipped=120
+Unity EditMode: 100/100
+Unity PlayMode:  7/7
+Python:          45/45
+Art build:       built=0 skipped=121
 Art validator:  passed
 ```
 
 完整 Unity 测试运行时不要添加 `-quit`。若出现旧许可通道 `Unsupported protocol version '1.18.1'`，终止陈旧的 `Unity.Licensing.Client` 后重试。
+
+## 视觉审查记录（2026-08-14）
+
+- 生成命令：`YuanHaiLu.Editor.VisualRegressionCapture.CaptureTemporaryReviewFromCommandLine`。
+- 输出目录：`/private/tmp/yuanhailu-art-review/`；包含主菜单、10 个户外区域、以及序章 normal/burned 两张图，全部为 `480×270` PNG。
+- 本轮由 Codex 逐张检查了场景构图、地标可读性、区域调色、水域/植被簇、正常/焚毁差异及缺图；未发现缺失精灵或精灵表拉花。
+- 这些是临时审查证据，**尚未作为经用户人工批准的仓库视觉基线提交**；后续如建立 `Assets/Tests/VisualBaselines/`，必须先保留前后对比与批准记录。
 
 ## 已知后续工作
 

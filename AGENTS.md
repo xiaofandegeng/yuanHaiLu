@@ -1,7 +1,7 @@
 # AGENTS.md — 渊海录项目交接与记忆
 
 > 本文件是接手本项目（开发者或 AI 助手）的首选入口。长期事实以本文件为准。
-> 最后更新：2026-08-13
+> 最后更新：2026-08-14
 
 ## 0. 30 秒速览
 
@@ -11,9 +11,9 @@
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
 | 代码规模 | 68 个运行时/编辑器 C# 文件；另有 19 个测试/测试工具文件 |
-| 状态 | 正式美术第一阶段完成：97 角色、10 户外、13 室内、烟柳镇可玩 Demo |
+| 状态 | 正式像素美术第二轮完成：97 角色、10 个独立构图户外、13 室内、序章 normal/burned、烟柳镇可玩 Demo |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
-| 测试 | 81 EditMode + 6 PlayMode + 34 Python 全通过 |
+| 测试 | 100 EditMode + 7 PlayMode + 45 Python 全通过 |
 | 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md` |
 
 ## 1. 如何运行
@@ -230,13 +230,13 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前全量基线为 EditMode 81/81、PlayMode 6/6、Python 34/34。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前全量基线为 EditMode 100/100、PlayMode 7/7、Python 45/45。
 
 美术确定性验证：
 
 ```bash
 python3 -m unittest discover -s tools/art_pipeline/tests -v
-python3 -m tools.art_pipeline.build --all   # 当前应 built=0 skipped=120
+python3 -m tools.art_pipeline.build --all   # 当前应 built=0 skipped=121
 python3 -m tools.art_pipeline.validate --all
 ```
 
@@ -268,8 +268,8 @@ python3 -m tools.art_pipeline.validate --all
 yuanHaiLu/
 ├── Assets/
 │   ├── Scripts/                 68 个运行时/编辑器 .cs
-│   ├── Tests/EditMode/          81 个测试用例
-│   ├── Tests/PlayMode/          6 个测试用例
+│   ├── Tests/EditMode/          100 个测试用例
+│   ├── Tests/PlayMode/          7 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
 │   ├── Art/                     97 角色 + 23 环境输出和验收图
 │   ├── Prefabs/Characters/      97 个正式 Prefab
@@ -283,7 +283,7 @@ yuanHaiLu/
 │   ├── 03-art-production-handoff.md
 │   ├── 04-external-ai-development-handoff.md
 │   └── 05-post-development-review-plan.md
-├── tools/art_pipeline/          确定性美术 baker/validator（34 测试）
+├── tools/art_pipeline/          确定性美术 baker/validator（45 测试）
 ├── ProjectSettings/             修改后需重启 Unity
 ├── Packages/manifest.json
 ├── README.md
@@ -356,6 +356,14 @@ yuanHaiLu/
 44. 修复 `PlayerCombat.Update()` 在 GameManager 引导前/销毁期空引用；无管理器时安全等待。
 45. 增加主菜单与烟柳镇离屏实际渲染验收图，并由截图发现/修复动画整表拉花、RectTransform 偏移、AspectRatioFitter 覆盖尺寸、菜单文字裁剪等视觉问题。
 46. 最终验证：81/81 EditMode、6/6 PlayMode、34/34 Python；`build --all` 为 `built=0 skipped=120`，全资产校验通过。
+
+### 第七批：正式美术构图与视觉证据（2026-08-14）
+
+47. 户外布局改由明确 `scenery` 与地标坐标直接写入 10 份 Layout JSON；市场、山寺、运河、烽火台、竹祠、冰湖、宗祠、遗迹、剑宗与碑林不再共享一排地标构图。
+48. 环境 source builder 为各区域生成专属植被/地形簇与叙事地标轮廓；环境仍是纯 2D、16×16 Tile，角色全部维持 32×32 帧。
+49. 序章 `RegionEnvironmentController` 只替换 normal/burned 的 Tile 与地标精灵；碰撞、锚点和场景 ID 不变，天气精确为 `clear` / `ember_wind`。
+50. 新增 `VisualRegressionCapture`：固定 480×270 截图，在 finally 中恢复活动场景、Canvas、相机目标、RenderTexture 和抗锯齿；临时审查图输出到 `/private/tmp/yuanhailu-art-review/`，尚非用户人工批准的仓库基线。
+51. 实际验证：Python 45/45、EditMode 100/100、PlayMode 7/7；`build --all` 为 `built=0 skipped=121`，全资产校验通过。
 
 ## 8. 当前人工 QA 清单
 

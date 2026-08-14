@@ -164,7 +164,7 @@ AttackIndex Int
 
 ## 7. 自动测试
 
-当前基线：81 个 EditMode、6 个 PlayMode、34 个 Python 测试。
+当前基线：100 个 EditMode、7 个 PlayMode、45 个 Python 测试。
 
 正式美术验证：
 
@@ -213,6 +213,7 @@ python3 -m tools.art_pipeline.validate --all
 - [ ] 主菜单可见 12 个角色选择；切换外观后 idle 预览和金色选中态正确。
 - [ ] 主菜单“新游戏”进入 `Demo_YanLiuTown`，选择的外观保持。
 - [ ] Demo 正式地面、水岸、道路、桥、建筑、玩家和 NPC 可见，场景切换后视口外无残影。
+- [ ] 序章村庄 normal / burned 状态仅替换环境画面；入口、出口、地标锚点和墙体碰撞保持一致。
 - [ ] NPC 附近出现提示，K 与 E 都能开始对话。
 - [ ] 自动事件不显示交互提示；按键事件可以触发且一次性事件不会重复出现。
 - [ ] J 攻击、Shift 冲刺、数字键武学在探索状态可用。
@@ -234,4 +235,5 @@ python3 -m tools.art_pipeline.validate --all
 - **大量命名空间错误**：系统代码必须使用 `YuanHaiLu.GameSystem`，不要使用 `YuanHaiLu.System`。
 - **只有地标、没有 Tilemap 地面**：运行 `RegionSceneBuilder` 重建；生成器必须批量调用 `Tilemap.SetTiles`，不能改回逐格 `SetTile`。
 - **只有 HUD、没有地图**：确认 Demo 主摄像机位于 Z=-10，并从正式烟柳镇场景重新生成 Demo。
+- **需要审查美术画面**：执行 `Tools → 渊海录 → 美术 → 截取临时正式美术验收图`；输出在 `/private/tmp/yuanhailu-art-review/`，不会改写仓库基线。
 - **启动提示 Packages with Errors**：项目已移除未使用且停止支持的 IAP 4.15；若旧 Library 缓存仍显示，等待 Package Manager 完成刷新后重启 Unity。

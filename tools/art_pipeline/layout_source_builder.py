@@ -25,6 +25,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((4, 13, 7, 3), (13, 14, 7, 3), (27, 11, 8, 3)),
         "decor": ((3, 5), (5, 9), (10, 11), (15, 5), (24, 5), (34, 6), (35, 16)),
         "foreground": (2, 19, 14, 19),
+        "landmarks": (("city_gate", 5, 13), ("imperial_avenue", 20, 15), ("academy", 33, 17)),
+        "scenery": ((2, 17, 5, 2), (28, 18, 7, 2)),
     },
     "cangyue": {
         "roads": (((2, 2), (7, 2), (7, 6), (13, 6), (13, 11), (19, 11), (19, 16), (28, 16), (28, 21), (37, 21)),),
@@ -32,6 +34,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((3, 14, 7, 3), (12, 17, 7, 3), (29, 8, 7, 3)),
         "decor": ((4, 6), (9, 10), (11, 3), (16, 14), (21, 19), (31, 15), (35, 4)),
         "foreground": (24, 3, 38, 3),
+        "landmarks": (("mountain_temple", 10, 17), ("cloud_bridge", 21, 12), ("sword_platform", 33, 18)),
+        "scenery": ((2, 5, 5, 5), (30, 13, 5, 4)),
     },
     "yanliu": {
         "roads": (((2, 2), (11, 2), (11, 7), (20, 7), (20, 13), (30, 13), (30, 21), (37, 21)),
@@ -40,6 +44,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((4, 12, 7, 3), (21, 16, 6, 3), (32, 12, 6, 3)),
         "decor": ((4, 4), (8, 8), (10, 17), (20, 17), (24, 8), (34, 5), (36, 18)),
         "foreground": (1, 18, 12, 18),
+        "landmarks": (("inn", 7, 14), ("arched_bridge", 20, 12), ("pharmacy", 33, 15)),
+        "scenery": ((7, 4, 3, 5), (34, 4, 3, 4)),
     },
     "chisha": {
         "roads": (((2, 2), (13, 2), (13, 6), (22, 6), (22, 11), (31, 11), (31, 21), (37, 21)),),
@@ -47,6 +53,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((4, 12, 8, 3), (16, 14, 7, 3), (28, 7, 8, 3)),
         "decor": ((4, 5), (8, 18), (12, 9), (18, 4), (23, 17), (33, 17), (36, 4)),
         "foreground": (3, 20, 18, 20),
+        "landmarks": (("fortress_gate", 6, 16), ("beacon_tower", 21, 18), ("caravan_inn", 32, 11)),
+        "scenery": ((2, 5, 8, 3), (24, 16, 5, 3)),
     },
     "youhuang": {
         "roads": (((2, 2), (7, 2), (7, 8), (15, 8), (15, 5), (24, 5), (24, 15), (32, 15), (32, 21), (37, 21)),),
@@ -54,6 +62,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((3, 14, 6, 3), (18, 16, 6, 3), (30, 5, 7, 3)),
         "decor": ((4, 4), (5, 9), (12, 17), (19, 9), (23, 3), (29, 18), (35, 12)),
         "foreground": (9, 15, 18, 15),
+        "landmarks": (("bamboo_shrine", 8, 17), ("poison_marsh_lab", 22, 10), ("hidden_camp", 34, 16)),
+        "scenery": ((2, 3, 5, 7), (29, 10, 7, 3)),
     },
     "hanyuan": {
         "roads": (((2, 2), (2, 9), (9, 9), (9, 14), (17, 14), (17, 19), (28, 19), (28, 21), (37, 21)),
@@ -62,6 +72,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((4, 15, 7, 3), (20, 7, 8, 3), (30, 17, 7, 3)),
         "decor": ((4, 5), (7, 11), (14, 7), (18, 3), (24, 17), (34, 6), (35, 10)),
         "foreground": (20, 20, 38, 20),
+        "landmarks": (("hot_spring_inn", 7, 14), ("ice_lake_tomb", 22, 17), ("hunter_village", 34, 10)),
+        "scenery": ((3, 4, 6, 3), (30, 5, 5, 5)),
     },
     "prologue_village": {
         "roads": (((2, 2), (8, 2), (8, 7), (16, 7), (16, 12), (25, 12), (25, 17), (37, 17), (37, 21)),
@@ -70,6 +82,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((3, 10, 7, 3), (13, 14, 7, 3), (27, 10, 8, 3)),
         "decor": ((4, 4), (7, 15), (11, 8), (20, 17), (23, 6), (33, 5), (36, 15)),
         "foreground": (2, 21, 17, 21),
+        "landmarks": (("blacksmith", 6, 14), ("ancestral_tree", 19, 17), ("village_gate", 32, 13)),
+        "scenery": ((12, 4, 6, 3), (34, 16, 3, 3)),
     },
     "luoyuan": {
         "roads": (((2, 2), (11, 2), (11, 11), (19, 11), (19, 6), (29, 6), (29, 16), (37, 16), (37, 21)),),
@@ -77,6 +91,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((4, 15, 6, 3), (14, 16, 6, 3), (30, 9, 7, 3)),
         "decor": ((3, 7), (6, 18), (13, 5), (17, 14), (24, 10), (32, 4), (35, 18)),
         "foreground": (20, 22, 38, 22),
+        "landmarks": (("east_city_gate", 5, 16), ("canal_market", 19, 13), ("escape_alley", 34, 11)),
+        "scenery": ((10, 4, 7, 3), (25, 14, 4, 4)),
     },
     "jueyun": {
         "roads": (((2, 2), (6, 2), (6, 7), (12, 7), (12, 12), (20, 12), (20, 17), (29, 17), (29, 21), (37, 21)),),
@@ -84,6 +100,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((3, 13, 7, 3), (15, 15, 7, 3), (29, 7, 8, 3)),
         "decor": ((4, 5), (8, 10), (11, 18), (21, 4), (24, 16), (33, 14), (35, 4)),
         "foreground": (2, 20, 15, 20),
+        "landmarks": (("sword_sect_gate", 8, 14), ("chain_bridge", 21, 17), ("summit_platform", 32, 11)),
+        "scenery": ((2, 4, 6, 4), (27, 3, 5, 4)),
     },
     "zhenyue": {
         "roads": (((2, 2), (10, 2), (10, 6), (20, 6), (20, 15), (30, 15), (30, 21), (37, 21)),
@@ -92,6 +110,8 @@ OUTDOOR_BLUEPRINTS = {
         "houses": ((3, 16, 7, 3), (15, 8, 8, 3), (30, 11, 7, 3)),
         "decor": ((3, 5), (8, 9), (13, 15), (23, 9), (26, 18), (35, 5), (36, 16)),
         "foreground": (22, 19, 38, 19),
+        "landmarks": (("stele_forest", 6, 17), ("ritual_altar", 21, 13), ("mountain_garrison", 33, 16)),
+        "scenery": ((5, 4, 6, 4), (26, 14, 4, 4)),
     },
 }
 
@@ -198,9 +218,26 @@ def _outdoor_layout(payload, blueprint, index):
     for decor_index, (x, y) in enumerate(blueprint["decor"]):
         layers["Lower Environment"][(x, y)] = "decor__{}".format((decor_index + index) % 16)
         layers["Lower Environment"][(x + 1, y)] = "decor__{}".format((decor_index + index + 4) % 16)
+    for scenery_index, (left, bottom, scenery_width, scenery_height) in enumerate(blueprint["scenery"]):
+        for x, y in _rect(left, bottom, scenery_width, scenery_height):
+            layers["Lower Environment"][(x, y)] = "decor__{}".format(
+                (x * 3 + y * 5 + scenery_index * 7 + index) % 16
+            )
     foreground_token = "decor__{}".format((index * 3) % 16)
     start_x, start_y, end_x, end_y = blueprint["foreground"]
     result = dict(payload)
+    landmark_positions = {
+        landmark_id: (x, y)
+        for landmark_id, x, y in blueprint["landmarks"]
+    }
+    result["anchors"] = [
+        {
+            **anchor,
+            **({"x": landmark_positions[anchor["id"]][0], "y": landmark_positions[anchor["id"]][1]}
+               if anchor["id"] in landmark_positions else {}),
+        }
+        for anchor in payload["anchors"]
+    ]
     result["layers"] = _serialise_layers(layers)
     result["collisions"] = _border_runs(width, height)
     result["foregroundSpans"] = [{

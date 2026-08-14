@@ -56,6 +56,7 @@ Build Profiles / Build Settings 中应包含：
 - 主菜单可选择 2 种性别 × 6 种职业；稳定角色 ID 写入 v4 存档并跨场景保持。
 - 97 套正式角色资源：12 主角、15 剧情角色、36 NPC、24 敌人、10 BOSS；全部有独立 PNG、动画 Controller 与 Prefab。
 - 10 个户外区域、13 个室内场景、23 个正式环境场景；统一 7 层 Tilemap、地标、锚点和持久化 Tile 资源。
+- 十个户外区域使用独立的地标构图和区域专属地形簇；序章村庄可在保持锚点/碰撞的前提下切换 normal / burned 环境状态。
 - 烟柳镇 Demo 已接入正式 Tilemap、桥、水岸、建筑、角色、NPC、敌人、战斗、交互与 UI，不再生成色块占位地图。
 - 确定性美术流水线：稳定 PNG/JSON 源、Python baker、SHA-256 校验、Unity 精确切片和目录校验。
 - v4 存档：在 v3 任务/背包/武学基础上增加正式主角外观稳定 ID，旧档迁移到女剑客。
@@ -92,7 +93,7 @@ Assets/
 
 ## 自动验证
 
-项目使用 Unity Test Framework `1.6.0`，当前全量结果为 **81 个 EditMode + 6 个 PlayMode 全通过**；Python 美术流水线另有 **34 个测试**。覆盖：
+项目使用 Unity Test Framework `1.6.0`，当前全量结果为 **100 个 EditMode + 7 个 PlayMode 全通过**；Python 美术流水线另有 **45 个测试**。覆盖：
 
 - 场景进入模式；
 - 背包/装备和资源值恢复；
@@ -109,12 +110,14 @@ Assets/
 - 23 个正式环境场景、7 层 Tilemap、持久化地面/结构 Tile、锚点可达性；
 - 主菜单 12 套外观选择、菜单→Demo 外观保持、正式烟柳镇场景绑定；
 - GameManager 尚未引导时 PlayerCombat 的空值安全。
+- 序章 normal/burned 环境状态的 Tile/地标替换与导航不变量。
+- 固定 `480×270` 视觉截图及其场景、Canvas 与渲染状态恢复。
 
 确定性资源验证：
 
 ```bash
 python3 -m unittest discover -s tools/art_pipeline/tests -v
-python3 -m tools.art_pipeline.build --all   # 正常应 built=0 skipped=120
+python3 -m tools.art_pipeline.build --all   # 正常应 built=0 skipped=121
 python3 -m tools.art_pipeline.validate --all
 ```
 
@@ -146,6 +149,7 @@ python3 -m tools.art_pipeline.validate --all
 | Tools/渊海录/美术/生成全部正式环境场景 | 重建 10 户外 + 13 室内 |
 | Tools/渊海录/美术/生成环境总览场景 | 重建环境 Showcase |
 | Tools/渊海录/美术/截取正式烟柳镇预览 | 生成实际相机验收图 |
+| Tools/渊海录/美术/截取临时正式美术验收图 | 输出主菜单、10 户外及序章焚毁态的 480×270 临时审查图 |
 | Tools/渊海录/切分角色精灵表(48×48) | 角色切片 |
 | Tools/渊海录/切分瓦片集(16×16) | 瓦片切片 |
 

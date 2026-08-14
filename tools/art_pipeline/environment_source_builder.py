@@ -68,6 +68,26 @@ INTERIOR_PROFILES = {
 }
 
 
+# Landmark categories are intentionally narrative, not palette driven.  A city
+# gate, bamboo shrine, ruined altar and hot-spring inn must still read as
+# different places when viewed in a monochrome screenshot.
+LANDMARK_ART_TYPES = {
+    "city_gate": "city_gate", "fortress_gate": "fortress_gate",
+    "east_city_gate": "city_gate", "sword_sect_gate": "sword_gate",
+    "village_gate": "village_gate", "imperial_avenue": "market",
+    "canal_market": "market", "academy": "pagoda",
+    "mountain_temple": "pagoda", "summit_platform": "pagoda",
+    "cloud_bridge": "bridge", "arched_bridge": "bridge", "chain_bridge": "bridge",
+    "sword_platform": "altar", "ritual_altar": "altar",
+    "inn": "inn", "hot_spring_inn": "inn", "caravan_inn": "tents",
+    "pharmacy": "workshop", "poison_marsh_lab": "workshop", "blacksmith": "forge",
+    "beacon_tower": "beacon", "mountain_garrison": "garrison",
+    "bamboo_shrine": "bamboo", "hidden_camp": "tents", "hunter_village": "hunters",
+    "ice_lake_tomb": "ice_tomb", "ancestral_tree": "tree",
+    "escape_alley": "alley", "stele_forest": "steles",
+}
+
+
 @dataclass(frozen=True)
 class EnvironmentDesign:
     id: str
@@ -189,11 +209,17 @@ def _draw_tile(design, role, variant):
         for x in range(3 + variant % 3, 16, 6):
             draw.line((x, 0, x - 1, 15), fill=_light(mid) + (255,))
     elif role == "water":
-        draw.rectangle((0, 0, 15, 15), fill=ink + (255,))
+        draw.rectangle((0, 0, 15, 15), fill=mid + (255,))
         for y in (3, 8, 13):
             offset = (variant * 3 + y) % 5
-            draw.line((offset, y, min(15, offset + 6), y), fill=mid + (255,))
+            draw.line((offset, y, min(15, offset + 6), y), fill=dark + (255,))
             draw.point((min(15, offset + 7), y - 1), fill=bright + (255,))
+        if design.geometry_key == "branching_canal_town":
+            draw.line((0, 1, 15, 1), fill=pale + (255,))
+        elif design.geometry_key == "bamboo_maze":
+            draw.point((4 + variant % 4, 5), fill=_accent(design) + (255,))
+        elif design.geometry_key == "snow_ridge_tomb":
+            draw.line((2, 4 + variant % 3, 13, 4 + variant % 3), fill=pale + (255,), width=2)
     elif role == "shore":
         draw.rectangle((0, 0, 15, 15), fill=base + (255,))
         draw.line((0, 3 + variant % 3, 15, 3 + variant % 3), fill=bright + (255,), width=2)
@@ -240,30 +266,82 @@ def _draw_tile(design, role, variant):
         draw.line((3, 3, 8, 0, 13, 3), fill=bright + (255,), width=2)
         if role == "exit":
             draw.line((7, 7, 7, 13), fill=pale + (255,))
-    else:  # decor and prop carry the scene-specific silhouettes.
+    else:  # decor and prop carry the region's readable terrain language.
         image = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
         draw = ImageDraw.Draw(image)
-        style = (variant + sum(ord(char) for char in design.geometry_key)) % 5
-        if style == 0:
-            draw.rectangle((6, 7, 9, 15), fill=dark + (255,))
-            draw.polygon(((2, 8), (8, 0), (14, 8)), fill=mid + (255,))
-            draw.rectangle((5, 5, 10, 9), fill=bright + (255,))
-        elif style == 1:
-            draw.rectangle((3, 7, 12, 14), fill=mid + (255,))
-            draw.rectangle((5, 3, 10, 8), fill=bright + (255,))
-            draw.line((3, 14, 12, 14), fill=dark + (255,))
-        elif style == 2:
-            draw.rectangle((6, 5, 9, 15), fill=dark + (255,))
-            draw.polygon(((7, 1), (13, 7), (9, 10), (3, 6)), fill=mid + (255,))
-            draw.point((8, 4), fill=pale + (255,))
-        elif style == 3:
-            draw.rectangle((4, 9, 11, 15), fill=mid + (255,))
-            draw.rectangle((5, 5, 10, 10), fill=bright + (255,))
-            draw.line((5, 5, 10, 10), fill=pale + (255,))
+        geometry = design.geometry_key
+        if geometry == "imperial_market":
+            draw.rectangle((1, 9, 14, 15), fill=mid + (255,))
+            draw.polygon(((0, 9), (7, 2 + variant % 3), (15, 9)), fill=bright + (255,))
+            draw.line((3, 9, 3, 15), fill=dark + (255,))
+            draw.line((12, 9, 12, 15), fill=dark + (255,))
+        elif geometry == "cliff_stair_temple":
+            draw.polygon(((0, 15), (2, 5), (6, 8), (9, 1), (15, 4), (15, 15)), fill=mid + (255,))
+            draw.line((0, 14, 15, 14), fill=dark + (255,))
+            draw.polygon(((5, 10), (8, 1), (11, 10)), fill=bright + (255,))
+        elif geometry == "branching_canal_town":
+            draw.line((2, 15, 5, 2), fill=dark + (255,), width=2)
+            draw.line((8, 15, 11, 5), fill=dark + (255,), width=2)
+            draw.polygon(((0, 11), (7, 7), (14, 11), (7, 13)), fill=mid + (255,))
+            draw.line((2, 11, 12, 11), fill=pale + (255,))
+        elif geometry == "dune_frontier":
+            draw.arc((-6, 5, 15, 23), 190, 350, fill=bright + (255,), width=3)
+            draw.arc((2, -3, 24, 17), 190, 350, fill=mid + (255,), width=3)
+            draw.rectangle((7, 7, 8, 15), fill=dark + (255,))
+            draw.line((4, 9, 12, 9), fill=dark + (255,))
+        elif geometry == "bamboo_maze":
+            for x in (2, 7, 12):
+                top = (variant + x) % 5
+                draw.line((x, 15, x + 1, top), fill=dark + (255,), width=2)
+                draw.polygon(((x, top + 5), (x - 4, top + 2), (x - 1, top + 8)), fill=mid + (255,))
+                draw.polygon(((x + 1, top + 9), (x + 5, top + 5), (x + 4, top + 11)), fill=bright + (255,))
+        elif geometry == "snow_ridge_tomb":
+            draw.polygon(((0, 15), (4, 5), (8, 8), (12, 1), (15, 5), (15, 15)), fill=mid + (255,))
+            draw.polygon(((4, 5), (8, 8), (12, 1), (14, 6), (10, 6), (8, 11)), fill=pale + (255,))
+            draw.line((0, 14, 15, 14), fill=dark + (255,))
+        elif geometry == "ring_road_grain_yard":
+            draw.rectangle((2, 8, 13, 15), fill=mid + (255,))
+            draw.line((2, 8, 13, 8), fill=dark + (255,), width=2)
+            for x in (4, 8, 12):
+                draw.rectangle((x, 3 + (variant % 2), x + 2, 12), fill=bright + (255,))
+        elif geometry == "river_ruin_market":
+            draw.rectangle((2, 6, 5, 15), fill=mid + (255,))
+            draw.rectangle((10, 3, 13, 15), fill=mid + (255,))
+            draw.line((1, 6, 6, 6), fill=pale + (255,), width=2)
+            draw.line((9, 3, 14, 3), fill=pale + (255,), width=2)
+            draw.point((7, 11), fill=_accent(design) + (255,))
+        elif geometry == "sect_cliff_walk":
+            draw.polygon(((0, 15), (0, 5), (5, 9), (8, 2), (15, 0), (15, 15)), fill=mid + (255,))
+            draw.line((2, 12, 14, 12), fill=pale + (255,), width=2)
+            draw.line((7, 1, 7, 11), fill=dark + (255,))
+        elif geometry == "stele_altar_axis":
+            draw.rectangle((5, 3, 10, 15), fill=mid + (255,))
+            draw.polygon(((4, 3), (7, 0), (11, 3)), fill=dark + (255,))
+            draw.line((7, 6, 8, 12), fill=pale + (255,))
+            draw.rectangle((1, 12, 4, 15), fill=bright + (255,))
+            draw.rectangle((12, 12, 15, 15), fill=bright + (255,))
         else:
-            draw.rectangle((2, 10, 13, 15), fill=dark + (255,))
-            draw.rectangle((4, 5, 11, 12), fill=mid + (255,))
-            draw.rectangle((6, 2, 9, 7), fill=_accent(design) + (255,))
+            style = (variant + sum(ord(char) for char in geometry)) % 5
+            if style == 0:
+                draw.rectangle((6, 7, 9, 15), fill=dark + (255,))
+                draw.polygon(((2, 8), (8, 0), (14, 8)), fill=mid + (255,))
+                draw.rectangle((5, 5, 10, 9), fill=bright + (255,))
+            elif style == 1:
+                draw.rectangle((3, 7, 12, 14), fill=mid + (255,))
+                draw.rectangle((5, 3, 10, 8), fill=bright + (255,))
+                draw.line((3, 14, 12, 14), fill=dark + (255,))
+            elif style == 2:
+                draw.rectangle((6, 5, 9, 15), fill=dark + (255,))
+                draw.polygon(((7, 1), (13, 7), (9, 10), (3, 6)), fill=mid + (255,))
+                draw.point((8, 4), fill=pale + (255,))
+            elif style == 3:
+                draw.rectangle((4, 9, 11, 15), fill=mid + (255,))
+                draw.rectangle((5, 5, 10, 10), fill=bright + (255,))
+                draw.line((5, 5, 10, 10), fill=pale + (255,))
+            else:
+                draw.rectangle((2, 10, 13, 15), fill=dark + (255,))
+                draw.rectangle((4, 5, 11, 12), fill=mid + (255,))
+                draw.rectangle((6, 2, 9, 7), fill=_accent(design) + (255,))
     return image
 
 
@@ -278,7 +356,141 @@ def _draw_landmark(design, landmark_id, size):
     left = 4 + fingerprint % 6
     right = width - 5 - (fingerprint >> 3) % 6
     bottom = height - 4
-    if "bridge" in landmark_id:
+    art_type = LANDMARK_ART_TYPES.get(landmark_id, "house")
+    if art_type in ("city_gate", "fortress_gate", "sword_gate", "village_gate"):
+        pillar_width = {"city_gate": 8, "fortress_gate": 12, "sword_gate": 7, "village_gate": 6}[art_type]
+        gate_top = bottom - ({"city_gate": 47, "fortress_gate": 40, "sword_gate": 51, "village_gate": 36}[art_type])
+        draw.rectangle((left, gate_top + 10, left + pillar_width, bottom), fill=mid + (255,))
+        draw.rectangle((right - pillar_width, gate_top + 10, right, bottom), fill=mid + (255,))
+        draw.rectangle((left + pillar_width, bottom - 23, right - pillar_width, bottom - 13), fill=dark + (255,))
+        draw.line((left - 3, gate_top + 10, width // 2, gate_top, right + 3, gate_top + 10), fill=ink + (255,), width=5)
+        draw.line((left, gate_top + 14, right, gate_top + 14), fill=pale + (255,), width=2)
+        if art_type == "fortress_gate":
+            draw.rectangle((left + 3, gate_top, left + 10, gate_top + 10), fill=dark + (255,))
+            draw.rectangle((right - 10, gate_top, right - 3, gate_top + 10), fill=dark + (255,))
+        if art_type == "sword_gate":
+            draw.line((width // 2 - 11, gate_top + 11, width // 2 + 2, bottom - 11), fill=bright + (255,), width=2)
+            draw.line((width // 2 + 11, gate_top + 11, width // 2 - 2, bottom - 11), fill=bright + (255,), width=2)
+        if art_type == "village_gate":
+            draw.rectangle((left - 5, bottom - 18, left, bottom), fill=dark + (255,))
+            draw.rectangle((right, bottom - 18, right + 5, bottom), fill=dark + (255,))
+    elif art_type == "market":
+        awning_y = bottom - 32
+        for stall in range(3):
+            x = left + 3 + stall * max(12, (right - left) // 3)
+            draw.rectangle((x, awning_y + 11, min(right, x + 13), bottom), fill=mid + (255,))
+            draw.polygon(((x - 2, awning_y + 11), (x + 6, awning_y), (x + 15, awning_y + 11)), fill=(bright if stall % 2 == 0 else pale) + (255,))
+            draw.rectangle((x + 3, bottom - 10, min(right, x + 10), bottom - 5), fill=_accent(design) + (255,))
+        draw.line((left, bottom - 2, right, bottom - 2), fill=dark + (255,), width=3)
+    elif art_type == "pagoda":
+        center = width // 2
+        tier_count = 3 if landmark_id == "mountain_temple" else 2
+        for tier in range(tier_count):
+            tier_bottom = bottom - tier * 16
+            half_width = 26 - tier * 7
+            draw.rectangle((center - half_width + 5, tier_bottom - 11, center + half_width - 5, tier_bottom), fill=mid + (255,))
+            draw.polygon(((center - half_width, tier_bottom - 10), (center, tier_bottom - 20), (center + half_width, tier_bottom - 10)), fill=dark + (255,))
+            draw.line((center - half_width, tier_bottom - 9, center + half_width, tier_bottom - 9), fill=pale + (255,), width=2)
+        draw.rectangle((center - 3, bottom - tier_count * 16 - 10, center + 3, bottom - tier_count * 16), fill=bright + (255,))
+    elif art_type == "bridge":
+        arch_top = bottom - (31 if landmark_id != "chain_bridge" else 23)
+        draw.rectangle((left, bottom - 12, right, bottom - 6), fill=mid + (255,))
+        draw.arc((left + 5, arch_top, right - 5, bottom), 180, 360, fill=pale + (255,), width=4)
+        draw.arc((left + 10, arch_top + 6, right - 10, bottom + 3), 180, 360, fill=dark + (255,), width=3)
+        if landmark_id == "chain_bridge":
+            for x in range(left + 7, right - 6, 11):
+                draw.line((x, arch_top - 6, x, bottom - 8), fill=bright + (255,))
+            draw.arc((left, arch_top - 17, right, bottom - 9), 180, 360, fill=dark + (255,), width=2)
+    elif art_type == "altar":
+        center = width // 2
+        draw.polygon(((center - 29, bottom - 7), (center + 29, bottom - 7), (center + 21, bottom), (center - 21, bottom)), fill=dark + (255,))
+        draw.rectangle((center - 19, bottom - 20, center + 19, bottom - 8), fill=mid + (255,))
+        draw.rectangle((center - 11, bottom - 31, center + 11, bottom - 20), fill=bright + (255,))
+        draw.polygon(((center - 5, bottom - 32), (center, bottom - 46), (center + 5, bottom - 32)), fill=pale + (255,))
+        if landmark_id == "sword_platform":
+            draw.line((center - 13, bottom - 43, center + 3, bottom - 23), fill=pale + (255,), width=2)
+            draw.line((center + 13, bottom - 43, center - 3, bottom - 23), fill=pale + (255,), width=2)
+    elif art_type == "inn":
+        roof_top = bottom - 48
+        draw.rectangle((left, bottom - 31, right, bottom), fill=mid + (255,))
+        draw.rectangle((left + 4, bottom - 27, right - 4, bottom - 15), fill=pale + (255,))
+        draw.rectangle((left + 7, bottom - 13, right - 7, bottom - 3), fill=base + (255,))
+        draw.polygon(((left - 4, bottom - 30), (width // 2, roof_top), (right + 4, bottom - 30)), fill=dark + (255,))
+        draw.line((left - 2, bottom - 28, right + 2, bottom - 28), fill=bright + (255,), width=2)
+        draw.rectangle((right - 5, roof_top + 9, right - 1, roof_top + 23), fill=dark + (255,))
+        if landmark_id == "hot_spring_inn":
+            for x in range(left + 7, right - 5, 12):
+                draw.arc((x, bottom - 45, x + 8, bottom - 26), 180, 350, fill=pale + (255,), width=2)
+    elif art_type == "tents":
+        for tent in range(3):
+            x = left + tent * max(13, (right - left) // 3)
+            peak = bottom - 26 - (tent % 2) * 9
+            draw.polygon(((x, bottom - 5), (x + 10, peak), (x + 22, bottom - 5)), fill=(bright if tent == 1 else mid) + (255,))
+            draw.line((x, bottom - 5, x + 22, bottom - 5), fill=dark + (255,), width=2)
+            draw.rectangle((x + 9, bottom - 10, x + 13, bottom - 4), fill=dark + (255,))
+        if landmark_id == "hidden_camp":
+            draw.line((left, bottom - 34, right, bottom - 34), fill=_accent(design) + (255,), width=2)
+    elif art_type in ("workshop", "forge"):
+        roof_top = bottom - 42
+        draw.rectangle((left + 3, bottom - 25, right - 3, bottom), fill=mid + (255,))
+        draw.polygon(((left, bottom - 25), (width // 2, roof_top), (right, bottom - 25)), fill=dark + (255,))
+        draw.rectangle((width // 2 - 9, bottom - 18, width // 2 + 9, bottom - 5), fill=pale + (255,))
+        if art_type == "forge":
+            draw.rectangle((right - 11, roof_top - 11, right - 4, bottom - 22), fill=ink + (255,))
+            draw.rectangle((width // 2 - 5, bottom - 12, width // 2 + 5, bottom - 7), fill=_accent(design) + (255,))
+        else:
+            draw.rectangle((left + 5, roof_top + 7, left + 10, bottom - 21), fill=bright + (255,))
+            draw.rectangle((left + 2, roof_top + 3, left + 13, roof_top + 10), fill=pale + (255,))
+    elif art_type in ("beacon", "garrison"):
+        center = width // 2
+        tower_top = bottom - (57 if art_type == "beacon" else 48)
+        draw.polygon(((center - 13, bottom), (center - 8, tower_top + 11), (center + 8, tower_top + 11), (center + 13, bottom)), fill=mid + (255,))
+        draw.rectangle((center - 6, tower_top + 11, center + 6, bottom - 6), fill=base + (255,))
+        draw.polygon(((center - 12, tower_top + 12), (center, tower_top), (center + 12, tower_top + 12)), fill=dark + (255,))
+        if art_type == "beacon":
+            draw.polygon(((center - 6, tower_top), (center, tower_top - 16), (center + 7, tower_top)), fill=_accent(design) + (255,))
+        else:
+            draw.line((center + 9, tower_top + 8, center + 23, tower_top + 3), fill=bright + (255,), width=2)
+            draw.polygon(((center + 22, tower_top + 2), (center + 31, tower_top + 6), (center + 22, tower_top + 10)), fill=_accent(design) + (255,))
+    elif art_type == "bamboo":
+        for x in range(left + 5, right, 10):
+            top = bottom - 40 - ((x + fingerprint) % 13)
+            draw.line((x, bottom, x + 3, top), fill=dark + (255,), width=3)
+            draw.polygon(((x + 1, top + 14), (x - 9, top + 8), (x - 1, top + 20)), fill=mid + (255,))
+            draw.polygon(((x + 2, top + 23), (x + 12, top + 15), (x + 6, top + 29)), fill=bright + (255,))
+        draw.rectangle((width // 2 - 14, bottom - 18, width // 2 + 14, bottom - 8), fill=base + (255,))
+        draw.line((width // 2 - 18, bottom - 20, width // 2, bottom - 34, width // 2 + 18, bottom - 20), fill=pale + (255,), width=3)
+    elif art_type == "hunters":
+        for hut in range(2):
+            x = left + hut * 28
+            draw.rectangle((x, bottom - 19, x + 23, bottom), fill=mid + (255,))
+            draw.polygon(((x - 3, bottom - 19), (x + 11, bottom - 35), (x + 26, bottom - 19)), fill=dark + (255,))
+        draw.line((right - 3, bottom - 42, right - 3, bottom - 9), fill=bright + (255,), width=2)
+        draw.polygon(((right - 3, bottom - 42), (right + 9, bottom - 36), (right - 3, bottom - 31)), fill=_accent(design) + (255,))
+    elif art_type == "ice_tomb":
+        center = width // 2
+        draw.polygon(((center - 26, bottom), (center - 15, bottom - 29), (center, bottom - 44), (center + 18, bottom - 25), (center + 27, bottom)), fill=mid + (255,))
+        draw.polygon(((center - 7, bottom - 8), (center, bottom - 34), (center + 8, bottom - 8)), fill=pale + (255,))
+        draw.line((center - 26, bottom - 2, center + 27, bottom - 2), fill=dark + (255,), width=2)
+    elif art_type == "tree":
+        center = width // 2
+        draw.rectangle((center - 5, bottom - 35, center + 5, bottom), fill=dark + (255,))
+        draw.polygon(((center, bottom - 65), (center - 27, bottom - 38), (center - 17, bottom - 19), (center - 36, bottom - 11), (center, bottom - 15), (center + 34, bottom - 11), (center + 18, bottom - 30)), fill=mid + (255,))
+        draw.polygon(((center, bottom - 58), (center - 20, bottom - 34), (center, bottom - 29), (center + 20, bottom - 34)), fill=bright + (255,))
+    elif art_type == "alley":
+        draw.rectangle((left, bottom - 38, left + 19, bottom), fill=mid + (255,))
+        draw.rectangle((right - 19, bottom - 45, right, bottom), fill=dark + (255,))
+        draw.rectangle((width // 2 - 7, bottom - 26, width // 2 + 7, bottom), fill=ink + (255,))
+        for x in (left + 6, right - 12):
+            draw.rectangle((x, bottom - 19, x + 5, bottom - 11), fill=pale + (255,))
+    elif art_type == "steles":
+        for index in range(5):
+            x = left + 4 + index * 12
+            top = bottom - 19 - (index % 3) * 9
+            draw.rectangle((x, top, x + 7, bottom), fill=mid + (255,))
+            draw.line((x + 2, top + 5, x + 5, bottom - 5), fill=pale + (255,))
+            draw.polygon(((x - 1, top), (x + 3, top - 5), (x + 8, top)), fill=dark + (255,))
+    elif "bridge" in landmark_id:
         arch_top = bottom - 28 - fingerprint % 10
         draw.rectangle((left, bottom - 12, right, bottom - 6), fill=mid + (255,))
         draw.arc((left + 7, arch_top, right - 7, bottom - 2), 180, 360, fill=pale + (255,), width=4)
