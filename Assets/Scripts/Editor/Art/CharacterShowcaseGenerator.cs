@@ -50,6 +50,7 @@ namespace YuanHaiLu.Editor
                     instance.name = entry.Id;
                     instance.transform.SetParent(roots[category]);
                     instance.transform.position = new Vector3((index % 12) * 2f, y - (index / 12) * 2.4f, 0f);
+                    CreateLabel(instance.transform, entry.Id);
                 }
                 y -= ((entries.Length + 11) / 12) * 2.4f + 1.5f;
             }
@@ -63,6 +64,23 @@ namespace YuanHaiLu.Editor
         public static void GenerateFromCommandLine()
         {
             Generate();
+        }
+
+        private static void CreateLabel(Transform character, string id)
+        {
+            var label = new GameObject("Label_" + id);
+            label.transform.SetParent(character, false);
+            label.transform.localPosition = new Vector3(0f, -0.9f, 0f);
+            var text = label.AddComponent<TextMesh>();
+            text.text = id;
+            text.anchor = TextAnchor.MiddleCenter;
+            text.alignment = TextAlignment.Center;
+            text.characterSize = 0.08f;
+            text.fontSize = 48;
+            text.color = new Color32(226, 220, 196, 255);
+            var renderer = label.GetComponent<MeshRenderer>();
+            renderer.sortingLayerName = "UI";
+            renderer.sortingOrder = 10;
         }
     }
 }

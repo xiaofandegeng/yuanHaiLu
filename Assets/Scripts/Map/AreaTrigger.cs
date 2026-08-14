@@ -1,4 +1,5 @@
 using YuanHaiLu.GameSystem;
+using UnityEngine.Events;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using YuanHaiLu.Core;
@@ -116,7 +117,7 @@ namespace YuanHaiLu.Map
             // 闭包只捕获值类型与持久 GameManager 引用（不捕获 this），
             // 因为 Single 加载会销毁当前场景的 AreaTrigger，协程随之停止。
             Vector2 targetSpawn = spawnPositionInTarget;
-            System.Action<Scene, LoadSceneMode> onSceneLoaded = null;
+            UnityAction<Scene, LoadSceneMode> onSceneLoaded = null;
             onSceneLoaded = (scene, mode) =>
             {
                 SceneManager.sceneLoaded -= onSceneLoaded;

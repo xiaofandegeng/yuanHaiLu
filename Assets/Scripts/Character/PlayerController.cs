@@ -39,10 +39,12 @@ namespace YuanHaiLu.Character
         private static readonly int AnimIsDashing = Animator.StringToHash("IsDashing");
         private static readonly int AnimIsAttacking = Animator.StringToHash("IsAttacking");
         private static readonly int AnimAttackIndex = Animator.StringToHash("AttackIndex");
+        private static readonly int AnimFacing = Animator.StringToHash("Facing");
 
         public Vector2 LastDirection => _lastDirection;
         public bool IsMoving => _moveInput.sqrMagnitude > 0.01f;
         public bool IsDashing => _isDashing;
+        public bool IsInputEnabled => _inputEnabled;
         private bool CanAnimate => _anim != null && _anim.runtimeAnimatorController != null;
 
         private void Awake()
@@ -147,6 +149,7 @@ namespace YuanHaiLu.Character
             _anim.SetFloat(AnimMoveY, _lastDirection.y);
             _anim.SetFloat(AnimSpeed, _moveInput.sqrMagnitude);
             _anim.SetBool(AnimIsDashing, _isDashing);
+            _anim.SetInteger(AnimFacing, FacingIndex(_lastDirection));
         }
 
         // === 外部控制 ===
@@ -168,7 +171,15 @@ namespace YuanHaiLu.Character
             {
                 _anim.SetFloat(AnimMoveX, _lastDirection.x);
                 _anim.SetFloat(AnimMoveY, _lastDirection.y);
+                _anim.SetInteger(AnimFacing, FacingIndex(_lastDirection));
             }
+        }
+
+        private static int FacingIndex(Vector2 direction)
+        {
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+                return direction.x < 0f ? 1 : 2;
+            return direction.y > 0f ? 3 : 0;
         }
 
         // === 碰撞排序（Y轴排序，让前方角色遮挡后方） ===

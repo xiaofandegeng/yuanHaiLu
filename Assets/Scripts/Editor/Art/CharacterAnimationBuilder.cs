@@ -16,7 +16,7 @@ namespace YuanHaiLu.Editor
         private const string PrefabRoot = "Assets/Prefabs/Characters";
         private const string AnimationRoot = "Assets/Animations/Characters";
         private const string StampPath = AnimationRoot + "/formal-character-build.txt";
-        private const string BuilderVersion = "character-builder-v2";
+        private const string BuilderVersion = "character-builder-v4";
 
         [MenuItem("Tools/渊海录/美术/重建角色动画与Prefab")]
         public static void RebuildAll()
@@ -100,7 +100,7 @@ namespace YuanHaiLu.Editor
             }
             if (states.TryGetValue("idle_down", out var idle))
                 stateMachine.defaultState = idle;
-            AddBasicTransitions(states);
+            AddBasicTransitions(stateMachine, states);
             EditorUtility.SetDirty(controller);
 
             var prefabObject = new GameObject(metadata.id);
@@ -152,7 +152,8 @@ namespace YuanHaiLu.Editor
             settings.loopTime = animation.loop;
             AnimationUtility.SetAnimationClipSettings(clip, settings);
 
-            if (animation.name.StartsWith("attack_", StringComparison.Ordinal))
+            if (artId.StartsWith("player_", StringComparison.Ordinal) &&
+                animation.name.StartsWith("attack_", StringComparison.Ordinal))
             {
                 var events = new List<AnimationEvent>();
                 foreach (var frame in animation.hitFrames ?? Array.Empty<int>())
@@ -181,20 +182,81 @@ namespace YuanHaiLu.Editor
             controller.AddParameter("IsDashing", AnimatorControllerParameterType.Bool);
             controller.AddParameter("IsAttacking", AnimatorControllerParameterType.Bool);
             controller.AddParameter("AttackIndex", AnimatorControllerParameterType.Int);
+            controller.AddParameter("Facing", AnimatorControllerParameterType.Int);
         }
 
-        private static void AddBasicTransitions(IReadOnlyDictionary<string, AnimatorState> states)
+        private static void AddBasicTransitions(
+            AnimatorStateMachine stateMachine,
+            IReadOnlyDictionary<string, AnimatorState> states)
         {
-            if (!states.TryGetValue("idle_down", out var idle) || !states.TryGetValue("walk_down", out var walk))
-                return;
-            var toWalk = idle.AddTransition(walk);
-            toWalk.hasExitTime = false;
-            toWalk.duration = 0f;
-            toWalk.AddCondition(AnimatorConditionMode.Greater, 0.01f, "Speed");
-            var toIdle = walk.AddTransition(idle);
-            toIdle.hasExitTime = false;
-            toIdle.duration = 0f;
-            toIdle.AddCondition(AnimatorConditionMode.Less, 0.01f, "Speed");
+            var directions = new[] { "down", "left", "right", "up" };
+            for (var facing = 0; facing < directions.Length; facing++)
+            {
+                var direction = directions[facing];
+                if (states.TryGetValue("idle_" + direction, out var idle))
+                {
+                    var idleTransition = AddAnyStateTransition(stateMachine, idle);
+                    idleTransition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsAttacking");
+                    idleTransition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsDashing");
+                    idleTransition.AddCondition(AnimatorConditionMode.Less, 0.01f, "Speed");
+                    idleTransition.AddCondition(AnimatorConditionMode.Equals, facing, "Facing");
+                }
+
+                if (states.TryGetValue("walk_" + direction, out var walk))
+                {
+                    var walkTransition = AddAnyStateTransition(stateMachine, walk);
+                    walkTransition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsAttacking");
+                    walkTransition.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsDashing");
+                    walkTransition.AddCondition(AnimatorConditionMode.Greater, 0.01f, "Speed");
+                    walkTransition.AddCondition(AnimatorConditionMode.Equals, facing, "Facing");
+                }
+
+                if (states.TryGetValue("dash_" + direction, out var dash))
+                {
+                    var dashTransition = AddAnyStateTransition(stateMachine, dash);
+                    dashTransition.AddCondition(AnimatorConditionMode.If, 0f, "IsDashing");
+                    dashTransition.AddCondition(AnimatorConditionMode.Equals, facing, "Facing");
+                    if (states.TryGetValue("idle_" + direction, out idle))
+                    {
+                        var dashEnd = dash.AddTransition(idle);
+                        dashEnd.hasExitTime = true;
+                        dashEnd.exitTime = 1f;
+                        dashEnd.duration = 0f;
+                        dashEnd.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsDashing");
+                    }
+                }
+
+                for (var attackIndex = 0; attackIndex < 3; attackIndex++)
+                {
+                    var stateName = "attack_" + (attackIndex + 1) + "_" + direction;
+                    if (!states.TryGetValue(stateName, out var attack))
+                        continue;
+
+                    var attackTransition = AddAnyStateTransition(stateMachine, attack);
+                    attackTransition.AddCondition(AnimatorConditionMode.If, 0f, "IsAttacking");
+                    attackTransition.AddCondition(AnimatorConditionMode.Equals, attackIndex, "AttackIndex");
+                    attackTransition.AddCondition(AnimatorConditionMode.Equals, facing, "Facing");
+                    if (states.TryGetValue("idle_" + direction, out idle))
+                    {
+                        var attackEnd = attack.AddTransition(idle);
+                        attackEnd.hasExitTime = true;
+                        attackEnd.exitTime = 1f;
+                        attackEnd.duration = 0f;
+                        attackEnd.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsAttacking");
+                    }
+                }
+            }
+        }
+
+        private static AnimatorStateTransition AddAnyStateTransition(
+            AnimatorStateMachine stateMachine,
+            AnimatorState target)
+        {
+            var transition = stateMachine.AddAnyStateTransition(target);
+            transition.hasExitTime = false;
+            transition.duration = 0f;
+            transition.canTransitionToSelf = false;
+            return transition;
         }
 
         private static string BuildStamp(IEnumerable<string> metadataPaths)

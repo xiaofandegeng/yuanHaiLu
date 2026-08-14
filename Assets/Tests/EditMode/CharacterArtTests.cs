@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 using YuanHaiLu.Art;
 using YuanHaiLu.Editor;
@@ -9,10 +10,15 @@ namespace YuanHaiLu.Tests.EditMode
 {
     public class CharacterArtTests
     {
+        [OneTimeSetUp]
+        public void RebuildFormalCharacterAssets()
+        {
+            CharacterAnimationBuilder.RebuildAll();
+        }
+
         [Test]
         public void FormalCharacterCatalogContainsExactlyNinetySevenEntries()
         {
-            CharacterAnimationBuilder.RebuildAll();
             var catalog = CharacterArtCatalog.LoadDefault();
 
             Assert.That(catalog.Entries.Count, Is.EqualTo(97));
@@ -32,7 +38,6 @@ namespace YuanHaiLu.Tests.EditMode
         [TestCase("hanyuan_snow_beast")]
         public void FormalCharacterHasSheetControllerAndPrefab(string id)
         {
-            CharacterAnimationBuilder.RebuildAll();
             var catalog = CharacterArtCatalog.LoadDefault();
 
             Assert.That(catalog.TryGet(id, out var entry), Is.True);
@@ -76,6 +81,94 @@ namespace YuanHaiLu.Tests.EditMode
             {
                 Object.DestroyImmediate(target);
             }
+        }
+
+        [TestCase("attack1", "attack_1_left")]
+        [TestCase("skill1", "skill_1_left")]
+        [TestCase("death", "death_left")]
+        public void ShowcaseActionMapsStableApiToAnimatorState(string actionId, string stateName)
+        {
+            var window = ScriptableObject.CreateInstance<CharacterShowcaseWindow>();
+            try
+            {
+                Assert.That(window.AnimatorStateFor(actionId, 1), Is.EqualTo(stateName));
+                Assert.That(() => window.AnimatorStateFor(actionId, 4),
+                    Throws.TypeOf<System.ArgumentOutOfRangeException>());
+                Assert.That(() => window.AnimatorStateFor("unknown", 0),
+                    Throws.TypeOf<System.ArgumentOutOfRangeException>());
+            }
+            finally
+            {
+                Object.DestroyImmediate(window);
+            }
+        }
+
+        [TestCase("player_female_swordsman")]
+        [TestCase("cangyue_cliff_wolf")]
+        [TestCase("hanyuan_snow_beast")]
+        public void FormalControllerHasReachableDirectionalMovementAndAttackStates(string id)
+        {
+            var catalog = CharacterArtCatalog.LoadDefault();
+            Assert.That(catalog.TryGet(id, out var entry), Is.True);
+            var controller = entry.Controller as AnimatorController;
+            Assert.That(controller, Is.Not.Null);
+            Assert.That(controller.parameters.Any(parameter => parameter.name == "Facing"), Is.True);
+            var states = controller.layers[0].stateMachine.states
+                .Select(child => child.state.name)
+                .ToArray();
+            foreach (var direction in new[] { "down", "left", "right", "up" })
+            {
+                Assert.That(states, Does.Contain("idle_" + direction));
+                Assert.That(states, Does.Contain("walk_" + direction));
+                Assert.That(states, Does.Contain("attack_1_" + direction));
+            }
+            Assert.That(controller.layers[0].stateMachine.anyStateTransitions.Any(transition =>
+                transition.conditions.Any(condition => condition.parameter == "IsAttacking")), Is.True);
+        }
+
+        [Test]
+        public void CivilianControllerStillProvidesFourDirectionalIdleAndWalkStates()
+        {
+            var catalog = CharacterArtCatalog.LoadDefault();
+            Assert.That(catalog.TryGet("yanliu_merchant_01", out var entry), Is.True);
+            var controller = entry.Controller as AnimatorController;
+            var states = controller.layers[0].stateMachine.states
+                .Select(child => child.state.name)
+                .ToArray();
+            foreach (var direction in new[] { "down", "left", "right", "up" })
+            {
+                Assert.That(states, Does.Contain("idle_" + direction));
+                Assert.That(states, Does.Contain("walk_" + direction));
+            }
+        }
+
+        [Test]
+        public void OnlyPlayerAttackClipsContainPlayerCombatAnimationEvents()
+        {
+            var catalog = CharacterArtCatalog.LoadDefault();
+            Assert.That(catalog.TryGet("player_female_swordsman", out var player), Is.True);
+            Assert.That(catalog.TryGet("cangyue_cliff_wolf", out var enemy), Is.True);
+
+            var playerEvents = AnimationUtility.GetAnimationEvents(AttackClip(player.Controller, "attack_1_down"));
+            var enemyEvents = AnimationUtility.GetAnimationEvents(AttackClip(enemy.Controller, "attack_1_down"));
+
+            Assert.That(playerEvents.Select(animationEvent => animationEvent.functionName),
+                Does.Contain("OnAttackHitFrame"));
+            Assert.That(enemyEvents.Select(animationEvent => animationEvent.functionName),
+                Has.None.EqualTo("OnAttackHitFrame"));
+            Assert.That(enemyEvents.Select(animationEvent => animationEvent.functionName),
+                Has.None.EqualTo("OnAttackAnimationEnd"));
+        }
+
+        private static AnimationClip AttackClip(RuntimeAnimatorController controller, string stateName)
+        {
+            var animatorController = controller as AnimatorController;
+            Assert.That(animatorController, Is.Not.Null);
+            var state = animatorController.layers[0].stateMachine.states
+                .Single(child => child.state.name == stateName)
+                .state;
+            Assert.That(state.motion, Is.TypeOf<AnimationClip>());
+            return state.motion as AnimationClip;
         }
     }
 }
