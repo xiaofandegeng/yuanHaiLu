@@ -134,6 +134,7 @@ class EnvironmentRecipe:
     tile_size: int
     modules: tuple
     landmarks: tuple = ()
+    blocking_tile_roles: tuple = ()
 
     @classmethod
     def from_dict(cls, payload):
@@ -149,11 +150,29 @@ class EnvironmentRecipe:
         landmark_ids = [landmark.id for landmark in landmarks]
         if len(landmark_ids) != len(set(landmark_ids)):
             raise ManifestError("{} contains duplicate landmark id".format(art_id))
+        blocking_roles = payload.get("blockingTileRoles", [])
+        if not isinstance(blocking_roles, list) or any(
+            not isinstance(role, str) or not role for role in blocking_roles
+        ):
+            raise ManifestError("{} blockingTileRoles must be an array of role names".format(art_id))
+        module_roles = {
+            re.sub(r"_[0-9]+$", "", Path(module).stem)
+            for module in payload.get("modules", [])
+            if isinstance(module, str)
+        }
+        unknown_blocking = set(blocking_roles) - module_roles
+        if unknown_blocking:
+            raise ManifestError(
+                "{} blocking tile role has no declared sprite role: {}".format(
+                    art_id, ", ".join(sorted(unknown_blocking))
+                )
+            )
         return cls(
             art_id,
             tile_size,
             _module_names(payload.get("modules"), art_id),
             landmarks,
+            tuple(blocking_roles),
         )
 
 

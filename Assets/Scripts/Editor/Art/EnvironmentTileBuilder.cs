@@ -26,6 +26,13 @@ namespace YuanHaiLu.Editor
                 var directory = Path.GetDirectoryName(metadataPath) ?? string.Empty;
                 var texturePath = Path.Combine(directory, metadata.image).Replace('\\', '/');
                 var sprites = AssetDatabase.LoadAllAssetsAtPath(texturePath).OfType<Sprite>();
+                var rolesBySpriteName = metadata.sprites.ToDictionary(
+                    sprite => sprite.name,
+                    sprite => sprite.role,
+                    StringComparer.Ordinal);
+                var blockingRoles = new HashSet<string>(
+                    metadata.blockingTileRoles,
+                    StringComparer.Ordinal);
                 EnsureFolder(TileRoot + "/" + metadata.id);
                 foreach (var sprite in sprites)
                 {
@@ -37,7 +44,12 @@ namespace YuanHaiLu.Editor
                         AssetDatabase.CreateAsset(tile, path);
                     }
                     tile.sprite = sprite;
-                    tile.colliderType = Tile.ColliderType.None;
+                    if (!rolesBySpriteName.TryGetValue(sprite.name, out var role))
+                        throw new InvalidOperationException(
+                            $"'{metadata.id}' metadata is missing a role for tile sprite '{sprite.name}'.");
+                    tile.colliderType = blockingRoles.Contains(role)
+                        ? Tile.ColliderType.Grid
+                        : Tile.ColliderType.None;
                     EditorUtility.SetDirty(tile);
                 }
             }

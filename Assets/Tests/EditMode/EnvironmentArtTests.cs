@@ -13,6 +13,8 @@ namespace YuanHaiLu.Tests.EditMode
 {
     public class EnvironmentArtTests
     {
+        private static bool environmentTilesRebuilt;
+
         [Test]
         public void EnvironmentCatalogContainsTenRegionsAndThirteenInteriors()
         {
@@ -102,6 +104,26 @@ namespace YuanHaiLu.Tests.EditMode
             finally
             {
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            }
+        }
+
+        [TestCase("yanliu", new string[] { "wall", "roof" })]
+        [TestCase("inn", new string[] { "wall" })]
+        public void FormalTilesUseOnlyDeclaredBlockingRoles(string id, string[] blockingRoles)
+        {
+            if (!environmentTilesRebuilt)
+            {
+                EnvironmentTileBuilder.RebuildAll();
+                environmentTilesRebuilt = true;
+            }
+
+            foreach (var tile in EnvironmentTileBuilder.LoadTiles(id).Values)
+            {
+                var role = tile.sprite.name.Split(new[] { "__" }, System.StringSplitOptions.None)[1];
+                var expected = blockingRoles.Contains(role)
+                    ? Tile.ColliderType.Grid
+                    : Tile.ColliderType.None;
+                Assert.That(tile.colliderType, Is.EqualTo(expected), tile.sprite.name);
             }
         }
     }

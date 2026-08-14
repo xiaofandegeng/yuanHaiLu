@@ -147,6 +147,7 @@ def bake_environment(recipe, output_dir):
         "height": canvas.image.height,
         "tileSize": tile_size,
         "sprites": sprites,
+        "blockingTileRoles": list(recipe.blocking_tile_roles),
         "landmarkImage": landmark_path.name if landmark_path else None,
         "landmarkSha256": landmark_hash,
         "landmarks": landmarks,

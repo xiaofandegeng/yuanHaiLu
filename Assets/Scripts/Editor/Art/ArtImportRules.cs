@@ -12,6 +12,8 @@ namespace YuanHaiLu.Editor
     internal sealed class ArtSpriteMetadata
     {
         public string name;
+        public string role;
+        public int variant;
         public int[] rect;
         public float[] pivot;
     }
@@ -28,6 +30,7 @@ namespace YuanHaiLu.Editor
         public string landmarkSha256;
         public int frameSize;
         public int tileSize;
+        public string[] blockingTileRoles;
         public ArtSpriteMetadata[] sprites;
         public ArtSpriteMetadata[] landmarks;
         public ArtAnimationMetadata[] animations;
@@ -112,6 +115,21 @@ namespace YuanHaiLu.Editor
             metadata.sprites = metadata.sprites ?? Array.Empty<ArtSpriteMetadata>();
             metadata.landmarks = metadata.landmarks ?? Array.Empty<ArtSpriteMetadata>();
             metadata.animations = metadata.animations ?? Array.Empty<ArtAnimationMetadata>();
+            if (string.Equals(metadata.kind, "environment", StringComparison.Ordinal))
+            {
+                if (metadata.blockingTileRoles == null)
+                    throw new InvalidDataException($"Environment metadata '{metadataPath}' omits blockingTileRoles.");
+                var declaredRoles = new HashSet<string>(
+                    metadata.sprites.Select(sprite => sprite.role).Where(role => !string.IsNullOrEmpty(role)),
+                    StringComparer.Ordinal);
+                var unknownBlocking = metadata.blockingTileRoles
+                    .Where(role => string.IsNullOrEmpty(role) || !declaredRoles.Contains(role))
+                    .ToArray();
+                if (unknownBlocking.Length > 0)
+                    throw new InvalidDataException(
+                        $"Environment metadata '{metadataPath}' names missing blocking roles: " +
+                        string.Join(", ", unknownBlocking));
+            }
             return metadata;
         }
 

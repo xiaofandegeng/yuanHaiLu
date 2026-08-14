@@ -8,6 +8,7 @@ from tools.art_pipeline.schema import (
     CharacterManifest,
     CharacterRecipe,
     EnvironmentManifest,
+    EnvironmentRecipe,
     ManifestError,
     load_character_manifest,
     load_environment_manifest,
@@ -69,6 +70,17 @@ class SchemaTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ManifestError, "tileSize must be 16"):
             EnvironmentManifest.from_dict(payload)
+
+    def test_environment_rejects_blocking_role_without_a_declared_sprite_role(self):
+        with self.assertRaisesRegex(ManifestError, "blocking tile role"):
+            EnvironmentRecipe.from_dict(
+                {
+                    "id": "yanliu",
+                    "tileSize": 16,
+                    "modules": ["Assets/ArtSource/wall_00.png"],
+                    "blockingTileRoles": ["roof"],
+                }
+            )
 
     def test_file_loaders_return_validated_manifests(self):
         with tempfile.TemporaryDirectory() as temp_dir:
