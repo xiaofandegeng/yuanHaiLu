@@ -5,6 +5,7 @@ from pathlib import Path
 from PIL import Image
 
 from tools.art_pipeline.character_modules import validate_character_modules
+from tools.art_pipeline.source_audit import audit_character_sources
 from tools.art_pipeline.character_roster import (
     BOSS_IDS,
     CORE_REGIONS,
@@ -75,6 +76,9 @@ class CharacterRosterTests(unittest.TestCase):
     def test_every_recipe_uses_six_visible_editable_modules(self):
         for recipe in build_roster():
             self.assertTrue(validate_character_modules(recipe), recipe.id)
+
+    def test_all_formal_character_sources_are_complete_and_unique(self):
+        self.assertEqual(audit_character_sources(build_roster()), [])
 
     def test_named_and_principal_boss_union_matches_18_story_roles(self):
         principal_bosses = {"helian_beiming", "liu_hanzhang", "feng_sanniang"}
