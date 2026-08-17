@@ -21,13 +21,14 @@ namespace YuanHaiLu.Core
     {
         public const string DefaultStyleId = "sword";
 
-        /// <summary>流派档案：ID、显示文案、主动技与全部普攻数值。</summary>
+        /// <summary>流派档案：ID、显示文案、主动技、武器小图与全部普攻数值。</summary>
         private sealed class StyleProfile
         {
             public string Id;
             public string DisplayName;
             public string Description;
             public string ActiveSkillId;
+            public string WeaponSpriteId;
             public float MeleeRange;
             public Vector2 MeleeBoxSize;
             public int MaxCombo;
@@ -43,6 +44,7 @@ namespace YuanHaiLu.Core
                     WeaponStyleKind.Sword, new StyleProfile
                     {
                         Id = "sword",
+                        WeaponSpriteId = "weapon_sword",
                         DisplayName = "长剑",
                         Description = "中距均衡，三段连斩，剑气前冲破敌",
                         ActiveSkillId = "sword_qi_wave",
@@ -58,6 +60,7 @@ namespace YuanHaiLu.Core
                     WeaponStyleKind.Gauntlets, new StyleProfile
                     {
                         Id = "gauntlets",
+                        WeaponSpriteId = "weapon_gauntlets",
                         DisplayName = "拳套",
                         Description = "短距疾风连拳，一记冲拳贴身突进",
                         ActiveSkillId = "fist_dash_punch",
@@ -73,6 +76,7 @@ namespace YuanHaiLu.Core
                     WeaponStyleKind.Dart, new StyleProfile
                     {
                         Id = "dart",
+                        WeaponSpriteId = "weapon_dart",
                         DisplayName = "飞镖",
                         Description = "远程点杀，扇形三镖齐发，近身较弱",
                         ActiveSkillId = "dart_fan_throw",
@@ -98,6 +102,9 @@ namespace YuanHaiLu.Core
 
         /// <summary>新游戏随流派直接学会的唯一主动技能。</summary>
         public string ActiveSkillId => Profile.ActiveSkillId;
+
+        /// <summary>流派武器小图（菜单图标与玩家武器层共用，MvpArtCatalog 持久精灵）。</summary>
+        public string WeaponSpriteId => Profile.WeaponSpriteId;
 
         // === 普攻档案（PlayerCombat 消费） ===
         public float MeleeRange => Profile.MeleeRange;

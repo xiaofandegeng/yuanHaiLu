@@ -49,6 +49,15 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(banditTargets.All(target =>
                 target.objectiveType == QuestObjective.ObjectiveType.KillEnemy), Is.True);
 
+            // 复审 P1-b：Demo 只保留这两名水匪；额外山贼/路匪与 BOSS 事件已随范围收缩移除。
+            var allEnemies = Object.FindObjectsByType<Character.EnemyAI>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            Assert.That(allEnemies, Has.Length.EqualTo(2),
+                "MVP scope: exactly two river bandits, no extra patrol groups.");
+            Assert.That(GameObject.Find("Event_BossFight"), Is.Null,
+                "MVP scope: boss fights are frozen content and must not appear in Demo.");
+
             // 掌柜的荷包拾取点。
             var pouch = Object.FindObjectsByType<ItemPickup>(
                     FindObjectsInactive.Include,

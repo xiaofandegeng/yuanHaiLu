@@ -213,6 +213,23 @@ namespace YuanHaiLu.Editor
             preview.sprite = prefabRenderer.sprite;
             preview.preserveAspect = true;
 
+            // 武器小图大图标（docs/15 复审）：随所选流派切换的持久精灵。
+            var iconObject = new GameObject("WeaponIcon");
+            iconObject.transform.SetParent(panel.transform, false);
+            var iconRect = iconObject.AddComponent<RectTransform>();
+            iconRect.anchorMin = new Vector2(0.17f, 0.34f);
+            iconRect.anchorMax = new Vector2(0.17f, 0.34f);
+            iconRect.pivot = new Vector2(0.5f, 0.5f);
+            iconRect.sizeDelta = new Vector2(26f, 26f);
+            var icon = iconObject.AddComponent<Image>();
+            icon.color = Color.white;
+            icon.preserveAspect = true;
+            icon.sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(
+                "Assets/Resources/Art/MVP/" + WeaponStyle.Default.WeaponSpriteId + ".png");
+            if (icon.sprite == null)
+                throw new System.InvalidOperationException(
+                    "MVP weapon icon sprite is missing: " + WeaponStyle.Default.WeaponSpriteId);
+
             var labelObject = new GameObject("StyleSelectionLabel");
             labelObject.transform.SetParent(panel.transform, false);
             var labelRect = labelObject.AddComponent<RectTransform>();
@@ -275,10 +292,28 @@ namespace YuanHaiLu.Editor
             var layoutElement = buttonObject.AddComponent<LayoutElement>();
             layoutElement.preferredHeight = 20;
 
+            // 武器小图（复审 P1-c）：每个流派按钮内嵌对应武器持久精灵。
+            var iconObject = new GameObject("Icon");
+            iconObject.transform.SetParent(buttonObject.transform, false);
+            var iconRect = iconObject.AddComponent<RectTransform>();
+            iconRect.anchorMin = new Vector2(0f, 0.5f);
+            iconRect.anchorMax = new Vector2(0f, 0.5f);
+            iconRect.pivot = new Vector2(0.5f, 0.5f);
+            iconRect.anchoredPosition = new Vector2(12f, 0f);
+            iconRect.sizeDelta = new Vector2(14f, 14f);
+            var iconImage = iconObject.AddComponent<Image>();
+            iconImage.color = Color.white;
+            iconImage.preserveAspect = true;
+            iconImage.sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(
+                "Assets/Resources/Art/MVP/weapon_" + style.StyleId + ".png");
+            if (iconImage.sprite == null)
+                throw new System.InvalidOperationException(
+                    "MVP weapon icon sprite is missing: weapon_" + style.StyleId);
+
             var textObject = new GameObject("Text");
             textObject.transform.SetParent(buttonObject.transform, false);
             var textRect = textObject.AddComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMin = new Vector2(0.18f, 0f);
             textRect.anchorMax = Vector2.one;
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;

@@ -392,14 +392,9 @@ namespace YuanHaiLu.Editor
         // ========== 敌人 ==========
         private static void CreateEnemies()
         {
-            // 第一组：镇外山贼
-            CreateEnemy("山贼甲", "yanliu_river_bandit", new Vector2(33f, 18f), 25, 6);
-            CreateEnemy("山贼乙", "yanliu_marsh_raider", new Vector2(35f, 20f), 25, 6);
-
-            // 第二组：路匪
-            CreateEnemy("路匪", "yanliu_rebel_scout", new Vector2(6f, 19f), 35, 8);
-
-            // MVP 河岸水匪（docs/15）：击杀后上报 MVP_01 的 KillEnemy 目标。
+            // 复审 P1：Demo 只保留 MVP_01 的两名河岸水匪（docs/15“两个敌人、
+            // 一个任务闭环”）。旧的山贼/路匪巡逻组与 BOSS 战事件已随收缩移除，
+            // 不再引用其他冻结角色资产。
             CreateEnemy("河岸水匪甲", "yanliu_river_bandit", new Vector2(14f, 3.2f), 22, 5,
                 questTargetId: "river_bandit");
             CreateEnemy("河岸水匪乙", "yanliu_marsh_raider", new Vector2(17f, 2.6f), 22, 5,
@@ -449,7 +444,9 @@ namespace YuanHaiLu.Editor
             loot.minGold = 3;
             loot.maxGold = 12;
             loot.expReward = 10 + hp / 5;
-            loot.lootItems = name.Contains("路匪") ? EnemyLootPresets.BanditLoot : EnemyLootPresets.WolfLoot;
+            loot.lootItems = name.Contains("水匪") || name.Contains("路匪")
+                ? EnemyLootPresets.BanditLoot
+                : EnemyLootPresets.WolfLoot;
         }
 
         // ========== 可破坏物体 ==========
@@ -488,40 +485,9 @@ namespace YuanHaiLu.Editor
         // ========== 事件触发器 ==========
         private static void CreateEventTriggers()
         {
-            // 北山山贼BOSS战触发器
-            var triggerObj = new GameObject("Event_BossFight");
-            triggerObj.transform.position = new Vector3(34f, 21f, 0);
-
-            var col = triggerObj.AddComponent<BoxCollider2D>();
-            col.isTrigger = true;
-            col.size = new Vector2(3f, 2f);
-
-            var evt = triggerObj.AddComponent<EventTrigger>();
-            evt.triggerType = EventTrigger.TriggerType.Combat;
-            evt.triggerOnce = true;
-            evt.enemyWaves = new EventTrigger.WaveData[]
-            {
-                new EventTrigger.WaveData
-                {
-                    enemyName = "山贼",
-                    artId = "yanliu_river_bandit",
-                    count = 3,
-                    enemyHp = 20,
-                    enemyAtk = 5,
-                    spawnRadius = 3f
-                },
-                new EventTrigger.WaveData
-                {
-                    enemyName = "山贼头目",
-                    artId = "yanliu_rebel_gang_lord",
-                    count = 1,
-                    enemyHp = 60,
-                    enemyAtk = 12,
-                    spawnRadius = 2f
-                }
-            };
-
-            Debug.Log("[Demo] 事件触发器创建完成");
+            // 复审 P1：BOSS 战事件（Event_BossFight）超出 docs/15 试玩范围，
+            // 且引用冻结 Boss 资产，已移除。Demo 事件由 MVP 任务对象承担。
+            Debug.Log("[Demo] 事件触发器创建完成（MVP 收缩后无附加事件）");
         }
 
         // ========== MVP 河岸失物任务对象（docs/15） ==========

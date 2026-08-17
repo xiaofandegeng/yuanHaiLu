@@ -35,6 +35,7 @@ namespace YuanHaiLu.GameSystem
             public string reqSkill;
             public int projCount;
             public float projSpreadDegrees;
+            public string projSpriteId;
         }
 
         private static Dictionary<string, MartialSkill> _skills;
@@ -46,6 +47,12 @@ namespace YuanHaiLu.GameSystem
                 if (_skills == null) BuildDatabase();
                 return _skills;
             }
+        }
+
+        /// <summary>显式触发代码表构建（场景生成与测试入口使用，避免以废弃局部变量触发 getter）。</summary>
+        public static void Initialize()
+        {
+            var _ = AllSkills;
         }
 
         public static MartialSkill Get(string id)
@@ -106,6 +113,7 @@ namespace YuanHaiLu.GameSystem
                 color = new Color(0.85f, 0.8f, 1f),
                 projCount = 3,
                 projSpreadDegrees = 24f,
+                projSpriteId = "proj_dart",
             });
 
             // === 初始招式（凌霜自带） ===
@@ -318,6 +326,9 @@ namespace YuanHaiLu.GameSystem
             skill.prerequisiteSkill = spec.reqSkill ?? "";
             skill.projectileCount = spec.projCount == 0 ? 1 : spec.projCount;
             skill.projectileSpreadDegrees = spec.projSpreadDegrees;
+            skill.projectileSpriteId = string.IsNullOrEmpty(spec.projSpriteId)
+                ? "proj_qi"
+                : spec.projSpriteId;
             skill.hideFlags = HideFlags.HideAndDontSave;
 
             _skills[spec.id] = skill;

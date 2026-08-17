@@ -28,6 +28,13 @@ namespace YuanHaiLu.Effects
             Instance = this;
         }
 
+        private void OnDestroy()
+        {
+            // 场景卸载时清空单例，避免残留 fake-null 引用（复审 S2）。
+            if (Instance == this)
+                Instance = null;
+        }
+
         /// <summary>
         /// 注册特效预制体
         /// </summary>

@@ -33,6 +33,12 @@ namespace YuanHaiLu.GameSystem
             }
         }
 
+        /// <summary>显式触发代码表构建（场景生成与测试入口使用，避免以废弃局部变量触发 getter）。</summary>
+        public static void Initialize()
+        {
+            var _ = AllItems;
+        }
+
         public static ItemData Get(string id)
         {
             return AllItems.TryGetValue(id, out var item) ? item : null;

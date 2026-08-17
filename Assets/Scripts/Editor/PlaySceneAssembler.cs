@@ -4,9 +4,8 @@ using UnityEngine.UI;
 using YuanHaiLu.Art;
 using YuanHaiLu.Core;
 using YuanHaiLu.Character;
-using YuanHaiLu.Dialogue;
-using YuanHaiLu.GameSystem;
 using YuanHaiLu.Effects;
+using YuanHaiLu.GameSystem;
 using YuanHaiLu.UI;
 
 namespace YuanHaiLu.Editor
@@ -21,31 +20,16 @@ namespace YuanHaiLu.Editor
         // ========== 全局管理器（两套玩法场景完全一致） ==========
         public static void CreateGlobalManagers(string logPrefix)
         {
+            // 复审 S1：Save/Inventory/Quest/GameTime/Dialogue 五个核心管理器
+            // 统一交给 GlobalSystemsBootstrapper.EnsureRequiredSystems 创建，
+            // 与运行时补全规则共用同一入口，不再手工装配。
             var gmObj = new GameObject("[GameManager]");
-            gmObj.AddComponent<GameManager>();
+            var gameManager = gmObj.AddComponent<GameManager>();
+            GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
 
-            var saveObj = new GameObject("SaveManager");
-            saveObj.transform.SetParent(gmObj.transform);
-            saveObj.AddComponent<SaveManager>();
-
-            var invObj = new GameObject("InventoryManager");
-            invObj.transform.SetParent(gmObj.transform);
-            invObj.AddComponent<InventoryManager>();
-
-            var questObj = new GameObject("QuestManager");
-            questObj.transform.SetParent(gmObj.transform);
-            questObj.AddComponent<QuestManager>();
-
-            var timeObj = new GameObject("GameTimeManager");
-            timeObj.transform.SetParent(gmObj.transform);
-            timeObj.AddComponent<GameTimeManager>();
-
+            // 以下场景级系统不在 EnsureRequiredSystems 契约内，仍由场景装配：
             var audioObj = new GameObject("[AudioManager]");
             audioObj.AddComponent<AudioManager>();
-
-            var dlgObj = new GameObject("[DialogueManager]");
-            dlgObj.transform.SetParent(gmObj.transform);
-            dlgObj.AddComponent<DialogueManager>();
 
             var fxObj = new GameObject("[EffectsManager]");
             fxObj.AddComponent<EffectsManager>();
@@ -55,9 +39,8 @@ namespace YuanHaiLu.Editor
             transObj.AddComponent<UnityEngine.UI.CanvasScaler>();
             transObj.AddComponent<ScreenTransition>();
 
-            // 物品/武学数据库初始化
-            var _ = ItemDatabase.AllItems;      // 触发 BuildDatabase
-            var __ = MartialSkillDatabase.AllSkills;
+            ItemDatabase.Initialize();
+            MartialSkillDatabase.Initialize();
 
             var deathObj = new GameObject("[PlayerDeathHandler]");
             deathObj.AddComponent<PlayerDeathHandler>();

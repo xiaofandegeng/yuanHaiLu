@@ -100,9 +100,11 @@ namespace YuanHaiLu.Character
 
             _learnedSkills[skill.skillId] = skill;
             OnSkillLearned?.Invoke(skill);
-            GameSystem.QuestManager.Instance?.UpdateObjective(
-                GameSystem.QuestObjective.ObjectiveType.LearnSkill,
-                skill.skillId);
+            var questManagerOnLearn = GameSystem.QuestManager.Instance;
+            if (questManagerOnLearn != null)
+                questManagerOnLearn.UpdateObjective(
+                    GameSystem.QuestObjective.ObjectiveType.LearnSkill,
+                    skill.skillId);
 
             Debug.Log($"[武学] 学会新招式：{skill.skillName}（{skill.school}）");
 
@@ -233,14 +235,18 @@ namespace YuanHaiLu.Character
                 }
             }
 
-            // 剑气特效
+            // 剑气特效（显式 == null，规避 Unity fake-null）
             var slashEnd = (Vector2)transform.position + dir * skill.range;
-            Effects.EffectsManager.Instance?.PlaySlashTrail(
-                (Vector2)transform.position + dir * 0.5f,
-                slashEnd,
-                skill.elementColor,
-                0.4f
-            );
+            var slashEffects = Effects.EffectsManager.Instance;
+            if (slashEffects != null)
+            {
+                slashEffects.PlaySlashTrail(
+                    (Vector2)transform.position + dir * 0.5f,
+                    slashEnd,
+                    skill.elementColor,
+                    0.4f
+                );
+            }
         }
 
         // === 远程招式 ===
@@ -267,6 +273,11 @@ namespace YuanHaiLu.Character
 
         private void CreateProjectile(MartialSkill skill, Vector2 dir)
         {
+            // 弹体必须使用持久精灵（Resources/Art/MVP，复审 S3），
+            // 禁止运行时 Texture2D/Sprite.Create；元素差异经 SpriteRenderer.color 染色。
+            var sprite = Art.MvpArtCatalog.Load(skill.projectileSpriteId);
+            if (sprite == null) return;
+
             // 创建飞行物
             GameObject projectile = new GameObject($"Projectile_{skill.skillName}");
             projectile.transform.position = transform.position;
@@ -274,7 +285,8 @@ namespace YuanHaiLu.Character
             var sr = projectile.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Foreground";
             sr.sortingOrder = 50;
-            sr.sprite = CreateBulletSprite(skill.elementColor);
+            sr.sprite = sprite;
+            sr.color = skill.elementColor;
 
             var rb = projectile.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
@@ -307,7 +319,9 @@ namespace YuanHaiLu.Character
         {
             // 临时提升属性
             StartCoroutine(BuffCoroutine(skill));
-            Effects.EffectsManager.Instance?.PlayEffect("buff_ring", transform.position, 1f);
+            var buffEffects = Effects.EffectsManager.Instance;
+            if (buffEffects != null)
+                buffEffects.PlayEffect("buff_ring", transform.position, 1f);
         }
 
         private System.Collections.IEnumerator BuffCoroutine(MartialSkill skill)
@@ -402,9 +416,13 @@ namespace YuanHaiLu.Character
                 }
             }
 
-            // 范围特效
-            Effects.EffectsManager.Instance?.PlayEffect("aoe_burst", transform.position, 1f);
-            Effects.EffectsManager.Instance?.ScreenFlash(skill.elementColor, 0.2f);
+            // 范围特效（显式 == null，规避 Unity fake-null）
+            var aoeEffects = Effects.EffectsManager.Instance;
+            if (aoeEffects != null)
+            {
+                aoeEffects.PlayEffect("aoe_burst", transform.position, 1f);
+                aoeEffects.ScreenFlash(skill.elementColor, 0.2f);
+            }
 
             Debug.Log($"[武学] 范围技 {skill.skillName}，命中 {hits.Length} 个目标");
         }
@@ -422,19 +440,7 @@ namespace YuanHaiLu.Character
         }
 
         // === 辅助 ===
-        private Sprite CreateBulletSprite(Color color)
-        {
-            var tex = new Texture2D(8, 8);
-            for (int x = 0; x < 8; x++)
-                for (int y = 0; y < 8; y++)
-                {
-                    float d = Vector2.Distance(new Vector2(x, y), new Vector2(4, 4));
-                    tex.SetPixel(x, y, d < 3.5f ? color : Color.clear);
-                }
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, 8, 8), new Vector2(0.5f, 0.5f), 8);
-        }
+        // （弹体精灵已改为 MvpArtCatalog 持久资产，CreateBulletSprite 随复审 S3 移除。）
 
         // === 存档 ===
         [System.Serializable]
@@ -531,6 +537,7 @@ namespace YuanHaiLu.Character
         public Color elementColor = new Color(0.7f, 0.9f, 1f); // 元素颜色
         public string castAnimation = "Cast";
         public string vfxId = "";
+        public string projectileSpriteId = "proj_qi"; // 弹体持久精灵（MvpArtCatalog）
 
         [Header("学习条件")]
         public int requiredLevel = 1;
@@ -568,7 +575,9 @@ namespace YuanHaiLu.Character
             }
             else if (other.gameObject.layer == LayerMask.NameToLayer("Environment"))
             {
-                Effects.EffectsManager.Instance?.PlayEffect("hit_wall", transform.position, 0.3f);
+                var wallEffects = Effects.EffectsManager.Instance;
+                if (wallEffects != null)
+                    wallEffects.PlayEffect("hit_wall", transform.position, 0.3f);
                 Destroy(gameObject);
             }
         }

@@ -79,6 +79,48 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
+        public void MainMenuSwapsPersistentWeaponIconsPerStyle()
+        {
+            EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity", OpenSceneMode.Single);
+
+            // 大图标（复审 P1-c）：随所选流派切换的持久精灵，禁止运行时生成。
+            var weaponIcon = GameObject.Find("WeaponIcon")?.GetComponent<Image>();
+            Assert.That(weaponIcon, Is.Not.Null,
+                "WeaponStyleSelector must contain the WeaponIcon image.");
+            Assert.That(weaponIcon.sprite, Is.Not.Null);
+            Assert.That(AssetDatabase.Contains(weaponIcon.sprite), Is.True,
+                "Weapon icons must be persistent sprite assets.");
+
+            // 每个流派按钮内嵌自己的武器小图，三种流派互不相同。
+            var styleButtons = Object.FindObjectsByType<Button>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(button => button.name.StartsWith("Btn_流派_"))
+                .ToArray();
+            Assert.That(styleButtons, Has.Length.EqualTo(3));
+
+            var seenSprites = new System.Collections.Generic.HashSet<Sprite>();
+            foreach (var button in styleButtons)
+            {
+                var icon = button.GetComponentsInChildren<Image>(true)
+                    .FirstOrDefault(image => image.name == "Icon");
+                Assert.That(icon, Is.Not.Null,
+                    $"{button.name} must embed a weapon icon image named 'Icon'.");
+                Assert.That(icon.sprite, Is.Not.Null);
+                Assert.That(AssetDatabase.Contains(icon.sprite), Is.True,
+                    "Button weapon icons must be persistent sprite assets.");
+
+                string styleId = button.name.Substring("Btn_流派_".Length);
+                Assert.That(icon.sprite.name,
+                    Is.EqualTo(WeaponStyle.ParseOrDefault(styleId).WeaponSpriteId),
+                    $"{styleId} button icon must match the style's weapon sprite.");
+                seenSprites.Add(icon.sprite);
+            }
+            Assert.That(seenSprites.Count, Is.EqualTo(3),
+                "Each weapon style must have its own distinct weapon sprite.");
+        }
+
+        [Test]
         public void DemoUsesFormalYanliuSceneAndFormalCharacterBindings()
         {
             EditorSceneManager.OpenScene("Assets/Scenes/Demo_YanLiuTown.unity", OpenSceneMode.Single);
@@ -95,7 +137,8 @@ namespace YuanHaiLu.Tests.EditMode
             var visuals = Object.FindObjectsByType<CharacterVisual>(
                 FindObjectsInactive.Include,
                 FindObjectsSortMode.None);
-            Assert.That(visuals, Has.Length.GreaterThanOrEqualTo(7));
+            // MVP 范围（docs/15）：男主 + 苏婉清 + 钓鱼翁 + 两名河岸水匪。
+            Assert.That(visuals, Has.Length.EqualTo(5));
             Assert.That(visuals.All(value => AssetDatabase.Contains(
                 value.GetComponent<SpriteRenderer>().sprite)), Is.True);
         }

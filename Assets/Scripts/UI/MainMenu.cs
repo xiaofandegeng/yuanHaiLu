@@ -19,6 +19,7 @@ namespace YuanHaiLu.UI
     {
         [Header("武器流派选择")]
         [SerializeField] private Image weaponPreview;
+        [SerializeField] private Image weaponIcon;
         [SerializeField] private Text weaponLabel;
         [SerializeField] private Text weaponHint;
 
@@ -138,6 +139,9 @@ namespace YuanHaiLu.UI
             if (weaponPreview == null)
                 weaponPreview = GetComponentsInChildren<Image>(true)
                     .FirstOrDefault(value => value.name == "CharacterPreview");
+            if (weaponIcon == null)
+                weaponIcon = GetComponentsInChildren<Image>(true)
+                    .FirstOrDefault(value => value.name == "WeaponIcon");
             if (weaponLabel == null)
                 weaponLabel = GetComponentsInChildren<Text>(true)
                     .FirstOrDefault(value => value.name == "StyleSelectionLabel");
@@ -166,13 +170,25 @@ namespace YuanHaiLu.UI
                 weaponPreview.preserveAspect = true;
             }
 
+            // 武器小图（docs/15 复审）：大图标随所选流派切换持久精灵。
+            if (weaponIcon != null)
+            {
+                var icon = MvpArtCatalog.Load(SelectedWeaponStyle.WeaponSpriteId);
+                if (icon == null)
+                    throw new InvalidOperationException(
+                        $"Weapon icon sprite is missing for '{SelectedWeaponStyle.StyleId}'.");
+                weaponIcon.sprite = icon;
+                weaponIcon.preserveAspect = true;
+            }
+
             const string prefix = "Btn_流派_";
             foreach (var button in GetComponentsInChildren<Button>(true))
             {
                 if (!button.name.StartsWith(prefix, StringComparison.Ordinal))
                     continue;
+                string styleId = button.name.Substring(prefix.Length);
                 bool selected = string.Equals(
-                    button.name.Substring(prefix.Length),
+                    styleId,
                     SelectedWeaponStyle.StyleId,
                     StringComparison.Ordinal);
                 var colors = button.colors;
@@ -180,6 +196,17 @@ namespace YuanHaiLu.UI
                     ? new Color(0.72f, 0.48f, 0.16f)
                     : new Color(0.15f, 0.12f, 0.2f);
                 button.colors = colors;
+
+                // 每个流派按钮的角标图标也换成对应武器小图。
+                // 注意不能用 GetComponentInChildren：会命中按钮自身背景 Image。
+                var buttonIcon = button.GetComponentsInChildren<Image>(true)
+                    .FirstOrDefault(img => img.name == "Icon");
+                if (buttonIcon != null)
+                {
+                    var sprite = MvpArtCatalog.Load("weapon_" + styleId);
+                    if (sprite != null)
+                        buttonIcon.sprite = sprite;
+                }
             }
         }
 

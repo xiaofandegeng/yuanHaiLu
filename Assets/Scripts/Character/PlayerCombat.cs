@@ -96,6 +96,29 @@ namespace YuanHaiLu.Character
             attackDuration = style.AttackDuration;
             CurrentMeleeDamageMultiplier = style.MeleeDamageMultiplier;
             slashColor = style.SlashColor;
+            ApplyWeaponVisual(style);
+        }
+
+        /// <summary>
+        /// 武器小图（docs/15）：在角色手侧挂一个持久精灵的武器层，
+        /// 拳套/飞镖与长剑肉眼可辨；父物体翻转时武器层随角色镜像。
+        /// </summary>
+        private void ApplyWeaponVisual(Core.WeaponStyle style)
+        {
+            var sprite = Art.MvpArtCatalog.Load(style.WeaponSpriteId);
+            if (sprite == null) return;
+
+            var visual = transform.Find("WeaponVisual");
+            if (visual == null)
+            {
+                visual = new GameObject("WeaponVisual").transform;
+                visual.SetParent(transform, false);
+                visual.localPosition = new Vector3(0.45f, 0.45f, 0f);
+                var sr = visual.gameObject.AddComponent<SpriteRenderer>();
+                sr.sortingLayerName = "Character";
+                sr.sortingOrder = 5;
+            }
+            visual.GetComponent<SpriteRenderer>().sprite = sprite;
         }
 
         private void Update()
@@ -149,12 +172,15 @@ namespace YuanHaiLu.Character
             // 计算攻击判定区域
             Vector2 attackCenter = (Vector2)transform.position + _controller.LastDirection * attackRange;
 
-            // === 剑气轨迹 ===
-            Vector2 slashStart = (Vector2)transform.position + _controller.LastDirection * 0.3f;
-            Vector2 slashEnd = attackCenter;
-            // 垂直方向偏移（模拟横向挥剑）
-            Vector2 perp = Vector2.Perpendicular(_controller.LastDirection) * 0.5f;
-            EffectsManager.Instance?.PlaySlashTrail(slashStart + perp, slashEnd - perp, slashColor, 0.2f);
+            // === 剑气轨迹（显式 == null，规避 Unity fake-null） ===
+            var effects = EffectsManager.Instance;
+            if (effects != null)
+            {
+                Vector2 slashStart2 = (Vector2)transform.position + _controller.LastDirection * 0.3f;
+                Vector2 slashEnd2 = attackCenter;
+                Vector2 perp2 = Vector2.Perpendicular(_controller.LastDirection) * 0.5f;
+                effects.PlaySlashTrail(slashStart2 + perp2, slashEnd2 - perp2, slashColor, 0.2f);
+            }
 
             // 检测范围内的敌人
             Collider2D[] hits = Physics2D.OverlapBoxAll(attackCenter, attackBoxSize, 0f,
@@ -184,8 +210,9 @@ namespace YuanHaiLu.Character
                         EffectsManager.CritEffect(hit.transform.position);
                     }
 
-                    // 摄像机震动（连击越高震动越大）
-                    var camFollow = Camera.main?.GetComponent<CameraFollow>();
+                    // 摄像机震动（连击越高震动越大；显式 == null，规避 Unity fake-null）
+                    var mainCamera = Camera.main;
+                    var camFollow = mainCamera != null ? mainCamera.GetComponent<CameraFollow>() : null;
                     if (camFollow != null) camFollow.Shake(0.05f + _comboIndex * 0.03f);
 
                     anyHit = true;

@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
+using YuanHaiLu.Art;
 using YuanHaiLu.Character;
 using YuanHaiLu.Core;
 using YuanHaiLu.GameSystem;
@@ -63,6 +64,24 @@ namespace YuanHaiLu.Tests.EditMode
                 Assert.That(MartialSkillDatabase.GetStarterSkills(style.StyleId),
                     Is.EqualTo(new[] { style.ActiveSkillId }));
             }
+        }
+
+        [Test]
+        public void EachStyleHasDistinctPersistentWeaponSprite()
+        {
+            // 复审 P1-c：武器小图必须是 Resources/Art/MVP 下的持久精灵，三种流派互不相同。
+            var spriteIds = new System.Collections.Generic.HashSet<string>();
+            foreach (var style in WeaponStyle.All)
+            {
+                Assert.That(style.WeaponSpriteId, Is.Not.Null.And.Not.Empty,
+                    $"style {style.StyleId} must declare a weapon sprite id.");
+                var sprite = MvpArtCatalog.Load(style.WeaponSpriteId);
+                Assert.That(sprite, Is.Not.Null,
+                    $"weapon sprite '{style.WeaponSpriteId}' must exist under Resources/Art/MVP.");
+                spriteIds.Add(style.WeaponSpriteId);
+            }
+            Assert.That(spriteIds.Count, Is.EqualTo(3),
+                "Each weapon style must reference its own weapon sprite.");
         }
 
         [Test]

@@ -35,7 +35,7 @@
 
 - 其余 11 套主角外观、85 名非试玩角色、10 个大区域、其余 12 个室内与全量美术生产。
 - 商店、技能树、小地图、BOSS 战、完整剧情章节、世界状态持久化和全区域传送网络。
-- 新的运行时生成精灵、3D/URP/后处理，以及任何 `ProjectSettings/` 平台改动。
+- 新的运行时生成精灵、3D/URP/后处理，以及 `ProjectSettings/` 平台改动。唯一例外：`EditorBuildSettings.asset` 的场景清单允许注册试玩场景 `Demo_Inn`；除此之外任何 `ProjectSettings/` 文件零变更。
 
 冻结内容保留在仓库中，不删除、不重命名、不合并至本期资产目录。
 
@@ -56,7 +56,7 @@
 
 ### 场景与任务
 
-- `MainMenu` 只进入 `Demo_YanLiuTown`；Build Settings 的 MVP 构建只要求 MainMenu、Demo_YanLiuTown、yanliu、inn 可用。
+- `MainMenu` 只进入 `Demo_YanLiuTown`；Build Settings 的 MVP 构建要求 MainMenu、Demo_YanLiuTown、Demo_Inn 可用。两个 `Demo_*` 场景从冻结基线 `Regions/yanliu`、`Interiors/inn` 克隆装配，基线场景文件本身不变。
 - 烟柳镇到客栈的入口、客栈返回烟柳镇的出口和河岸战斗点必须各有明确的可达锚点与碰撞边界。
 - 试玩任务只用一个稳定 ID，进度顺序固定为 `talk_to_innkeeper` → `reach_riverbank` → `defeat_river_enemies` → `collect_lost_item` → `return_to_innkeeper`。每步只在真实成功行为后推进，重复触发不得重复计数。
 
@@ -69,10 +69,10 @@
 ## 验收标准
 
 1. 新游戏只有剑、拳套、暗器三种选择，选择后始终显示同一男性主角。
-2. 三种选择分别产生可观察的攻击距离/命中方式/主动技能差异，且不会改变主角身体美术。
+2. 三种选择分别产生可观察的攻击距离/命中方式/主动技能差异，且不会改变主角身体美术；武器小图（菜单图标与角色随身武器层）随流派真实切换。
 3. 从主菜单出发，可无控制台错误地完成客栈接任务、河岸战斗与拾取、返回交付、保存、退出后继续游戏。
 4. v1–v4 存档迁移后为男主 + `sword`，且保留可恢复的既有游戏进度；非法 `weaponStyleId` 安全回退。
-5. 试玩内容不依赖冻结区域、冻结角色或批量美术生成；`ProjectSettings/` 无变更。
+5. 试玩内容不依赖冻结区域、冻结角色或批量美术生成；`ProjectSettings/` 除 `EditorBuildSettings.asset` 场景清单注册 `Demo_Inn` 这一处例外之外零变更。
 6. 自动验证至少覆盖菜单选择、存档迁移、三种武器判定、任务顺序、场景往返；人工验证覆盖三种流派各一次完整试玩。
 7. 对相对 `main` 的最终变更运行 `git diff --check` 为零输出；合并和推送仍需用户单独授权。
 
