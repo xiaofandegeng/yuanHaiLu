@@ -32,6 +32,7 @@ namespace YuanHaiLu.GameSystem
 
             _quests = new Dictionary<string, QuestData>();
             AddM01Quests();
+            AddMvpQuests();
 
             foreach (QuestData quest in Resources.LoadAll<QuestData>("Quests"))
             {
@@ -133,6 +134,48 @@ namespace YuanHaiLu.GameSystem
                 completeDialogue: new[] { "烟柳镇渐渐远去，前路通向渊朝的心脏——天枢城。" }));
         }
 
+        /// <summary>
+        /// 单主角 MVP 主线（docs/15）：河岸失物。
+        /// 五个目标严格按序推进，每步只在真实成功行为后上报。
+        /// </summary>
+        private static void AddMvpQuests()
+        {
+            Add(Create(
+                "MVP_01",
+                "河岸失物",
+                "掌柜老赵运货途中在河岸被水匪劫走了荷包。去河岸夺回来。",
+                new[]
+                {
+                    Objective(QuestObjective.ObjectiveType.TalkToNPC, "innkeeper_zhao", "与掌柜老赵交谈"),
+                    Objective(QuestObjective.ObjectiveType.ReachArea, "yanliu_riverbank", "前往烟柳镇河岸"),
+                    Objective(QuestObjective.ObjectiveType.KillEnemy, "river_bandit", "击败河岸水匪", 2),
+                    Objective(QuestObjective.ObjectiveType.CollectItem, "quest_lost_pouch", "寻回掌柜的荷包"),
+                    Objective(QuestObjective.ObjectiveType.TalkToNPC, "innkeeper_zhao", "回客栈向掌柜复命")
+                },
+                rewardExp: 80,
+                rewardGold: 60,
+                rewardItemIds: new[] { "herb_medicinal" },
+                introDialogue: new[]
+                {
+                    "客官来得正好！",
+                    "我前日运货，在镇南河岸被两个水匪劫了，荷包也丢了。",
+                    "荷包里有全客栈的账银，务请少侠帮我取回来。",
+                    "出客栈往南走，过了河岸就是。"
+                },
+                progressDialogue: new[]
+                {
+                    "河岸就在镇子南边，水匪还在那一带游荡。",
+                    "荷包找回来后，回这里告诉我一声。"
+                },
+                completeDialogue: new[]
+                {
+                    "荷包……账银一文不少！少侠真是雪中送炭！",
+                    "这点薄礼不成敬意，往后客栈的房间随你住。",
+                    "若还想在镇上走走，南边的河岸风景其实不错。"
+                },
+                sequential: true));
+        }
+
         private static QuestData Create(
             string id,
             string name,
@@ -146,7 +189,8 @@ namespace YuanHaiLu.GameSystem
             string[] unlockQuestIds = null,
             string[] introDialogue = null,
             string[] progressDialogue = null,
-            string[] completeDialogue = null)
+            string[] completeDialogue = null,
+            bool sequential = false)
         {
             QuestData quest = ScriptableObject.CreateInstance<QuestData>();
             quest.hideFlags = HideFlags.HideAndDontSave;
@@ -156,6 +200,7 @@ namespace YuanHaiLu.GameSystem
             quest.type = QuestData.QuestType.MainStory;
             quest.rarity = QuestData.QuestRarity.Critical;
             quest.objectives = objectives;
+            quest.sequentialObjectives = sequential;
             quest.prerequisiteQuests = prerequisiteQuests;
             quest.rewardExp = rewardExp;
             quest.rewardGold = rewardGold;

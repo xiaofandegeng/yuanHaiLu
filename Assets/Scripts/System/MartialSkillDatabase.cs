@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 using System.Collections.Generic;
 using YuanHaiLu.Character;
 
@@ -7,9 +6,37 @@ namespace YuanHaiLu.GameSystem
 {
     /// <summary>
     /// 武学招式数据库 — Demo预置招式
+    /// 复审 P2：Add 收配置对象（SkillSpec），不再使用长位置参数列表，
+    /// 新增字段只改 SkillSpec 与拷贝处，调用点按名赋值不易错位。
     /// </summary>
     public static class MartialSkillDatabase
     {
+        /// <summary>单条招式配置（Add 的入参对象）。</summary>
+        private struct SkillSpec
+        {
+            public string id;
+            public string name;
+            public string desc;
+            public string school;
+            public SkillType type;
+            public int mpCost;
+            public float cooldown;
+            public int baseDamage;
+            public float attackScaling;
+            public float range;
+            public float aoeRadius;
+            public float duration;
+            public float buffMultiplier;
+            public float projSpeed;
+            public float dashSpeed;
+            public Color color;
+            public int reqLevel;
+            public string reqQuest;
+            public string reqSkill;
+            public int projCount;
+            public float projSpreadDegrees;
+        }
+
         private static Dictionary<string, MartialSkill> _skills;
 
         public static Dictionary<string, MartialSkill> AllSkills
@@ -30,107 +57,270 @@ namespace YuanHaiLu.GameSystem
         {
             _skills = new Dictionary<string, MartialSkill>();
 
+            // === 单主角 MVP 流派主动技（docs/15） ===
+            Add(new SkillSpec
+            {
+                id = "sword_qi_wave",
+                name = "剑气斩",
+                desc = "长剑流派：剑凝真气，前冲一道剑气破敌",
+                school = "无流派",
+                type = SkillType.Ranged,
+                mpCost = 10,
+                cooldown = 3f,
+                baseDamage = 20,
+                attackScaling = 0.9f,
+                range = 7f,
+                projSpeed = 10f,
+                color = new Color(0.7f, 0.9f, 1f),
+            });
+
+            Add(new SkillSpec
+            {
+                id = "fist_dash_punch",
+                name = "冲拳",
+                desc = "拳套流派：短距突进，一记重拳撞开前方之敌",
+                school = "无流派",
+                type = SkillType.Dash,
+                mpCost = 8,
+                cooldown = 4f,
+                baseDamage = 18,
+                attackScaling = 0.8f,
+                range = 3.5f,
+                dashSpeed = 16f,
+                color = new Color(1f, 0.7f, 0.3f),
+            });
+
+            Add(new SkillSpec
+            {
+                id = "dart_fan_throw",
+                name = "回风三镖",
+                desc = "飞镖流派：袖中三镖齐发，扇形罩住去路",
+                school = "无流派",
+                type = SkillType.Ranged,
+                mpCost = 10,
+                cooldown = 3.5f,
+                baseDamage = 12,
+                attackScaling = 0.6f,
+                range = 8f,
+                projSpeed = 12f,
+                color = new Color(0.85f, 0.8f, 1f),
+                projCount = 3,
+                projSpreadDegrees = 24f,
+            });
+
             // === 初始招式（凌霜自带） ===
-            Add("basic_slash", "横剑式", "最基本的剑招，横剑一斩", "无流派",
-                SkillType.Melee, mpCost: 5, cooldown: 1.5f, baseDamage: 15,
-                attackScaling: 0.8f, range: 1.5f,
-                color: new Color(0.7f, 0.9f, 1f));
+            Add(new SkillSpec
+            {
+                id = "basic_slash",
+                name = "横剑式",
+                desc = "最基本的剑招，横剑一斩",
+                school = "无流派",
+                type = SkillType.Melee,
+                mpCost = 5,
+                cooldown = 1.5f,
+                baseDamage = 15,
+                attackScaling = 0.8f,
+                range = 1.5f,
+                color = new Color(0.7f, 0.9f, 1f),
+            });
 
             // === 剑法 ===
-            Add("sword_frost_slash", "霜华斩", "剑凝冰霜，一剑生寒", "霜华剑派",
-                SkillType.Melee, mpCost: 15, cooldown: 4f, baseDamage: 30,
-                attackScaling: 1.2f, range: 2f,
-                color: new Color(0.5f, 0.8f, 1f),
-                reqLevel: 3);
+            Add(new SkillSpec
+            {
+                id = "sword_frost_slash",
+                name = "霜华斩",
+                desc = "剑凝冰霜，一剑生寒",
+                school = "霜华剑派",
+                type = SkillType.Melee,
+                mpCost = 15,
+                cooldown = 4f,
+                baseDamage = 30,
+                attackScaling = 1.2f,
+                range = 2f,
+                color = new Color(0.5f, 0.8f, 1f),
+                reqLevel = 3,
+            });
 
-            Add("sword_flying_snow", "飞雪连天", "剑化飞雪，漫天寒芒", "霜华剑派",
-                SkillType.AoE, mpCost: 30, cooldown: 10f, baseDamage: 25,
-                attackScaling: 0.7f, aoeRadius: 4f,
-                color: new Color(0.7f, 0.9f, 1f),
-                reqLevel: 8, reqSkill: "sword_frost_slash");
+            Add(new SkillSpec
+            {
+                id = "sword_flying_snow",
+                name = "飞雪连天",
+                desc = "剑化飞雪，漫天寒芒",
+                school = "霜华剑派",
+                type = SkillType.AoE,
+                mpCost = 30,
+                cooldown = 10f,
+                baseDamage = 25,
+                attackScaling = 0.7f,
+                aoeRadius = 4f,
+                color = new Color(0.7f, 0.9f, 1f),
+                reqLevel = 8,
+                reqSkill = "sword_frost_slash",
+            });
 
-            Add("sword_sky_pierce", "天外一剑", "蓄力一剑，贯穿天际", "霜华剑派",
-                SkillType.Ranged, mpCost: 25, cooldown: 6f, baseDamage: 40,
-                attackScaling: 1.5f, range: 8f, projSpeed: 12f,
-                color: new Color(0.3f, 0.6f, 1f),
-                reqLevel: 12, reqSkill: "sword_flying_snow");
+            Add(new SkillSpec
+            {
+                id = "sword_sky_pierce",
+                name = "天外一剑",
+                desc = "蓄力一剑，贯穿天际",
+                school = "霜华剑派",
+                type = SkillType.Ranged,
+                mpCost = 25,
+                cooldown = 6f,
+                baseDamage = 40,
+                attackScaling = 1.5f,
+                range = 8f,
+                projSpeed = 12f,
+                color = new Color(0.3f, 0.6f, 1f),
+                reqLevel = 12,
+                reqSkill = "sword_flying_snow",
+            });
 
             // === 拳法 ===
-            Add("fist_tiger", "猛虎下山拳", "拳如猛虎，势不可挡", "少林外功",
-                SkillType.Melee, mpCost: 10, cooldown: 3f, baseDamage: 20,
-                attackScaling: 1f, range: 1.2f,
-                color: new Color(1f, 0.7f, 0.2f),
-                reqLevel: 2);
+            Add(new SkillSpec
+            {
+                id = "fist_tiger",
+                name = "猛虎下山拳",
+                desc = "拳如猛虎，势不可挡",
+                school = "少林外功",
+                type = SkillType.Melee,
+                mpCost = 10,
+                cooldown = 3f,
+                baseDamage = 20,
+                attackScaling = 1f,
+                range = 1.2f,
+                color = new Color(1f, 0.7f, 0.2f),
+                reqLevel = 2,
+            });
 
-            Add("fist_dragon", "降龙掌", "掌出如龙，气吞山河", "丐帮",
-                SkillType.AoE, mpCost: 35, cooldown: 12f, baseDamage: 35,
-                attackScaling: 1f, aoeRadius: 3.5f,
-                color: new Color(1f, 0.85f, 0.1f),
-                reqLevel: 10, reqSkill: "fist_tiger");
+            Add(new SkillSpec
+            {
+                id = "fist_dragon",
+                name = "降龙掌",
+                desc = "掌出如龙，气吞山河",
+                school = "丐帮",
+                type = SkillType.AoE,
+                mpCost = 35,
+                cooldown = 12f,
+                baseDamage = 35,
+                attackScaling = 1f,
+                aoeRadius = 3.5f,
+                color = new Color(1f, 0.85f, 0.1f),
+                reqLevel = 10,
+                reqSkill = "fist_tiger",
+            });
 
             // === 轻功 ===
-            Add("dash_wind_step", "疾风步", "身化疾风，瞬间位移", "武当轻功",
-                SkillType.Dash, mpCost: 12, cooldown: 5f, baseDamage: 0,
-                range: 4f, dashSpeed: 18f,
-                color: new Color(0.5f, 1f, 0.5f),
-                reqLevel: 4);
+            Add(new SkillSpec
+            {
+                id = "dash_wind_step",
+                name = "疾风步",
+                desc = "身化疾风，瞬间位移",
+                school = "武当轻功",
+                type = SkillType.Dash,
+                mpCost = 12,
+                cooldown = 5f,
+                baseDamage = 0,
+                range = 4f,
+                dashSpeed = 18f,
+                color = new Color(0.5f, 1f, 0.5f),
+                reqLevel = 4,
+            });
 
-            Add("dash_shadow", "无影步", "步法如幻，残影迷踪", "唐门",
-                SkillType.Dash, mpCost: 20, cooldown: 8f, baseDamage: 10,
-                range: 6f, dashSpeed: 25f,
-                color: new Color(0.4f, 0.2f, 0.6f),
-                reqLevel: 10, reqSkill: "dash_wind_step");
+            Add(new SkillSpec
+            {
+                id = "dash_shadow",
+                name = "无影步",
+                desc = "步法如幻，残影迷踪",
+                school = "唐门",
+                type = SkillType.Dash,
+                mpCost = 20,
+                cooldown = 8f,
+                baseDamage = 10,
+                range = 6f,
+                dashSpeed = 25f,
+                color = new Color(0.4f, 0.2f, 0.6f),
+                reqLevel = 10,
+                reqSkill = "dash_wind_step",
+            });
 
             // === 内功 ===
-            Add("buff_iron_body", "金钟罩", "内力护体，防御大增", "少林内功",
-                SkillType.Buff, mpCost: 20, cooldown: 15f, baseDamage: 0,
-                duration: 8f, buffMultiplier: 0.5f,
-                color: new Color(1f, 0.85f, 0.3f),
-                reqLevel: 6);
+            Add(new SkillSpec
+            {
+                id = "buff_iron_body",
+                name = "金钟罩",
+                desc = "内力护体，防御大增",
+                school = "少林内功",
+                type = SkillType.Buff,
+                mpCost = 20,
+                cooldown = 15f,
+                baseDamage = 0,
+                duration = 8f,
+                buffMultiplier = 0.5f,
+                color = new Color(1f, 0.85f, 0.3f),
+                reqLevel = 6,
+            });
 
-            Add("heal_pure_spring", "清心诀", "内息运转，恢复气血", "武当内功",
-                SkillType.Heal, mpCost: 15, cooldown: 8f, baseDamage: 30,
-                color: new Color(0.3f, 1f, 0.5f),
-                reqLevel: 3);
+            Add(new SkillSpec
+            {
+                id = "heal_pure_spring",
+                name = "清心诀",
+                desc = "内息运转，恢复气血",
+                school = "武当内功",
+                type = SkillType.Heal,
+                mpCost = 15,
+                cooldown = 8f,
+                baseDamage = 30,
+                color = new Color(0.3f, 1f, 0.5f),
+                reqLevel = 3,
+            });
 
             // === 绝招（大招） ===
-            Add("ultimate_sword_dance", "一剑霜寒十四州", "霜华剑派终极奥义，剑意化霜天", "霜华剑派",
-                SkillType.AoE, mpCost: 60, cooldown: 30f, baseDamage: 80,
-                attackScaling: 2f, aoeRadius: 6f,
-                color: new Color(0.2f, 0.5f, 1f),
-                reqLevel: 20, reqSkill: "sword_sky_pierce");
+            Add(new SkillSpec
+            {
+                id = "ultimate_sword_dance",
+                name = "一剑霜寒十四州",
+                desc = "霜华剑派终极奥义，剑意化霜天",
+                school = "霜华剑派",
+                type = SkillType.AoE,
+                mpCost = 60,
+                cooldown = 30f,
+                baseDamage = 80,
+                attackScaling = 2f,
+                aoeRadius = 6f,
+                color = new Color(0.2f, 0.5f, 1f),
+                reqLevel = 20,
+                reqSkill = "sword_sky_pierce",
+            });
         }
 
-        private static void Add(string id, string name, string desc, string school,
-            SkillType type, int mpCost, float cooldown, int baseDamage,
-            float attackScaling = 0f, float range = 0f, float aoeRadius = 0f,
-            float duration = 0f, float buffMultiplier = 0f,
-            float projSpeed = 0f, float dashSpeed = 0f,
-            Color color = default,
-            int reqLevel = 1, string reqQuest = "", string reqSkill = "")
+        private static void Add(SkillSpec spec)
         {
             var skill = ScriptableObject.CreateInstance<MartialSkill>();
-            skill.skillId = id;
-            skill.skillName = name;
-            skill.description = desc;
-            skill.school = school;
-            skill.type = type;
-            skill.mpCost = mpCost;
-            skill.cooldown = cooldown;
-            skill.baseDamage = baseDamage;
-            skill.attackScaling = attackScaling;
-            skill.range = range;
-            skill.aoeRadius = aoeRadius;
-            skill.duration = duration;
-            skill.buffMultiplier = buffMultiplier;
-            skill.projectileSpeed = projSpeed;
-            skill.dashSpeed = dashSpeed;
-            skill.elementColor = color == default ? Color.white : color;
-            skill.requiredLevel = reqLevel;
-            skill.requiredQuest = reqQuest;
-            skill.prerequisiteSkill = reqSkill;
+            skill.skillId = spec.id;
+            skill.skillName = spec.name;
+            skill.description = spec.desc;
+            skill.school = spec.school;
+            skill.type = spec.type;
+            skill.mpCost = spec.mpCost;
+            skill.cooldown = spec.cooldown;
+            skill.baseDamage = spec.baseDamage;
+            skill.attackScaling = spec.attackScaling;
+            skill.range = spec.range;
+            skill.aoeRadius = spec.aoeRadius;
+            skill.duration = spec.duration;
+            skill.buffMultiplier = spec.buffMultiplier;
+            skill.projectileSpeed = spec.projSpeed;
+            skill.dashSpeed = spec.dashSpeed;
+            skill.elementColor = spec.color == default ? Color.white : spec.color;
+            skill.requiredLevel = spec.reqLevel == 0 ? 1 : spec.reqLevel;
+            skill.requiredQuest = spec.reqQuest ?? "";
+            skill.prerequisiteSkill = spec.reqSkill ?? "";
+            skill.projectileCount = spec.projCount == 0 ? 1 : spec.projCount;
+            skill.projectileSpreadDegrees = spec.projSpreadDegrees;
+            skill.hideFlags = HideFlags.HideAndDontSave;
 
-            _skills[id] = skill;
+            _skills[spec.id] = skill;
         }
 
         /// <summary>
@@ -139,6 +329,15 @@ namespace YuanHaiLu.GameSystem
         public static string[] GetStarterSkills()
         {
             return new string[] { "basic_slash" };
+        }
+
+        /// <summary>
+        /// 单主角 MVP（docs/15）：新游戏只随流派学会一个主动技能。
+        /// </summary>
+        public static string[] GetStarterSkills(string weaponStyleId)
+        {
+            var style = Core.WeaponStyle.ParseOrDefault(weaponStyleId);
+            return new string[] { style.ActiveSkillId };
         }
     }
 }

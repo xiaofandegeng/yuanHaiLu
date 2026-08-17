@@ -19,7 +19,9 @@ namespace YuanHaiLu.Map
         [SerializeField] private float introDelay = 1f;
 
         [Header("玩家出生设置")]
-        [SerializeField] private Vector2 spawnPosition = new Vector2(0, -5);
+        // 复审 P1 修复：出生点必须落在烟柳镇可行走区域内（地图 y 从 0 起）。
+        // 默认值由 DemoSceneGenerator 覆写为客栈门外 (7.5, 7.6)。
+        public Vector2 spawnPosition = new Vector2(7.5f, 7.6f);
         [SerializeField] private bool teachControls = true;
 
         [Header("对话序列")]
@@ -87,7 +89,7 @@ namespace YuanHaiLu.Map
                     {
                         "……这里是哪里？",
                         "烟柳镇……名字倒是雅致。",
-                        "身上只有一柄铁剑和一些碎银子。",
+                        "身上只有几件趁手的兵器和一些碎银子。",
                         "先四处看看吧。"
                     });
                 }
@@ -129,8 +131,11 @@ namespace YuanHaiLu.Map
             var martialSys = player.GetComponent<MartialArtsSystem>();
             if (martialSys != null)
             {
-                // 学习初始招式
-                var starterSkills = MartialSkillDatabase.GetStarterSkills();
+                // 学习初始招式：单主角 MVP 只随武器流派学会一个主动技能（docs/15）。
+                string weaponStyleId = GameManager.Instance != null
+                    ? GameManager.Instance.WeaponStyleId
+                    : Core.WeaponStyle.DefaultStyleId;
+                var starterSkills = MartialSkillDatabase.GetStarterSkills(weaponStyleId);
                 foreach (var skillId in starterSkills)
                 {
                     var skill = MartialSkillDatabase.Get(skillId);

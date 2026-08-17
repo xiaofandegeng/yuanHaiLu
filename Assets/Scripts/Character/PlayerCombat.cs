@@ -23,6 +23,15 @@ namespace YuanHaiLu.Character
         [Header("剑气颜色")]
         public Color slashColor = new Color(0.7f, 0.9f, 1f, 0.8f);  // 冰蓝色剑气
 
+        // 当前武器流派（docs/15）：普攻判定、连击节奏与伤害倍率由流派档案决定。
+        public string WeaponStyleId { get; private set; } = WeaponStyle.DefaultStyleId;
+        public WeaponStyle WeaponStyle => Core.WeaponStyle.ParseOrDefault(WeaponStyleId);
+        public float CurrentAttackRange => attackRange;
+        public Vector2 CurrentAttackBoxSize => attackBoxSize;
+        public int CurrentMaxCombo => maxCombo;
+        public float CurrentAttackDuration => attackDuration;
+        public float CurrentMeleeDamageMultiplier { get; private set; } = 1f;
+
         [Header("组件")]
         private PlayerController _controller;
         private CharacterStats _stats;
@@ -49,6 +58,44 @@ namespace YuanHaiLu.Character
             _controller = GetComponent<PlayerController>();
             _stats = GetComponent<CharacterStats>();
             _anim = GetComponent<Animator>();
+        }
+
+        private void Start()
+        {
+            // 场景内玩家的流派来自持久 GameManager；主菜单选择/读档都在
+            // 本组件 Start 之前完成（sceneLoaded 回调先于 Start）。
+            if (GameManager.Instance != null)
+                ApplyWeaponStyle(GameManager.Instance.WeaponStyleId);
+        }
+
+        private void OnEnable()
+        {
+            GameManager.OnWeaponStyleChanged += OnWeaponStyleChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameManager.OnWeaponStyleChanged -= OnWeaponStyleChanged;
+        }
+
+        private void OnWeaponStyleChanged(string styleId)
+        {
+            ApplyWeaponStyle(styleId);
+        }
+
+        /// <summary>
+        /// 应用武器流派档案：非法 ID 回退长剑（与存档迁移规则一致）。
+        /// </summary>
+        public void ApplyWeaponStyle(string styleId)
+        {
+            var style = Core.WeaponStyle.ParseOrDefault(styleId);
+            WeaponStyleId = style.StyleId;
+            attackRange = style.MeleeRange;
+            attackBoxSize = style.MeleeBoxSize;
+            maxCombo = style.MaxCombo;
+            attackDuration = style.AttackDuration;
+            CurrentMeleeDamageMultiplier = style.MeleeDamageMultiplier;
+            slashColor = style.SlashColor;
         }
 
         private void Update()
@@ -119,8 +166,8 @@ namespace YuanHaiLu.Character
                 var enemyStats = hit.GetComponent<CharacterStats>();
                 if (enemyStats != null && enemyStats.IsAlive)
                 {
-                    // 计算伤害（连击加成）
-                    float comboMultiplier = 1f + (_comboIndex * 0.15f);
+                    // 计算伤害（流派倍率 + 连击加成）
+                    float comboMultiplier = CurrentMeleeDamageMultiplier * (1f + (_comboIndex * 0.15f));
                     bool isCrit = Random.Range(0, 100) < _stats.critRate;
                     if (isCrit) comboMultiplier *= _stats.critMultiplier;
                     int damage = Mathf.RoundToInt(_stats.attack * comboMultiplier);

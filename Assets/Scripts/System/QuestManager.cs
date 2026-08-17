@@ -25,6 +25,9 @@ namespace YuanHaiLu.GameSystem
         [Header("目标")]
         public QuestObjective[] objectives;  // 任务目标列表
 
+        [Tooltip("勾选后目标必须按列表顺序推进：只有第一个未完成目标能收到进度")]
+        public bool sequentialObjectives;
+
         [Header("奖励")]
         public int rewardExp;               // 经验奖励
         public int rewardGold;              // 金钱奖励
@@ -260,10 +263,24 @@ namespace YuanHaiLu.GameSystem
             {
                 if (quest.state != ActiveQuest.QuestState.Active) continue;
 
+                // 顺序任务：只有第一个未完成目标可以接收进度（docs/15 MVP_01）。
+                QuestObjective gate = null;
+                if (quest.data != null && quest.data.sequentialObjectives)
+                {
+                    foreach (var obj in quest.Objectives)
+                    {
+                        if (obj.completed) continue;
+                        gate = obj;
+                        break;
+                    }
+                }
+
                 foreach (var obj in quest.Objectives)
                 {
                     if (obj.type == type && obj.targetId == targetId && !obj.completed)
                     {
+                        if (gate != null && obj != gate) continue;
+
                         obj.currentAmount = Mathf.Min(obj.currentAmount + amount, obj.requiredAmount);
                         updated = true;
                         OnObjectiveUpdated?.Invoke(obj);
@@ -571,14 +588,21 @@ namespace YuanHaiLu.GameSystem
 
             if (savedObjectives == null) return;
 
+            // 同一任务允许出现重复的 type+targetId（如 MVP_01 首尾两次找掌柜），
+            // 恢复时按顺序消费目标，避免后一个同键目标覆盖前一个的进度。
+            var claimed = new bool[activeQuest.Objectives.Length];
+
             foreach (QuestObjectiveSaveData savedObjective in savedObjectives)
             {
                 if (savedObjective == null) continue;
 
                 bool matched = false;
 
-                foreach (QuestObjective objective in activeQuest.Objectives)
+                for (int i = 0; i < activeQuest.Objectives.Length; i++)
                 {
+                    if (claimed[i]) continue;
+
+                    QuestObjective objective = activeQuest.Objectives[i];
                     if (objective.type != savedObjective.type ||
                         objective.targetId != savedObjective.targetId)
                     {
@@ -586,6 +610,7 @@ namespace YuanHaiLu.GameSystem
                     }
 
                     matched = true;
+                    claimed[i] = true;
                     if (savedObjective.currentAmount < 0 ||
                         savedObjective.currentAmount > objective.requiredAmount)
                     {

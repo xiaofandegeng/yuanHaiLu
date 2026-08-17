@@ -248,37 +248,44 @@ namespace YuanHaiLu.Effects
         }
 
         // === 快捷静态方法 ===
+        // 注意：Instance 必须用显式 == null 判断（Unity fake-null），
+        // 禁止 ?. / ??，否则场景卸载后残留引用会在协程/实例方法上抛 MissingReferenceException。
 
         /// <summary>播放受击火花</summary>
         public static void HitSpark(Vector3 pos, Vector2 dir)
         {
-            Instance?.PlayEffect("hit_spark", pos, dir, 0.5f);
+            if (Instance == null) return;
+            Instance.PlayEffect("hit_spark", pos, dir, 0.5f);
         }
 
         /// <summary>播放暴击特效</summary>
         public static void CritEffect(Vector3 pos)
         {
-            Instance?.PlayEffect("crit_burst", pos, 0.8f);
-            Instance?.ScreenFlash(new Color(1f, 0.3f, 0f), 0.15f);
+            if (Instance == null) return;
+            Instance.PlayEffect("crit_burst", pos, 0.8f);
+            Instance.ScreenFlash(new Color(1f, 0.3f, 0f), 0.15f);
         }
 
         /// <summary>播放升级光效</summary>
         public static void LevelUpEffect(Vector3 pos)
         {
-            Instance?.PlayEffect("levelup_ring", pos, 2f);
-            Instance?.ScreenFlash(new Color(1f, 0.85f, 0.2f), 0.3f);
+            if (Instance == null) return;
+            Instance.PlayEffect("levelup_ring", pos, 2f);
+            Instance.ScreenFlash(new Color(1f, 0.85f, 0.2f), 0.3f);
         }
 
         /// <summary>播放治疗光效</summary>
         public static void HealEffect(Vector3 pos)
         {
-            Instance?.PlayEffect("heal_green", pos, 1f);
+            if (Instance == null) return;
+            Instance.PlayEffect("heal_green", pos, 1f);
         }
 
         /// <summary>显示伤害数字</summary>
         public static void DamageNumber(Vector3 pos, int dmg, bool crit)
         {
-            Instance?.SpawnDamageNumber(pos, dmg, crit);
+            if (Instance == null) return;
+            Instance.SpawnDamageNumber(pos, dmg, crit);
         }
     }
 }

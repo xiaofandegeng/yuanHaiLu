@@ -14,7 +14,8 @@ namespace YuanHaiLu.Editor
             var scenes = new List<string>
             {
                 "Assets/Scenes/MainMenu.unity",
-                "Assets/Scenes/Demo_YanLiuTown.unity"
+                "Assets/Scenes/Demo_YanLiuTown.unity",
+                "Assets/Scenes/Demo_Inn.unity"
             };
 
             scenes.AddRange(Directory.GetFiles("Assets/Scenes/Regions", "*.unity")

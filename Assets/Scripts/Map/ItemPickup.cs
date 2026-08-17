@@ -46,14 +46,14 @@ namespace YuanHaiLu.Map
             {
                 _sprite.sprite = itemSprite;
             }
-
-            // 随机弹出效果
-            StartCoroutine(PopIn());
         }
 
-        private void Start()
+        private void OnEnable()
         {
-            // 延迟可拾取
+            // 弹出/可拾取协程从 OnEnable 启动（而非 Start）：
+            // 任务阶段门（QuestStageGate）会先失活再激活任务物品，
+            // 失活会杀掉已启动的协程，重激活必须能重新启动它们。
+            StartCoroutine(PopIn());
             StartCoroutine(EnablePickupAfterDelay());
         }
 

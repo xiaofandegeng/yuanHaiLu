@@ -1,16 +1,10 @@
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using YuanHaiLu.Core;
 using YuanHaiLu.Character;
-using YuanHaiLu.Dialogue;
 using YuanHaiLu.Map;
 using YuanHaiLu.GameSystem;
-using YuanHaiLu.Effects;
-using YuanHaiLu.UI;
 using YuanHaiLu.Art;
 
 namespace YuanHaiLu.Editor
@@ -59,6 +53,7 @@ namespace YuanHaiLu.Editor
             CreateDestructibles();
             CreateEventTriggers();
             CreateAreaExits();
+            CreateMvpQuestObjects();
             CreateHUD();
             CreateDialogueUI();
             CreatePauseMenu();
@@ -66,7 +61,9 @@ namespace YuanHaiLu.Editor
 
             // 场景引导脚本
             var directorObj = new GameObject("[SceneDirector]");
-            directorObj.AddComponent<SceneDirector>();
+            var director = directorObj.AddComponent<SceneDirector>();
+            // 复审 P1：出生点改到客栈门外可行走格（旧默认 (0,-5) 在地图外）。
+            director.spawnPosition = new Vector2(7.5f, 7.6f);
 
             // 保存场景
             System.IO.Directory.CreateDirectory("Assets/Scenes");
@@ -91,86 +88,30 @@ namespace YuanHaiLu.Editor
         // ========== 全局管理器 ==========
         private static void CreateGlobalManagers()
         {
-            // GameManager
-            var gmObj = new GameObject("[GameManager]");
-            gmObj.AddComponent<GameManager>();
-
-            var saveObj = new GameObject("SaveManager");
-            saveObj.transform.SetParent(gmObj.transform);
-            saveObj.AddComponent<SaveManager>();
-
-            var invObj = new GameObject("InventoryManager");
-            invObj.transform.SetParent(gmObj.transform);
-            invObj.AddComponent<InventoryManager>();
-
-            var questObj = new GameObject("QuestManager");
-            questObj.transform.SetParent(gmObj.transform);
-            questObj.AddComponent<QuestManager>();
-
-            var timeObj = new GameObject("GameTimeManager");
-            timeObj.transform.SetParent(gmObj.transform);
-            timeObj.AddComponent<GameTimeManager>();
-
-            // AudioManager
-            var audioObj = new GameObject("[AudioManager]");
-            audioObj.AddComponent<AudioManager>();
-
-            // DialogueManager
-            var dlgObj = new GameObject("[DialogueManager]");
-            dlgObj.transform.SetParent(gmObj.transform);
-            dlgObj.AddComponent<DialogueManager>();
-
-            // EffectsManager
-            var fxObj = new GameObject("[EffectsManager]");
-            fxObj.AddComponent<EffectsManager>();
-
-            // ScreenTransition
-            var transObj = new GameObject("[ScreenTransition]");
-            transObj.AddComponent<Canvas>();
-            transObj.AddComponent<UnityEngine.UI.CanvasScaler>();
-            transObj.AddComponent<ScreenTransition>();
-
-            // 物品数据库初始化
-            var _ = ItemDatabase.AllItems; // 触发 BuildDatabase
-            var __ = MartialSkillDatabase.AllSkills;
-
-            // PlayerDeathHandler
-            var deathObj = new GameObject("[PlayerDeathHandler]");
-            deathObj.AddComponent<PlayerDeathHandler>();
-
-            Debug.Log("[Demo] 全局管理器创建完成");
+            // 复审 P1：统一走共享装配器，与客栈室内场景保持一致，防止漂移。
+            PlaySceneAssembler.CreateGlobalManagers("Demo");
         }
 
         // ========== 摄像机 ==========
         private static void CreateMainCamera()
         {
-            var camObj = new GameObject("Main Camera");
-            camObj.tag = "MainCamera";
-            camObj.transform.position = new Vector3(20f, 12f, -10f);
-
-            var cam = camObj.AddComponent<Camera>();
-            cam.orthographic = true;
-            cam.orthographicSize = 8.5f;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.18f, 0.22f, 0.16f); // 暗绿底色
-
-            camObj.AddComponent<AudioListener>();
-            camObj.AddComponent<PixelPerfectCamera>();
-            camObj.AddComponent<CameraFollow>();
-
-            Debug.Log("[Demo] 摄像机创建完成");
+            PlaySceneAssembler.CreateMainCamera(
+                "Demo",
+                new Vector3(20f, 12f, -10f),
+                8.5f,
+                new Color(0.18f, 0.22f, 0.16f)); // 暗绿底色
         }
 
         private static void CreateFormalColliders()
         {
+            // 建筑、岸线、柳树与边界的阻挡全部由 yanliu.json 声明并在
+            // RegionSceneBuilder 生成的 Layout Colliders 中落地；这里只补
+            // 场外缓冲，不再覆盖水面（水道可经双桥穿越）。
             var root = new GameObject("FormalCollision");
             root.layer = LayerMask.NameToLayer("Environment");
             CreateInvisibleWall(root, "Boundary_West", new Vector2(-0.5f, 12f), new Vector2(1f, 25f));
             CreateInvisibleWall(root, "Boundary_East", new Vector2(40.5f, 12f), new Vector2(1f, 25f));
             CreateInvisibleWall(root, "Boundary_North", new Vector2(20f, 24.5f), new Vector2(42f, 1f));
-            CreateInvisibleWall(root, "RiverBank_South", new Vector2(20f, 3.5f), new Vector2(42f, 1f));
-            CreateInvisibleWall(root, "Landmark_Inn", new Vector2(8f, 12f), new Vector2(7f, 4f));
-            CreateInvisibleWall(root, "Landmark_Pharmacy", new Vector2(32f, 12f), new Vector2(7f, 4f));
         }
 
         private static void CreateInvisibleWall(GameObject parent, string name, Vector2 position, Vector2 size)
@@ -397,67 +338,14 @@ namespace YuanHaiLu.Editor
         // ========== 玩家 ==========
         private static void CreatePlayer()
         {
-            var player = new GameObject("Player");
-            player.tag = "Player";
-            player.layer = LayerMask.NameToLayer("Player");
-
-            var sr = player.AddComponent<SpriteRenderer>();
-            sr.sortingLayerName = "Character";
-            sr.sortingOrder = 0;
-
-            // 物理
-            var rb = player.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 0f;
-            rb.freezeRotation = true;
-            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-
-            var col = player.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(0.8f, 1.2f);
-            col.offset = new Vector2(0f, 0.6f);
-
-            player.AddComponent<Animator>();
-            CharacterVisual.ApplyTo(player, PlayerAppearance.Default.ArtId);
-            player.AddComponent<PlayerAppearanceBinder>();
-
-            // 组件
-            player.AddComponent<PlayerController>();
-            var stats = player.AddComponent<CharacterStats>();
-            stats.characterName = "凌霜";
-            stats.maxHp = 100; stats.currentHp = 100;
-            stats.maxMp = 50; stats.currentMp = 50;
-            stats.attack = 15;
-            stats.defense = 5;
-            stats.agility = 10;
-            player.AddComponent<PlayerCombat>();
-            player.AddComponent<CharacterAudio>();
-
-            // 武学系统
-            var martial = player.AddComponent<MartialArtsSystem>();
-
-            // 升级系统
-            player.AddComponent<LevelSystem>();
-
-            // 交互系统（K 键与 NPC/木箱/传送点交互）
-            PlayerInteraction.EnsureOn(player);
-
-            player.transform.position = new Vector3(20.5f, 7.5f, 0);
-
-            // 学会初始招式
-            Debug.Log("[Demo] 玩家创建完成（含武学+升级系统）");
+            // 固定男主 + 全套组件统一走共享装配器（复审 P1）。
+            PlaySceneAssembler.CreatePlayer("Demo", new Vector3(20.5f, 7.5f, 0));
         }
 
         // ========== NPC ==========
         private static void CreateNPCs()
         {
-            // 客栈掌柜
-            CreateNPC("掌柜老赵", "innkeeper_zhao", new Vector2(6.5f, 9f),
-                new string[] {
-                    "客官您好！欢迎来到烟柳客栈。",
-                    "最近北山上的山贼闹得厉害，商路都断了。",
-                    "你要是身手好，不如去帮镇上除个害？",
-                    "凌霜少侠，我看好你！"
-                });
+            // 掌柜老赵移入客栈室内场景（InnSceneGenerator 负责），镇上不再摆放。
 
             // 苏婉清（药铺）
             CreateNPC("苏婉清", "su_wanqing", new Vector2(30.5f, 9f),
@@ -511,10 +399,17 @@ namespace YuanHaiLu.Editor
             // 第二组：路匪
             CreateEnemy("路匪", "yanliu_rebel_scout", new Vector2(6f, 19f), 35, 8);
 
+            // MVP 河岸水匪（docs/15）：击杀后上报 MVP_01 的 KillEnemy 目标。
+            CreateEnemy("河岸水匪甲", "yanliu_river_bandit", new Vector2(14f, 3.2f), 22, 5,
+                questTargetId: "river_bandit");
+            CreateEnemy("河岸水匪乙", "yanliu_marsh_raider", new Vector2(17f, 2.6f), 22, 5,
+                questTargetId: "river_bandit");
+
             Debug.Log("[Demo] 敌人创建完成");
         }
 
-        private static void CreateEnemy(string name, string artId, Vector2 pos, int hp, int atk)
+        private static void CreateEnemy(string name, string artId, Vector2 pos, int hp, int atk,
+            string questTargetId = null)
         {
             var enemy = new GameObject($"Enemy_{name}");
             enemy.transform.position = pos;
@@ -540,6 +435,15 @@ namespace YuanHaiLu.Editor
 
             enemy.AddComponent<EnemyAI>();
 
+            // 任务击杀目标（可选）：死亡成功上报后锁定，不重复计数。
+            if (!string.IsNullOrEmpty(questTargetId))
+            {
+                var questTarget = enemy.AddComponent<QuestTarget>();
+                questTarget.objectiveType = QuestObjective.ObjectiveType.KillEnemy;
+                questTarget.targetId = questTargetId;
+                questTarget.amount = 1;
+            }
+
             // 掉落表
             var loot = enemy.AddComponent<LootTable>();
             loot.minGold = 3;
@@ -553,7 +457,7 @@ namespace YuanHaiLu.Editor
         {
             CreateCrate(new Vector2(16f, 15f), new string[] { "herb_medicinal" });
             CreateCrate(new Vector2(18f, 16f), new string[] { "food_mantou", "herb_spirit" });
-            CreateCrate(new Vector2(24f, 14f), new string[] { });
+            CreateCrate(new Vector2(24f, 15f), new string[] { });
 
             Debug.Log("[Demo] 可破坏物体创建完成");
         }
@@ -620,6 +524,85 @@ namespace YuanHaiLu.Editor
             Debug.Log("[Demo] 事件触发器创建完成");
         }
 
+        // ========== MVP 河岸失物任务对象（docs/15） ==========
+        private static void CreateMvpQuestObjects()
+        {
+            // 河岸子区域：进入即上报 MVP_01 的 ReachArea 目标（上报先于一次性地名显示）。
+            var riverbank = new GameObject("AreaTrigger_Riverbank");
+            riverbank.transform.position = new Vector3(12f, 5.2f, 0);
+            var riverbankCol = riverbank.AddComponent<BoxCollider2D>();
+            riverbankCol.isTrigger = true;
+            riverbankCol.size = new Vector2(8f, 1.6f);
+            var riverbankTrigger = riverbank.AddComponent<AreaTrigger>();
+            riverbankTrigger.areaName = "烟柳河岸";
+            riverbankTrigger.areaSubtitle = "水匪出没之地";
+            riverbankTrigger.questTargetId = "yanliu_riverbank";
+            riverbankTrigger.showOnce = true;
+
+            // 掌柜的荷包：走过即拾取，成功入包后上报 CollectItem。
+            var pouch = new GameObject("ItemPickup_LostPouch");
+            pouch.transform.position = new Vector3(24f, 3f, 0);
+            var pouchSr = pouch.AddComponent<SpriteRenderer>();
+            pouchSr.sortingLayerName = "Environment";
+            pouchSr.sortingOrder = 5;
+            var pouchTiles = EnvironmentTileBuilder.LoadTiles("yanliu");
+            pouchSr.sprite = pouchTiles["yanliu__decor__0"].sprite;
+            var pouchCol = pouch.AddComponent<BoxCollider2D>();
+            pouchCol.isTrigger = true;
+            pouchCol.size = new Vector2(0.8f, 0.8f);
+            var pickup = pouch.AddComponent<ItemPickup>();
+            pickup.itemId = "quest_lost_pouch";
+            pickup.amount = 1;
+            pickup.bobAmplitude = 0.08f;
+            pickup.magnetRange = 1.2f;
+            pickup.lifetime = 0f;
+
+            // 客栈大门：进入切换到客栈室内（掌柜老赵与 MVP_01 接取/提交都在室内）。
+            var innDoor = new GameObject("AreaTrigger_InnDoor");
+            innDoor.transform.position = new Vector3(7.5f, 9.9f, 0);
+            var innDoorCol = innDoor.AddComponent<BoxCollider2D>();
+            innDoorCol.isTrigger = true;
+            innDoorCol.size = new Vector2(1.8f, 1.4f);
+            var innDoorTrigger = innDoor.AddComponent<AreaTrigger>();
+            innDoorTrigger.areaName = "烟柳客栈";
+            innDoorTrigger.areaSubtitle = "掌柜老赵";
+            innDoorTrigger.triggersSceneChange = true;
+            innDoorTrigger.targetSceneName = "Demo_Inn";
+            innDoorTrigger.spawnPositionInTarget = new Vector2(11.5f, 2.5f);
+
+            CreateMvpQuestStageGates(pouch);
+
+            Debug.Log("[Demo] MVP 河岸失物任务对象创建完成");
+        }
+
+        // ========== MVP 任务阶段门（复审 P0：防接任务前消耗目标） ==========
+        private static void CreateMvpQuestStageGates(GameObject pouch)
+        {
+            var banditA = GameObject.Find("Enemy_河岸水匪甲");
+            var banditB = GameObject.Find("Enemy_河岸水匪乙");
+            if (banditA == null || banditB == null || pouch == null)
+            {
+                Debug.LogError("[Demo] MVP 阶段门缺少受控对象，任务可能软锁！");
+                return;
+            }
+
+            // 第三步（杀水匪）前：水匪保持失活，无法被提前击杀。
+            var killGate = new GameObject("QuestGate_MVP01_KillBandits");
+            var kill = killGate.AddComponent<QuestStageGate>();
+            kill.questId = "MVP_01";
+            kill.objectiveType = QuestObjective.ObjectiveType.KillEnemy;
+            kill.targetId = "river_bandit";
+            kill.targets = new[] { banditA, banditB };
+
+            // 第四步（拾荷包）前：荷包保持失活，无法被提前拾走。
+            var collectGate = new GameObject("QuestGate_MVP01_CollectPouch");
+            var collect = collectGate.AddComponent<QuestStageGate>();
+            collect.questId = "MVP_01";
+            collect.objectiveType = QuestObjective.ObjectiveType.CollectItem;
+            collect.targetId = "quest_lost_pouch";
+            collect.targets = new[] { pouch };
+        }
+
         // ========== 区域出口 ==========
         private static void CreateAreaExits()
         {
@@ -665,52 +648,25 @@ namespace YuanHaiLu.Editor
         // ========== HUD ==========
         private static void CreateHUD()
         {
-            var canvasObj = new GameObject("[HUD Canvas]");
-            canvasObj.AddComponent<Canvas>();
-            canvasObj.AddComponent<CanvasScaler>();
-
-            // HUD v2 自动构建所有UI
-            canvasObj.AddComponent<HUD>();
-
-            Debug.Log("[Demo] HUD创建完成");
+            PlaySceneAssembler.CreateHudCanvas();
         }
 
         // ========== 对话UI ==========
         private static void CreateDialogueUI()
         {
-            var dlgCanvas = new GameObject("[Dialogue Canvas]");
-            dlgCanvas.AddComponent<Canvas>();
-            dlgCanvas.AddComponent<CanvasScaler>();
-
-            // DialogueUI v2 自动构建对话框+选择面板
-            dlgCanvas.AddComponent<DialogueUI>();
-
-            Debug.Log("[Demo] 对话UI创建完成");
+            PlaySceneAssembler.CreateDialogueCanvas();
         }
 
         // ========== 暂停菜单 ==========
         private static void CreatePauseMenu()
         {
-            var pauseCanvas = new GameObject("[Pause Canvas]");
-            var canvas = pauseCanvas.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 300;
-            pauseCanvas.AddComponent<CanvasScaler>();
-            pauseCanvas.AddComponent<PauseMenu>();
-
-            Debug.Log("[Demo] 暂停菜单创建完成");
+            PlaySceneAssembler.CreatePauseCanvas();
         }
 
         // ========== Canvas设置 ==========
         private static void CreateCanvasSettings()
         {
-            // 确保EventSystem存在
-            if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
-            {
-                var esObj = new GameObject("[EventSystem]");
-                esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                esObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-            }
+            PlaySceneAssembler.EnsureEventSystem();
         }
     }
 }

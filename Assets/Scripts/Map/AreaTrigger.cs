@@ -42,9 +42,12 @@ namespace YuanHaiLu.Map
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (!other.CompareTag("Player")) return;
-            if (showOnce && _hasShown) return;
 
+            // 任务进度先于"只显示一次"门：玩家可能在接任务前就路过此地，
+            // 接任务后再次进入时仍必须能上报 ReachArea（上报自身有成功锁定）。
             ReportAreaReached();
+
+            if (showOnce && _hasShown) return;
 
             if (triggersSceneChange && !string.IsNullOrEmpty(targetSceneName))
             {
@@ -105,15 +108,18 @@ namespace YuanHaiLu.Map
             var saveManager = GameSystem.SaveManager.Instance;
             if (saveManager != null) saveManager.SaveGame(-1);
 
+            var gameManager = GameManager.Instance;
+
+            // HP/MP/基础属性/武学挂在场景本地玩家上，切换前捕获、落地后回放。
+            gameManager?.BeginTransitionCarry(player);
+
             // 加载目标场景
             Debug.Log($"[AreaTrigger] 切换场景: {targetSceneName}");
-
-            var gameManager = GameManager.Instance;
 
             // 标记为"场景过渡"而非新游戏：SceneDirector 将跳过出生点/初始物资覆盖。
             gameManager?.BeginSceneEntry(GameManager.SceneEntryMode.SceneTransition);
 
-            // 单次具名回调：新场景加载后把玩家放到指定入口。
+            // 单次具名回调：新场景加载后把玩家放到指定入口，并回放过渡携带。
             // 闭包只捕获值类型与持久 GameManager 引用（不捕获 this），
             // 因为 Single 加载会销毁当前场景的 AreaTrigger，协程随之停止。
             Vector2 targetSpawn = spawnPositionInTarget;
@@ -123,7 +129,10 @@ namespace YuanHaiLu.Map
                 SceneManager.sceneLoaded -= onSceneLoaded;
                 var newPlayer = GameObject.FindGameObjectWithTag("Player");
                 if (newPlayer != null)
+                {
                     newPlayer.transform.position = targetSpawn;
+                    gameManager?.ApplyTransitionCarry(newPlayer);
+                }
                 gameManager?.CompleteSceneEntry();
             };
             SceneManager.sceneLoaded += onSceneLoaded;

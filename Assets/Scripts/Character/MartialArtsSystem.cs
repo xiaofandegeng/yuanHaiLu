@@ -44,16 +44,18 @@ namespace YuanHaiLu.Character
         {
             // 更新冷却
             List<string> expiredCooldowns = new List<string>();
-            foreach (var kvp in _cooldowns)
+            // 先拷贝键集合再遍历：Unity Mono 下迭代中用索引器写回会使枚举器失效。
+            var cooldownKeys = new List<string>(_cooldowns.Keys);
+            foreach (var skillId in cooldownKeys)
             {
-                if (kvp.Value > 0)
+                if (_cooldowns[skillId] > 0)
                 {
-                    _cooldowns[kvp.Key] -= Time.deltaTime;
-                    OnSkillCooldownUpdate?.Invoke(kvp.Key, _cooldowns[kvp.Key]);
+                    _cooldowns[skillId] -= Time.deltaTime;
+                    OnSkillCooldownUpdate?.Invoke(skillId, _cooldowns[skillId]);
                 }
                 else
                 {
-                    expiredCooldowns.Add(kvp.Key);
+                    expiredCooldowns.Add(skillId);
                 }
             }
             foreach (var key in expiredCooldowns)
@@ -244,6 +246,27 @@ namespace YuanHaiLu.Character
         // === 远程招式 ===
         private void ExecuteRangedSkill(MartialSkill skill, Vector2 dir)
         {
+            int count = Mathf.Max(1, skill.projectileCount);
+            float spread = Mathf.Max(0f, skill.projectileSpreadDegrees);
+
+            for (int i = 0; i < count; i++)
+            {
+                // 扇形齐发：总张角均匀分布，单发保持直线。
+                float t = count == 1 ? 0f : (i / (float)(count - 1) - 0.5f);
+                float angle = spread * t;
+                Vector2 shotDir = Rotate(dir, angle);
+
+                CreateProjectile(skill, shotDir);
+            }
+
+            // 发射特效（显式 == null，规避 Unity fake-null）
+            var castEffects = Effects.EffectsManager.Instance;
+            if (castEffects != null)
+                castEffects.PlayEffect("cast_burst", transform.position, 0.5f);
+        }
+
+        private void CreateProjectile(MartialSkill skill, Vector2 dir)
+        {
             // 创建飞行物
             GameObject projectile = new GameObject($"Projectile_{skill.skillName}");
             projectile.transform.position = transform.position;
@@ -267,9 +290,16 @@ namespace YuanHaiLu.Character
             proj.sourceStats = _stats;
             proj.lifetime = 3f;
             proj.skill = skill;
+        }
 
-            // 发射特效
-            Effects.EffectsManager.Instance?.PlayEffect("cast_burst", transform.position, 0.5f);
+        private static Vector2 Rotate(Vector2 vector, float degrees)
+        {
+            float radians = degrees * Mathf.Deg2Rad;
+            float cos = Mathf.Cos(radians);
+            float sin = Mathf.Sin(radians);
+            return new Vector2(
+                vector.x * cos - vector.y * sin,
+                vector.x * sin + vector.y * cos);
         }
 
         // === 增益招式 ===
@@ -308,6 +338,27 @@ namespace YuanHaiLu.Character
         // === 突进招式 ===
         private void ExecuteDashSkill(MartialSkill skill, Vector2 dir)
         {
+            // 冲拳类突进：对突进路径上的敌人结算一次伤害（docs/15 拳套主动技）。
+            if (skill.baseDamage > 0 || skill.attackScaling > 0f)
+            {
+                Vector2 start = transform.position;
+                Vector2 end = start + dir * skill.range;
+                Vector2 min = Vector2.Min(start, end) - new Vector2(0.6f, 0.6f);
+                Vector2 max = Vector2.Max(start, end) + new Vector2(0.6f, 0.6f);
+                var hits = Physics2D.OverlapAreaAll(min, max, LayerMask.GetMask("Enemy"));
+                foreach (var hit in hits)
+                {
+                    var target = hit.GetComponent<CharacterStats>();
+                    if (target != null && target.IsAlive)
+                    {
+                        int damage = CalculateSkillDamage(skill);
+                        target.TakeDamage(damage, _stats);
+                        Effects.EffectsManager.HitSpark(hit.transform.position, dir);
+                        Effects.EffectsManager.DamageNumber(hit.transform.position, damage, false);
+                    }
+                }
+            }
+
             var rb = GetComponent<Rigidbody2D>();
             if (rb != null)
             {
@@ -315,13 +366,17 @@ namespace YuanHaiLu.Character
                 StartCoroutine(StopDashAfterDelay(rb, 0.2f));
             }
 
-            // 残影效果
-            Effects.EffectsManager.Instance?.PlaySlashTrail(
-                transform.position,
-                (Vector2)transform.position + dir * skill.range,
-                new Color(0.5f, 0.5f, 1f, 0.5f),
-                0.5f
-            );
+            // 残影效果（显式 == null，规避 Unity fake-null）
+            var effects = Effects.EffectsManager.Instance;
+            if (effects != null)
+            {
+                effects.PlaySlashTrail(
+                    transform.position,
+                    (Vector2)transform.position + dir * skill.range,
+                    new Color(0.5f, 0.5f, 1f, 0.5f),
+                    0.5f
+                );
+            }
         }
 
         private System.Collections.IEnumerator StopDashAfterDelay(Rigidbody2D rb, float delay)
@@ -469,6 +524,8 @@ namespace YuanHaiLu.Character
         public float buffMultiplier = 0.3f;// 增益倍率
         public float projectileSpeed = 8f; // 飞行物速度
         public float dashSpeed = 15f;      // 突进速度
+        public int projectileCount = 1;    // 飞行物数量（扇形齐发，如飞镖三连）
+        public float projectileSpreadDegrees = 0f; // 扇形总张角（度，0=单发直线）
 
         [Header("视觉")]
         public Color elementColor = new Color(0.7f, 0.9f, 1f); // 元素颜色

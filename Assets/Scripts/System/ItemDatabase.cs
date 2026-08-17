@@ -79,6 +79,8 @@ namespace YuanHaiLu.GameSystem
                 buyPrice: 5, sellPrice: 3);
             Add("mat_jade", "玉佩碎片", "刻有神秘铭文的玉佩碎片", ItemType.QuestItem,
                 questItem: true, questId: "q_jade_pendant");
+            Add("quest_lost_pouch", "掌柜的荷包", "老赵落在河岸的荷包，装着客栈的全部账银", ItemType.QuestItem,
+                questItem: true, questId: "MVP_01");
             Add("mat_wolf_fang", "狼牙", "山中恶狼的獠牙", ItemType.Material,
                 buyPrice: 8, sellPrice: 4);
 

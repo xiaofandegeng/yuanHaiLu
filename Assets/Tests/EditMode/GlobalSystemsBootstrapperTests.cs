@@ -107,16 +107,16 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void MainMenuAppearanceSelectionUpdatesPersistentGameManager()
+        public void MainMenuWeaponStyleSelectionUpdatesPersistentGameManager()
         {
             var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
                 TestSceneFactory.Create("GameManager"));
             var menu = TestSceneFactory.Create("MainMenu").AddComponent<MainMenu>();
 
-            menu.SelectAppearance("player_male_hidden_weapon");
+            menu.SelectWeaponStyle("gauntlets");
 
-            Assert.That(menu.SelectedAppearance.ArtId, Is.EqualTo("player_male_hidden_weapon"));
-            Assert.That(gameManager.PlayerArtId, Is.EqualTo("player_male_hidden_weapon"));
+            Assert.That(menu.SelectedWeaponStyle.StyleId, Is.EqualTo("gauntlets"));
+            Assert.That(gameManager.WeaponStyleId, Is.EqualTo("gauntlets"));
         }
 
         private static void InvokePrivate(object target, string methodName)

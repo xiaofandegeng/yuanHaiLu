@@ -11,23 +11,21 @@ using System.Linq;
 namespace YuanHaiLu.UI
 {
     /// <summary>
-    /// 主菜单控制器
+    /// 主菜单控制器（单主角 MVP，docs/15）：
+    /// 只保留 新游戏/继续游戏 与三个武器流派按钮；
+    /// 预览永远是同一位男性主角，不再提供外观选择。
     /// </summary>
     public class MainMenu : MonoBehaviour
     {
-        [Header("菜单面板")]
-        [SerializeField] private GameObject mainPanel;
-        [SerializeField] private GameObject settingsPanel;
-        [SerializeField] private GameObject loadPanel;
-
-        [Header("角色选择")]
-        [SerializeField] private Image appearancePreview;
-        [SerializeField] private Text appearanceLabel;
+        [Header("武器流派选择")]
+        [SerializeField] private Image weaponPreview;
+        [SerializeField] private Text weaponLabel;
+        [SerializeField] private Text weaponHint;
 
         [Header("场景名")]
         [SerializeField] private string firstSceneName = "Demo_YanLiuTown";
 
-        public PlayerAppearance SelectedAppearance { get; private set; } = PlayerAppearance.Default;
+        public WeaponStyle SelectedWeaponStyle { get; private set; } = WeaponStyle.Default;
 
         private void Start()
         {
@@ -41,9 +39,9 @@ namespace YuanHaiLu.UI
 
             GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
             gameManager.SetState(GameManager.GameState.MainMenu);
-            SelectedAppearance = gameManager.PlayerAppearance;
-            ResolveAppearanceUI();
-            RefreshAppearanceUI();
+            SelectedWeaponStyle = gameManager.WeaponStyle;
+            ResolveWeaponStyleUI();
+            RefreshWeaponStyleUI();
             BindMenuButtons();
         }
 
@@ -72,6 +70,9 @@ namespace YuanHaiLu.UI
             QuestManager.Instance?.ResetForNewGame();
             gameManager.playerName = "凌霜";
             gameManager.chapterIndex = 1;
+            // 单主角 MVP：固定男性主角身体；只应用玩家选择的武器流派。
+            gameManager.SetPlayerAppearance(PlayerAppearance.Default.ArtId);
+            gameManager.SetWeaponStyle(SelectedWeaponStyle.StyleId);
             gameManager.BeginSceneEntry(GameManager.SceneEntryMode.NewGame);
             gameManager.SetState(GameManager.GameState.Exploration);
 
@@ -93,36 +94,6 @@ namespace YuanHaiLu.UI
             SaveManager.Instance.LoadGame();
         }
 
-        /// <summary>
-        /// 打开设置
-        /// </summary>
-        public void OnSettings()
-        {
-            if (mainPanel == null || settingsPanel == null)
-            {
-                Debug.LogWarning("[MainMenu] 设置面板引用未配置。");
-                return;
-            }
-
-            mainPanel.SetActive(false);
-            settingsPanel.SetActive(true);
-        }
-
-        /// <summary>
-        /// 关闭设置
-        /// </summary>
-        public void OnSettingsBack()
-        {
-            if (mainPanel == null || settingsPanel == null)
-            {
-                Debug.LogWarning("[MainMenu] 设置面板引用未配置。");
-                return;
-            }
-
-            settingsPanel.SetActive(false);
-            mainPanel.SetActive(true);
-        }
-
         private void BindMenuButtons()
         {
             foreach (Button button in GetComponentsInChildren<Button>(true))
@@ -137,73 +108,72 @@ namespace YuanHaiLu.UI
                     case "Btn_继续游戏":
                         Bind(button, OnContinue);
                         break;
-                    case "Btn_设置":
-                        Bind(button, OnSettings);
-                        break;
-                    case "Btn_退出":
-                        Bind(button, OnQuit);
-                        break;
                     default:
-                        const string prefix = "Btn_角色_";
+                        const string prefix = "Btn_流派_";
                         if (button.gameObject.name.StartsWith(prefix, StringComparison.Ordinal))
                         {
-                            string artId = button.gameObject.name.Substring(prefix.Length);
-                            BindAppearance(button, artId);
+                            string styleId = button.gameObject.name.Substring(prefix.Length);
+                            BindWeaponStyle(button, styleId);
                         }
                         break;
                 }
             }
         }
 
-        public void SelectAppearance(string artId)
+        public void SelectWeaponStyle(string styleId)
         {
-            if (!PlayerAppearance.TryParse(artId, out var appearance))
-                throw new ArgumentException($"Unknown formal player appearance '{artId}'.", nameof(artId));
+            if (!WeaponStyle.TryParse(styleId, out var style))
+                throw new ArgumentException($"Unknown weapon style '{styleId}'.", nameof(styleId));
             var gameManager = GameManager.Instance;
             if (gameManager == null)
-                throw new InvalidOperationException("GameManager is required to select a player appearance.");
-            gameManager.SetPlayerAppearance(appearance.ArtId);
-            SelectedAppearance = appearance;
-            ResolveAppearanceUI();
-            RefreshAppearanceUI();
+                throw new InvalidOperationException("GameManager is required to select a weapon style.");
+            gameManager.SetWeaponStyle(style.StyleId);
+            SelectedWeaponStyle = style;
+            ResolveWeaponStyleUI();
+            RefreshWeaponStyleUI();
         }
 
-        private void ResolveAppearanceUI()
+        private void ResolveWeaponStyleUI()
         {
-            if (appearancePreview == null)
-                appearancePreview = GetComponentsInChildren<Image>(true)
+            if (weaponPreview == null)
+                weaponPreview = GetComponentsInChildren<Image>(true)
                     .FirstOrDefault(value => value.name == "CharacterPreview");
-            if (appearanceLabel == null)
-                appearanceLabel = GetComponentsInChildren<Text>(true)
-                    .FirstOrDefault(value => value.name == "CharacterSelectionLabel");
+            if (weaponLabel == null)
+                weaponLabel = GetComponentsInChildren<Text>(true)
+                    .FirstOrDefault(value => value.name == "StyleSelectionLabel");
+            if (weaponHint == null)
+                weaponHint = GetComponentsInChildren<Text>(true)
+                    .FirstOrDefault(value => value.name == "StyleSelectionHint");
         }
 
-        private void RefreshAppearanceUI()
+        private void RefreshWeaponStyleUI()
         {
-            if (appearanceLabel != null)
-                appearanceLabel.text = $"主角：{SelectedAppearance.DisplayName}";
-            if (appearancePreview != null)
+            if (weaponLabel != null)
+                weaponLabel.text = $"武器：{SelectedWeaponStyle.DisplayName}";
+            if (weaponHint != null)
+                weaponHint.text = SelectedWeaponStyle.Description;
+            if (weaponPreview != null)
             {
                 var catalog = CharacterArtCatalog.LoadDefault();
-                if (!catalog.TryGet(SelectedAppearance.ArtId, out var entry) || entry.Prefab == null)
+                if (!catalog.TryGet(PlayerAppearance.Default.ArtId, out var entry) || entry.Prefab == null)
                     throw new InvalidOperationException(
-                        $"Formal player preview is missing for '{SelectedAppearance.ArtId}'.");
+                        $"Formal player preview is missing for '{PlayerAppearance.Default.ArtId}'.");
                 var prefabRenderer = entry.Prefab.GetComponent<SpriteRenderer>();
                 if (prefabRenderer == null || prefabRenderer.sprite == null)
                     throw new InvalidOperationException(
-                        $"Formal player prefab has no idle sprite for '{SelectedAppearance.ArtId}'.");
-                appearancePreview.sprite = prefabRenderer.sprite;
-                appearancePreview.preserveAspect = true;
+                        $"Formal player prefab has no idle sprite for '{PlayerAppearance.Default.ArtId}'.");
+                weaponPreview.sprite = prefabRenderer.sprite;
+                weaponPreview.preserveAspect = true;
             }
 
-            const string prefix = "Btn_角色_";
+            const string prefix = "Btn_流派_";
             foreach (var button in GetComponentsInChildren<Button>(true))
             {
                 if (!button.name.StartsWith(prefix, StringComparison.Ordinal))
                     continue;
                 bool selected = string.Equals(
                     button.name.Substring(prefix.Length),
-                    SelectedAppearance.ArtId,
+                    SelectedWeaponStyle.StyleId,
                     StringComparison.Ordinal);
                 var colors = button.colors;
                 colors.normalColor = selected
@@ -213,10 +183,10 @@ namespace YuanHaiLu.UI
             }
         }
 
-        private void BindAppearance(Button button, string artId)
+        private void BindWeaponStyle(Button button, string styleId)
         {
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => SelectAppearance(artId));
+            button.onClick.AddListener(() => SelectWeaponStyle(styleId));
         }
 
         private static void Bind(Button button, UnityEngine.Events.UnityAction action)
@@ -226,18 +196,6 @@ namespace YuanHaiLu.UI
 
             button.onClick.RemoveListener(action);
             button.onClick.AddListener(action);
-        }
-
-        /// <summary>
-        /// 退出游戏
-        /// </summary>
-        public void OnQuit()
-        {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
         }
     }
 }

@@ -251,12 +251,13 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void VersionFourSaveRestoresFormalPlayerAppearance()
+        public void VersionFourSaveMigratesToFixedMaleHeroWithSwordStyle()
         {
             var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
                 TestSceneFactory.Create("GameManager"));
             gameManager.BeginSceneEntry(GameManager.SceneEntryMode.LoadGame);
             var player = TestSceneFactory.CreatePlayer();
+            TestSceneFactory.AddComponentWithAwake<PlayerCombat>(player);
             var saveManager = TestSceneFactory.AddComponentWithAwake<SaveManager>(
                 TestSceneFactory.Create("SaveManager"));
 
@@ -264,7 +265,8 @@ namespace YuanHaiLu.Tests.EditMode
             {
                 saveVersion = 4,
                 playerName = "凌霜",
-                playerArtId = "player_male_boxer",
+                // v4 曾保存过的女性外观必须迁移为固定男主（docs/15）。
+                playerArtId = "player_female_swordsman",
                 level = 1,
                 currentHp = 100,
                 currentMp = 50,
@@ -276,19 +278,23 @@ namespace YuanHaiLu.Tests.EditMode
                 chapterIndex = 1
             });
 
-            Assert.That(gameManager.PlayerAppearance.ArtId, Is.EqualTo("player_male_boxer"));
+            Assert.That(gameManager.PlayerAppearance.ArtId, Is.EqualTo("player_male_swordsman"));
             Assert.That(player.GetComponent<YuanHaiLu.Art.CharacterVisual>().ArtId,
-                Is.EqualTo("player_male_boxer"));
+                Is.EqualTo("player_male_swordsman"));
+            Assert.That(gameManager.WeaponStyleId, Is.EqualTo("sword"));
+            Assert.That(player.GetComponent<PlayerCombat>().WeaponStyleId, Is.EqualTo("sword"));
         }
 
         [Test]
-        public void OlderSaveMigratesToDefaultFormalPlayerAppearance()
+        public void OlderSaveMigratesToFixedMaleHeroWithSwordStyle()
         {
             var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
                 TestSceneFactory.Create("GameManager"));
             gameManager.SetPlayerAppearance("player_male_mystic");
+            gameManager.SetWeaponStyle("dart");
             gameManager.BeginSceneEntry(GameManager.SceneEntryMode.LoadGame);
             var player = TestSceneFactory.CreatePlayer();
+            TestSceneFactory.AddComponentWithAwake<PlayerCombat>(player);
             var saveManager = TestSceneFactory.AddComponentWithAwake<SaveManager>(
                 TestSceneFactory.Create("SaveManager"));
 
@@ -310,6 +316,79 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(gameManager.PlayerAppearance, Is.EqualTo(PlayerAppearance.Default));
             Assert.That(player.GetComponent<YuanHaiLu.Art.CharacterVisual>().ArtId,
                 Is.EqualTo(PlayerAppearance.Default.ArtId));
+            Assert.That(gameManager.WeaponStyleId, Is.EqualTo("sword"));
+            Assert.That(player.GetComponent<PlayerCombat>().WeaponStyleId, Is.EqualTo("sword"));
+        }
+
+        [Test]
+        public void VersionFiveSaveRestoresWeaponStyleAndIllegalStyleFallsBackToSword()
+        {
+            var gameManager = TestSceneFactory.AddComponentWithAwake<GameManager>(
+                TestSceneFactory.Create("GameManager"));
+            gameManager.BeginSceneEntry(GameManager.SceneEntryMode.LoadGame);
+            var player = TestSceneFactory.CreatePlayer();
+            TestSceneFactory.AddComponentWithAwake<PlayerCombat>(player);
+            var saveManager = TestSceneFactory.AddComponentWithAwake<SaveManager>(
+                TestSceneFactory.Create("SaveManager"));
+
+            saveManager.ApplySaveDataToLoadedScene(new SaveManager.SaveData
+            {
+                saveVersion = 5,
+                playerName = "凌霜",
+                playerArtId = "player_male_swordsman",
+                weaponStyleId = "dart",
+                level = 2,
+                currentHp = 90,
+                currentMp = 40,
+                baseAttack = 15,
+                baseDefense = 5,
+                baseAgility = 10,
+                baseMaxHp = 100,
+                baseMaxMp = 50,
+                chapterIndex = 1
+            });
+
+            Assert.That(gameManager.WeaponStyleId, Is.EqualTo("dart"));
+            Assert.That(player.GetComponent<PlayerCombat>().WeaponStyleId, Is.EqualTo("dart"));
+
+            saveManager.ApplySaveDataToLoadedScene(new SaveManager.SaveData
+            {
+                saveVersion = 5,
+                playerName = "凌霜",
+                weaponStyleId = "railgun",
+                level = 2,
+                currentHp = 90,
+                currentMp = 40,
+                baseAttack = 15,
+                baseDefense = 5,
+                baseAgility = 10,
+                baseMaxHp = 100,
+                baseMaxMp = 50,
+                chapterIndex = 1
+            });
+
+            Assert.That(gameManager.WeaponStyleId, Is.EqualTo("sword"));
+            Assert.That(player.GetComponent<PlayerCombat>().WeaponStyleId, Is.EqualTo("sword"));
+        }
+
+        [Test]
+        public void VersionFiveSaveDataSurvivesJsonRoundTrip()
+        {
+            var source = new SaveManager.SaveData
+            {
+                saveVersion = 5,
+                playerArtId = "player_male_swordsman",
+                weaponStyleId = "gauntlets",
+                baseAttack = 18
+            };
+
+            string json = JsonUtility.ToJson(source);
+            var restored = JsonUtility.FromJson<SaveManager.SaveData>(json);
+
+            Assert.That(restored.saveVersion, Is.EqualTo(5));
+            Assert.That(restored.playerArtId, Is.EqualTo("player_male_swordsman"));
+            Assert.That(restored.weaponStyleId, Is.EqualTo("gauntlets"));
+            Assert.That(restored.baseAttack, Is.EqualTo(18));
         }
     }
 }

@@ -36,10 +36,11 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void InvalidArtIdIsRejectedAndDefaultIsFormalFemaleSwordsman()
+        public void InvalidArtIdIsRejectedAndDefaultIsFixedMaleSwordsman()
         {
             Assert.That(PlayerAppearance.TryParse("missing_actor", out _), Is.False);
-            Assert.That(PlayerAppearance.Default.ArtId, Is.EqualTo("player_female_swordsman"));
+            // docs/15：单主角 MVP 固定男性剑客身体；其余 11 套外观保留在库中。
+            Assert.That(PlayerAppearance.Default.ArtId, Is.EqualTo("player_male_swordsman"));
         }
     }
 }

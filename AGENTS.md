@@ -1,7 +1,7 @@
 # AGENTS.md — 渊海录项目交接与记忆
 
 > 本文件是接手本项目（开发者或 AI 助手）的首选入口。长期事实以本文件为准。
-> 最后更新：2026-08-14
+> 最后更新：2026-08-17
 
 ## 0. 30 秒速览
 
@@ -10,11 +10,11 @@
 | 项目 | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
-| 代码规模 | 68 个运行时/编辑器 C# 文件；另有 19 个测试/测试工具文件 |
-| 状态 | 正式像素美术第二轮完成：97 角色、10 个独立构图户外、13 室内、序章 normal/burned、烟柳镇可玩 Demo |
-| 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
-| 测试 | 101 EditMode + 7 PlayMode + 45 Python 全通过 |
-| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md` |
+| 代码规模 | 72 个运行时/编辑器 C# 文件；另有 25 个测试/测试工具文件 |
+| 状态 | 单主角 MVP 垂直切片（docs/15）：固定男主 + 三武器流派 + 烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
+| 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/single-hero-mvp-v2`（复审后重建的干净分支） |
+| 测试 | 125 EditMode + 11 PlayMode + 45 Python 全通过 |
+| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md`、`docs/15-single-hero-mvp-design.md` |
 
 ## 1. 如何运行
 
@@ -31,20 +31,26 @@
 ```text
 Tools → 渊海录 → 生成主菜单场景
 Tools → 渊海录 → 生成Demo场景
+Tools → 渊海录 → 生成客栈室内场景
 ```
 
-对应实现：`Assets/Scripts/Editor/MainMenuSceneGenerator.cs` 与 `DemoSceneGenerator.cs`。
+对应实现：`Assets/Scripts/Editor/MainMenuSceneGenerator.cs`、`DemoSceneGenerator.cs` 与 `InnSceneGenerator.cs`。公共装配（管理器/摄像机/玩家/UI）统一走 `PlaySceneAssembler.cs`，两个玩法生成器只保留差异化内容。
 
 Build Profiles / Build Settings 应包含：
 
 ```text
 0  Assets/Scenes/MainMenu.unity
 1  Assets/Scenes/Demo_YanLiuTown.unity
-2–11  Assets/Scenes/Regions/*.unity
-12–24 Assets/Scenes/Interiors/*.unity
+2  Assets/Scenes/Demo_Inn.unity
+3–12  Assets/Scenes/Regions/*.unity
+13–25 Assets/Scenes/Interiors/*.unity
 ```
 
-可从主菜单运行，也可直接打开 Demo；直接运行 Demo 默认按新游戏初始化。
+`Demo_Inn.unity` 是客栈玩法场景：从正式 `Interiors/inn.unity` Tilemap 克隆后叠加玩家、掌柜老赵（MVP_01）与回镇出口；正式室内基线文件保持纯 Tilemap，供 EnvironmentArtTests 反复重建（与 Demo_YanLiuTown / Regions/yanliu 同构）。可从主菜单运行，也可直接打开 Demo；直接运行 Demo 默认按新游戏初始化。
+
+> ProjectSettings 例外说明：本分支相对 main 唯一的 ProjectSettings 变更是
+> `EditorBuildSettings.asset` 加入 `Demo_Inn.unity`（运行时按场景名加载所必需）。
+> 其余 ProjectSettings 文件一律与 main 保持一致。
 
 ### 1.3 关键操作守则
 
@@ -57,7 +63,7 @@ Build Profiles / Build Settings 应包含：
 | 按键 | 功能 |
 |------|------|
 | WASD / 方向键 | 移动 |
-| J | 攻击（3 连击，可暴击） |
+| J | 攻击（连击随流派 3–5 段，可暴击） |
 | K / E | 最近目标交互 |
 | Left Shift | 冲刺 |
 | 数字键 1–4 | 已装备武学 |
@@ -74,7 +80,8 @@ Legacy Input Manager 中 `Interact` 只有一个轴：K 主键、E 备用键。
 
 ```text
 YuanHaiLu.Core
-  GameConfig / GameManager / PlayerAppearance / SceneBootstrapper / CameraFollow / PixelPerfectCamera
+  GameConfig / GameManager / PlayerAppearance / WeaponStyle
+  SceneBootstrapper / CameraFollow / PixelPerfectCamera
 
 YuanHaiLu.Art
   CharacterArtCatalog / EnvironmentArtCatalog / CharacterVisual
@@ -104,8 +111,8 @@ YuanHaiLu.UI
   HUD / MainMenu / InventoryUI / QuestUI / PauseMenu / DialogueUI
 
 YuanHaiLu.Editor
-  DemoSceneGenerator / MainMenuSceneGenerator / PixelArtImporter
-  ProjectInitializer / SetupBuildSettings / ArtImportRules / ArtAssetValidator
+  DemoSceneGenerator / MainMenuSceneGenerator / InnSceneGenerator / PlaySceneAssembler
+  PixelArtImporter / ProjectInitializer / SetupBuildSettings / ArtImportRules / ArtAssetValidator
   CharacterAnimationBuilder / RegionSceneBuilder / EnvironmentTileBuilder
   CharacterShowcaseGenerator / EnvironmentShowcaseGenerator / FormalSceneCapture
 
@@ -123,7 +130,10 @@ YuanHaiLu.Combat
 - 战斗判定帧由 Animator 事件调用 `PlayerCombat.OnAttackHitFrame()`。
 - `PlayerInteraction` 扫描最近的 `IInteractable`，受 `GameManager.CanPlayerAct()` 控制。
 - `CharacterArtCatalog` 和 `EnvironmentArtCatalog` 以稳定 snake_case ID 作为运行时唯一入口；正式场景不得创建运行时 Texture/Sprite 作为美术回退。
-- `PlayerAppearance` 固定 2 性别 × 6 职业，`PlayerAppearanceBinder` 在场景加载后重新应用持久选择。
+- `PlayerAppearance` 保有 2 性别 × 6 职业共 12 套资产，但 docs/15 起玩家默认固定男主 `player_male_swordsman`（`PlayerAppearance.Default`），菜单不再提供外观选择。
+- `WeaponStyle`（sword / gauntlets / dart）是三武器流派的唯一运行时模型：不可变配置表 + 稳定 ID、非法回退 sword、近战档案与 `ActiveSkillId`。`PlayerCombat` 与 `MartialArtsSystem` 全部从它取值；`GameManager.SetWeaponStyle` 非法 ID 抛错，存档迁移侧先 `ParseOrDefault` 归一化。
+- `QuestStageGate` 把场景对象激活绑定到顺序任务的当前步骤（复审 P0）：接任务/未到步骤前整体失活，防止敌人被提前击杀、任务物品被提前拾走造成软锁。受其管控的组件必须把协程启动放在 `OnEnable`（失活会杀死协程，重激活要能重启）——`ItemPickup` 即按此约定实现。
+- `GameManager.TransitionCarry` 在 `AreaTrigger` 场景切换前抓取场景本地玩家的等级/属性/HP/MP/武学，落地后回放；烟柳镇 ↔ Demo_Inn 往返不丢成长。
 - 正式环境由 `RegionSceneBuilder` 生成 7 层 Tilemap；必须用批量 `SetTiles` 后保存，逐格 `SetTile` 在 Unity 6 批处理路径曾出现未序列化问题。
 
 ### 2.3 典型存档恢复顺序
@@ -138,12 +148,13 @@ LoadGame 读取并校验 JSON
   → 恢复武学和装备槽
   → v3 按稳定 ID 恢复活跃任务、目标进度、接取时间和已完成任务
     （v2 只恢复已完成任务，并清空活跃任务）
-  → v4 恢复正式主角外观；v1–v3 缺失外观时迁移为 player_female_swordsman
+  → v4 起主角外观固定男主；v1–v3 旧档迁移为 player_male_swordsman
+  → v5 恢复武器流派 weaponStyleId；缺失或非法回退 sword
   → 状态切到 Exploration
   → SceneEntryMode.Active
 ```
 
-`SaveData.saveVersion == 4` 是当前格式；基础属性仍按 v2 语义恢复，任务按 v3 语义恢复，外观按 v4 语义恢复。不要降低版本号或改变既有字段含义。
+`SaveData.saveVersion == 5` 是当前格式；基础属性仍按 v2 语义恢复，任务按 v3 语义恢复，外观按 v4 语义归一为男主，流派按 v5 语义恢复。不要降低版本号或改变既有字段含义。任务目标恢复按 type+targetId 顺序消费，同一任务允许重复目标对（MVP_01 首尾两步都找掌柜）。
 
 ## 3. 关键约定
 
@@ -193,11 +204,14 @@ Ground → Environment → Character → Foreground → UI
 
 ### 3.6 任务运行时
 
-- `QuestDatabase` 提供 `M01_01`–`M01_05` 五个稳定代码模板；`Resources/Quests` 下同 ID 的 `QuestData` 可覆盖代码模板。
+- `QuestDatabase` 提供 `M01_01`–`M01_05` 与 `MVP_01` 稳定代码模板；`Resources/Quests` 下同 ID 的 `QuestData` 可覆盖代码模板。
 - `ActiveQuest` 深复制模板目标，模板只提供显示和奖励数据，运行时进度不得写回模板。
 - `QuestManager` 是接取、目标推进、提交、奖励与 v3 序列化的唯一权威；损坏进度会钳制并警告，未知模板/目标会跳过并警告。
+- `QuestData.sequentialObjectives` 为真时目标严格按序推进（只有第一个未完成目标接收进度）；M01 系列保持自由顺序，MVP_01 为顺序任务。
+- `MVP_01` 河岸失物五步固定顺序：找掌柜 → 到河岸 → 杀 2 水匪 → 拾荷包 → 回掌柜复命；接取与提交都在客栈室内 `NPC_掌柜老赵` 的对话后结算。
+- 河岸水匪与荷包由 `QuestStageGate` 门控（复审 P0）：未接任务或未到对应步骤时整体失活，玩家无法提前消耗；`QuestStageGate` 订阅 QuestManager 的接取/目标/完成事件刷新。
 - `QuestGiver` 与 `NPCBase` 同物体配置，但不实现 `IInteractable`；任务行为只在它启动的对话结束后结算。
-- `QuestTarget`、`AreaTrigger`、`ItemPickup` 和 `MartialArtsSystem` 只在真实成功行为后上报进度；重复死亡、区域、拾取或学习不会重复计数。
+- `QuestTarget`、`AreaTrigger`、`ItemPickup` 和 `MartialArtsSystem` 只在真实成功行为后上报进度；重复死亡、区域、拾取或学习不会重复计数。`AreaTrigger` 的任务上报先于一次性地名显示判定，先入区后接任务也能补报。
 
 ### 3.7 正式美术流水线
 
@@ -250,8 +264,9 @@ python3 -m tools.art_pipeline.validate --all
 
 ### P1 — 数据与内容
 
-- v4 已保存主角外观与活跃任务，但尚未保存敌人状态、唯一拾取物、一次性事件、区域标志和其他世界状态。
-- `M01_01`–`M01_05` 运行时模板已完成，但烟柳镇现有场景尚未配置对应 `QuestGiver`、区域目标、敌人目标和任务物品；这是阶段二内容接入任务。
+- v5 已保存主角外观、武器流派与活跃任务，但尚未保存敌人状态、唯一拾取物、一次性事件、区域标志和其他世界状态（读档后 Demo 敌人与门控对象按场景初始状态重置，任务进度仍按存档恢复）。
+- `MVP_01` 已在 Demo/客栈全链路接线；`M01_01`–`M01_05` 运行时模板已完成但烟柳镇场景尚未为其配置 `QuestGiver` 与目标，属阶段二内容。
+- docs/15 冻结项仍然有效：其余 11 套主角外观、85 个非 MVP 角色、10 户外、12 个非 inn 室内与批量美术流水线保持原样；本分支（v2）不含任何美术资产改动。
 - 正式 97 角色和 23 环境已完成确定性第一版，但仍需要人工精修表情、攻击动作节奏、地标细节和区域独特构图。
 - 角色 Controller/动画资源已生成；当前基础状态切换仅完整覆盖 down 向 idle/walk，四方向 BlendTree 和所有动作的运行时过渡仍可继续深化。
 - 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
@@ -365,16 +380,39 @@ yuanHaiLu/
 50. 新增 `VisualRegressionCapture`：固定 480×270 截图，在 finally 中恢复活动场景、Canvas、相机目标、RenderTexture 和抗锯齿；临时审查图输出到 `/private/tmp/yuanhailu-art-review/`，尚非用户人工批准的仓库基线。
 51. 实际验证：Python 45/45、EditMode 101/101、PlayMode 7/7；`build --all` 为 `built=0 skipped=121`，全资产校验通过。
 
+### 第八批：单主角 MVP 垂直切片（2026-08-14，docs/15）
+
+52. 新增 `WeaponStyle`（sword/gauntlets/dart）不可变配置表：稳定 ID、非法回退 sword、近战档案与各自主动技（剑气斩/冲拳/回风三镖）；`MartialSkill` 支持多投射物扇形与位移伤害；`MartialSkillDatabase.Add` 收 `SkillSpec` 配置对象。
+53. 主角固定男主 `player_male_swordsman`（其余 11 套外观资产保留不动）；主菜单只留新游戏/继续游戏 + 三流派按钮，预览恒为同一男主。
+54. 存档升级 v5：新增 `weaponStyleId`；v1–v4 迁移为男主+sword，非法流派回退 sword。
+55. `PlayerCombat` 全部战斗参数（射程/判定盒/连击数/攻击时长/伤害系数/斩击色）由 `WeaponStyleId` 驱动，支持运行时 `OnWeaponStyleChanged` 热切换。
+56. 新增 `MVP_01` 河岸失物顺序任务与 `sequentialObjectives` 顺序门；Demo 河岸子区（ReachArea + 2 名水匪 + 荷包拾取）与客栈门接线。
+57. 新增 `InnSceneGenerator` 与 `Demo_Inn.unity`：客栈室内掌柜老赵（接取/提交）、回镇出口与完整 UI；`GameManager.TransitionCarry` 保证往返不丢等级/属性/武学。
+58. 修复三处既有缺陷：冷却字典迭代中写回崩溃、`EffectsManager` 静态快捷方法 `?.` 遇 fake-null 崩溃、任务重复目标对恢复相互覆盖。
+59. `AreaTrigger` 任务上报先于一次性地名判定；Build Settings 扩为 26 场景（含 Demo_Inn）。
+
+### 第九批：复审修复与干净分支重建（2026-08-17）
+
+60. 复审 P0：新增 `QuestStageGate`，河岸水匪/荷包只在 MVP_01 对应顺序步骤激活，杜绝"接任务前清空敌人/拾走荷包导致任务永久软锁"；配套 PlayMode 回归（QuestStageGatePlayModeTests：乱序不可能消耗、按序可完整完成）。
+61. 复审 P1：出生点由地图外 (0,-5) 改为客栈门外可达格 (7.5,7.6)；客栈回镇落点与门触发盒不再重叠（原 (7.5,8.6) 落地即重叠、会被立刻传回客栈）；新增出生点/客栈门/河岸/荷包 BFS 可达性接线测试与 MainFlow 出生点运行时断言。
+62. 复审 P1：`MartialArtsSystem` 远程技能 cast_burst 特效补显式 `== null`；两个玩法生成器的管理器/摄像机/玩家/UI 装配统一提取到 `PlaySceneAssembler`。
+63. 复审发现并修复门控与协程生命周期的冲突：`ItemPickup` 弹出/延迟协程改在 `OnEnable` 启动，失活→激活循环后仍可拾取。
+64. 复审 P2：`WeaponStyle` 九组 switch 收敛为不可变配置表；`MartialSkillDatabase` 改 `SkillSpec` 配置对象。
+65. 冻结范围整改：从 main 重建 `codex/single-hero-mvp-v2`，只包含 docs/15 + MVP 代码/测试/场景；不改任何美术资产、正式场景基线与 `VisualRegressionCapture`（后者在 main 上不含审查角色功能）；唯一 ProjectSettings 变更为 EditorBuildSettings 加入 Demo_Inn（文档化例外）。
+66. 最终验证：EditMode 125/125、PlayMode 11/11、Python 45/45（main 基线）。
+
 ## 8. 当前人工 QA 清单
 
 自动测试不能替代 Play 验证。涉及本批改动时至少检查：
 
-- 主菜单新游戏能进入 Demo。
+- 主菜单三流派按钮可选且预览恒为同一男主；新游戏能进入 Demo，玩家出生在客栈门外 (7.5, 7.6) 而非地图外。
+- 三种流派在 Demo 中战斗差异可感（剑中距均衡、拳短距快连、镖远程弱近战；主动技 1 键分别为剑气/冲拳/扇形三镖）。
+- 接任务前先去河岸：看不到水匪与荷包（阶段门关闭）；接取 MVP_01 并到达河岸后水匪才出现。
+- 接取 MVP_01 → 客栈门进入 Demo_Inn → 河岸杀 2 水匪 → 拾荷包 → 回掌柜复命提交；顺序外行为不推进。
+- 烟柳镇 ↔ 客栈往返不卡门（落地不会立即被传回），等级/HP/MP/武学不重置。
 - Demo 世界、HUD 和像素视口正确显示，场景切换无残影。
-- K/E NPC 对话、手动事件和传送点可达。
 - WASD、J、Shift 和 ESC 可用；暂停时应显示默认暂停面板。
-- 自动事件不显示交互提示，一次性事件不会再次成为目标。
-- v4 存档往返精确恢复外观、位置、HP/MP、背包、装备、金钱、武学、活跃任务进度和已完成任务。
+- v5 存档往返精确恢复外观、流派、位置、HP/MP、背包、装备、金钱、武学、活跃任务进度和已完成任务；v1–v4 旧档载入为男主+长剑。
 - 读档不发初始物资、不覆盖位置；卸装后属性正确。
 - 后续场景加载不会重复应用旧存档。
 

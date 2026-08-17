@@ -20,7 +20,8 @@ namespace YuanHaiLu.GameSystem
         private const int BASE_STATS_SAVE_VERSION = 2;
         private const int QUEST_SAVE_VERSION = 3;
         private const int APPEARANCE_SAVE_VERSION = 4;
-        private const int CURRENT_SAVE_VERSION = 4;
+        private const int WEAPON_STYLE_SAVE_VERSION = 5;
+        private const int CURRENT_SAVE_VERSION = 5;
 
         private SaveData _pendingLoadData;
 
@@ -53,6 +54,8 @@ namespace YuanHaiLu.GameSystem
             public string playerName;
             // v4 起保存 12 套正式主角外观的稳定资源 ID。
             public string playerArtId;
+            // v5 起保存单主角 MVP 的武器流派稳定 ID（sword/gauntlets/dart）。
+            public string weaponStyleId;
             public int level;
             public int exp;
             public int currentHp;
@@ -123,6 +126,7 @@ namespace YuanHaiLu.GameSystem
                 // 基本信息
                 playerName = GameManager.Instance.playerName,
                 playerArtId = GameManager.Instance.PlayerArtId,
+                weaponStyleId = GameManager.Instance.WeaponStyleId,
                 level = stats.level,
                 exp = stats.exp,
                 currentHp = stats.currentHp,
@@ -251,8 +255,10 @@ namespace YuanHaiLu.GameSystem
             var player = GameObject.FindGameObjectWithTag("Player");
             CharacterStats stats = null;
             string playerArtId = ResolvePlayerArtId(saveData);
+            string weaponStyleId = ResolveWeaponStyleId(saveData);
 
             gameManager?.SetPlayerAppearance(playerArtId);
+            gameManager?.SetWeaponStyle(weaponStyleId);
 
             if (player == null)
             {
@@ -262,6 +268,7 @@ namespace YuanHaiLu.GameSystem
             {
                 player.transform.position = new Vector2(saveData.positionX, saveData.positionY);
                 CharacterVisual.ApplyTo(player, playerArtId);
+                player.GetComponent<PlayerCombat>()?.ApplyWeaponStyle(weaponStyleId);
 
                 stats = player.GetComponent<CharacterStats>();
                 if (stats == null)
@@ -382,13 +389,24 @@ namespace YuanHaiLu.GameSystem
 
         internal static string ResolvePlayerArtId(SaveData saveData)
         {
-            if (saveData != null &&
-                saveData.saveVersion >= APPEARANCE_SAVE_VERSION &&
-                PlayerAppearance.TryParse(saveData.playerArtId, out var appearance))
-            {
-                return appearance.ArtId;
-            }
+            // docs/15：单主角 MVP 固定男性剑客身体。
+            // v1–v4 存档（无论当年选了什么外观）统一迁移为男主，
+            // v5+ 存档也只会写入男主 ID；字段保留是为格式向前兼容。
             return PlayerAppearance.Default.ArtId;
+        }
+
+        /// <summary>
+        /// v5 起恢复武器流派；v1–v4 迁移为长剑，非法/缺失流派回退长剑。
+        /// </summary>
+        internal static string ResolveWeaponStyleId(SaveData saveData)
+        {
+            if (saveData != null &&
+                saveData.saveVersion >= WEAPON_STYLE_SAVE_VERSION &&
+                WeaponStyle.TryParse(saveData.weaponStyleId, out var style))
+            {
+                return style.StyleId;
+            }
+            return WeaponStyle.DefaultStyleId;
         }
 
         /// <summary>

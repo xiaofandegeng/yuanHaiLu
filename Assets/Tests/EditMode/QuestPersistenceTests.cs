@@ -229,7 +229,7 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void SaveGameWritesVersionFourQuestAndAppearancePayload()
+        public void SaveGameWritesVersionFiveQuestAppearanceAndWeaponStylePayload()
         {
             TestSceneFactory.AddComponentWithAwake<GameManager>(
                 TestSceneFactory.Create("GameManager"));
@@ -246,8 +246,9 @@ namespace YuanHaiLu.Tests.EditMode
 
             string json = PlayerPrefs.GetString($"YuanHaiLu_SaveSlot_{TestSaveSlot}");
             SaveManager.SaveData restored = JsonUtility.FromJson<SaveManager.SaveData>(json);
-            Assert.That(restored.saveVersion, Is.EqualTo(4));
+            Assert.That(restored.saveVersion, Is.EqualTo(5));
             Assert.That(restored.playerArtId, Is.EqualTo(PlayerAppearance.Default.ArtId));
+            Assert.That(restored.weaponStyleId, Is.EqualTo(GameManager.Instance.WeaponStyleId));
             Assert.That(restored.quests, Is.Not.Null);
             Assert.That(restored.quests.activeQuests, Has.Length.EqualTo(1));
             Assert.That(restored.quests.activeQuests[0].questId, Is.EqualTo("M01_01"));

@@ -119,13 +119,11 @@ namespace YuanHaiLu.Editor
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            // 创建按钮
+            // 创建按钮（单主角 MVP：只保留新游戏/继续游戏，docs/15）
             CreateMenuButton(btnContainer, "新游戏", Color.white);
             CreateMenuButton(btnContainer, "继续游戏", new Color(0.8f, 0.8f, 0.8f));
-            CreateMenuButton(btnContainer, "设置", new Color(0.8f, 0.8f, 0.8f));
-            CreateMenuButton(btnContainer, "退出", new Color(0.7f, 0.7f, 0.7f));
 
-            CreateAppearanceSelector(canvasObj);
+            CreateWeaponStyleSelector(canvasObj);
 
             // 底部版本信息
             var versionObj = new GameObject("Version");
@@ -174,15 +172,19 @@ namespace YuanHaiLu.Editor
             {
                 EditorUtility.DisplayDialog("主菜单生成完成",
                     "主菜单场景已创建！\n\n" +
-                    "可选择 2 种性别 × 6 种职业，然后开始游戏。\n" +
+                    "可选择长剑 / 拳套 / 飞镖三种武器流派（同一男主），然后开始游戏。\n" +
                     "全部正式区域与室内场景会由 Build Settings 工具自动加入。",
                     "了解");
             }
         }
 
-        private static void CreateAppearanceSelector(GameObject canvasObject)
+        /// <summary>
+        /// 武器流派选择面板（docs/15）：三个流派按钮 + 同一位男性主角预览。
+        /// 不再生成 2×6 外观网格。
+        /// </summary>
+        private static void CreateWeaponStyleSelector(GameObject canvasObject)
         {
-            var panel = new GameObject("CharacterSelector");
+            var panel = new GameObject("WeaponStyleSelector");
             panel.transform.SetParent(canvasObject.transform, false);
             var panelRect = panel.AddComponent<RectTransform>();
             panelRect.anchorMin = new Vector2(0.05f, 0.13f);
@@ -192,6 +194,7 @@ namespace YuanHaiLu.Editor
             var panelImage = panel.AddComponent<Image>();
             panelImage.color = new Color(0.08f, 0.07f, 0.12f, 0.94f);
 
+            // 固定男主预览：三种流派共用同一副身体。
             var previewObject = new GameObject("CharacterPreview");
             previewObject.transform.SetParent(panel.transform, false);
             var previewRect = previewObject.AddComponent<RectTransform>();
@@ -209,7 +212,8 @@ namespace YuanHaiLu.Editor
                 throw new System.InvalidOperationException("Default formal player idle sprite is missing.");
             preview.sprite = prefabRenderer.sprite;
             preview.preserveAspect = true;
-            var labelObject = new GameObject("CharacterSelectionLabel");
+
+            var labelObject = new GameObject("StyleSelectionLabel");
             labelObject.transform.SetParent(panel.transform, false);
             var labelRect = labelObject.AddComponent<RectTransform>();
             labelRect.anchorMin = new Vector2(0.32f, 0.70f);
@@ -221,9 +225,9 @@ namespace YuanHaiLu.Editor
             label.fontSize = 14;
             label.alignment = TextAnchor.MiddleLeft;
             label.color = new Color(1f, 0.82f, 0.35f);
-            label.text = "主角：" + PlayerAppearance.Default.DisplayName;
+            label.text = "武器：" + WeaponStyle.Default.DisplayName;
 
-            var hintObject = new GameObject("CharacterSelectionHint");
+            var hintObject = new GameObject("StyleSelectionHint");
             hintObject.transform.SetParent(panel.transform, false);
             var hintRect = hintObject.AddComponent<RectTransform>();
             hintRect.anchorMin = new Vector2(0.32f, 0.50f);
@@ -235,36 +239,41 @@ namespace YuanHaiLu.Editor
             hint.fontSize = 9;
             hint.alignment = TextAnchor.MiddleLeft;
             hint.color = new Color(0.68f, 0.68f, 0.72f);
-            hint.text = "选择性别与入门流派";
+            hint.text = WeaponStyle.Default.Description;
 
-            var gridObject = new GameObject("CharacterChoiceGrid");
-            gridObject.transform.SetParent(panel.transform, false);
-            var gridRect = gridObject.AddComponent<RectTransform>();
-            gridRect.anchorMin = new Vector2(0.04f, 0.04f);
-            gridRect.anchorMax = new Vector2(0.96f, 0.34f);
-            gridRect.offsetMin = Vector2.zero;
-            gridRect.offsetMax = Vector2.zero;
-            var grid = gridObject.AddComponent<GridLayoutGroup>();
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 6;
-            grid.cellSize = new Vector2(39f, 17f);
-            grid.spacing = new Vector2(3f, 3f);
-            grid.childAlignment = TextAnchor.MiddleCenter;
+            // 三个流派按钮竖排。
+            var listObject = new GameObject("WeaponStyleList");
+            listObject.transform.SetParent(panel.transform, false);
+            var listRect = listObject.AddComponent<RectTransform>();
+            listRect.anchorMin = new Vector2(0.30f, 0.08f);
+            listRect.anchorMax = new Vector2(0.96f, 0.46f);
+            listRect.offsetMin = Vector2.zero;
+            listRect.offsetMax = Vector2.zero;
+            var list = listObject.AddComponent<VerticalLayoutGroup>();
+            list.spacing = 4;
+            list.childAlignment = TextAnchor.MiddleCenter;
+            list.childControlWidth = true;
+            list.childControlHeight = true;
+            list.childForceExpandWidth = true;
+            list.childForceExpandHeight = false;
 
-            foreach (var appearance in PlayerAppearance.All)
-                CreateAppearanceButton(gridObject, appearance);
+            foreach (var style in WeaponStyle.All)
+                CreateWeaponStyleButton(listObject, style);
         }
 
-        private static void CreateAppearanceButton(GameObject parent, PlayerAppearance appearance)
+        private static void CreateWeaponStyleButton(GameObject parent, WeaponStyle style)
         {
-            var buttonObject = new GameObject("Btn_角色_" + appearance.ArtId);
+            var buttonObject = new GameObject("Btn_流派_" + style.StyleId);
             buttonObject.transform.SetParent(parent.transform, false);
             var image = buttonObject.AddComponent<Image>();
-            image.color = appearance == PlayerAppearance.Default
+            image.color = style == WeaponStyle.Default
                 ? new Color(0.72f, 0.48f, 0.16f)
                 : new Color(0.15f, 0.12f, 0.2f);
             var button = buttonObject.AddComponent<Button>();
             button.targetGraphic = image;
+
+            var layoutElement = buttonObject.AddComponent<LayoutElement>();
+            layoutElement.preferredHeight = 20;
 
             var textObject = new GameObject("Text");
             textObject.transform.SetParent(buttonObject.transform, false);
@@ -275,10 +284,10 @@ namespace YuanHaiLu.Editor
             textRect.offsetMax = Vector2.zero;
             var text = textObject.AddComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = 8;
+            text.fontSize = 10;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
-            text.text = appearance.DisplayName.Replace(" · ", "");
+            text.text = style.DisplayName;
         }
 
         private static void CreateMenuButton(GameObject parent, string text, Color textColor)

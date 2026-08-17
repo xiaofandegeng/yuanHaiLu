@@ -50,22 +50,32 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void MainMenuContainsTwelveFormalAppearanceChoicesAndPreview()
+        public void MainMenuOffersThreeWeaponStylesWithFixedMalePreview()
         {
             EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity", OpenSceneMode.Single);
 
+            var styleButtons = Object.FindObjectsByType<Button>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .Where(button => button.name.StartsWith("Btn_流派_"))
+                .ToArray();
             var appearanceButtons = Object.FindObjectsByType<Button>(
                     FindObjectsInactive.Include,
                     FindObjectsSortMode.None)
                 .Where(button => button.name.StartsWith("Btn_角色_"))
                 .ToArray();
 
-            Assert.That(appearanceButtons, Has.Length.EqualTo(12));
+            Assert.That(styleButtons.Select(button => button.name).OrderBy(name => name),
+                Is.EqualTo(new[] { "Btn_流派_dart", "Btn_流派_gauntlets", "Btn_流派_sword" }));
+            Assert.That(appearanceButtons, Is.Empty);
             var preview = GameObject.Find("CharacterPreview")?.GetComponent<Image>();
             Assert.That(preview, Is.Not.Null);
             Assert.That(preview.sprite, Is.Not.Null);
             Assert.That(AssetDatabase.Contains(preview.sprite), Is.True);
-            Assert.That(GameObject.Find("CharacterSelectionLabel")?.GetComponent<Text>(), Is.Not.Null);
+            Assert.That(GameObject.Find("StyleSelectionLabel")?.GetComponent<Text>(), Is.Not.Null);
+            Assert.That(GameObject.Find("StyleSelectionHint")?.GetComponent<Text>(), Is.Not.Null);
+            Assert.That(GameObject.Find("Btn_设置"), Is.Null);
+            Assert.That(GameObject.Find("Btn_退出"), Is.Null);
         }
 
         [Test]
@@ -91,14 +101,15 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void BuildSettingsContainsMenuDemoAndAllTwentyThreeFormalScenes()
+        public void BuildSettingsContainsMenuDemoInnAndAllTwentyThreeFormalScenes()
         {
             SetupBuildSettings.Setup();
             var scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).ToArray();
 
-            Assert.That(scenes, Has.Length.EqualTo(25));
+            Assert.That(scenes, Has.Length.EqualTo(26));
             Assert.That(scenes[0].path, Is.EqualTo("Assets/Scenes/MainMenu.unity"));
             Assert.That(scenes[1].path, Is.EqualTo("Assets/Scenes/Demo_YanLiuTown.unity"));
+            Assert.That(scenes[2].path, Is.EqualTo("Assets/Scenes/Demo_Inn.unity"));
             Assert.That(scenes.Count(scene => scene.path.StartsWith("Assets/Scenes/Regions/")),
                 Is.EqualTo(10));
             Assert.That(scenes.Count(scene => scene.path.StartsWith("Assets/Scenes/Interiors/")),

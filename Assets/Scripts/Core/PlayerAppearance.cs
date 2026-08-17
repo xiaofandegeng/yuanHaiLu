@@ -24,7 +24,8 @@ namespace YuanHaiLu.Core
     /// </summary>
     public readonly struct PlayerAppearance : IEquatable<PlayerAppearance>
     {
-        public const string DefaultArtId = "player_female_swordsman";
+        // docs/15：单主角 MVP 固定男性剑客身体；12 套外观资源仍在库中但不再对外选择。
+        public const string DefaultArtId = "player_male_swordsman";
 
         private static readonly PlayerGender[] Genders =
             (PlayerGender[])Enum.GetValues(typeof(PlayerGender));
@@ -37,7 +38,7 @@ namespace YuanHaiLu.Core
         public string ArtId => $"player_{GenderToken(Gender)}_{ProfessionToken(Profession)}";
 
         public static PlayerAppearance Default =>
-            new PlayerAppearance(PlayerGender.Female, PlayerProfession.Swordsman);
+            new PlayerAppearance(PlayerGender.Male, PlayerProfession.Swordsman);
         public static IReadOnlyList<PlayerAppearance> All => AllValues;
 
         public PlayerAppearance(PlayerGender gender, PlayerProfession profession)
