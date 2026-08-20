@@ -99,8 +99,10 @@ namespace YuanHaiLu.Tests.EditMode
 
             // 主角仍是固定男主。
             var player = GameObject.FindGameObjectWithTag("Player");
-            Assert.That(player.GetComponent<CharacterVisual>()?.ArtId,
-                Is.EqualTo("player_male_swordsman"));
+            Assert.That(player, Is.Not.Null);
+            var playerVisual = player.GetComponent<CharacterVisual>();
+            Assert.That(playerVisual, Is.Not.Null);
+            Assert.That(playerVisual.ArtId, Is.EqualTo("player_male_swordsman"));
         }
 
         [Test]
@@ -108,14 +110,15 @@ namespace YuanHaiLu.Tests.EditMode
         {
             EditorSceneManager.OpenScene("Assets/Scenes/Demo_Inn.unity", OpenSceneMode.Single);
 
-            Assert.That(
-                Object.FindAnyObjectByType<RegionSceneDefinition>()?.SceneId,
-                Is.EqualTo("inn"));
+            var definition = Object.FindAnyObjectByType<RegionSceneDefinition>();
+            Assert.That(definition, Is.Not.Null);
+            Assert.That(definition.SceneId, Is.EqualTo("inn"));
 
             var player = GameObject.FindGameObjectWithTag("Player");
             Assert.That(player, Is.Not.Null);
-            Assert.That(player.GetComponent<CharacterVisual>()?.ArtId,
-                Is.EqualTo("player_male_swordsman"));
+            var playerVisual = player.GetComponent<CharacterVisual>();
+            Assert.That(playerVisual, Is.Not.Null);
+            Assert.That(playerVisual.ArtId, Is.EqualTo("player_male_swordsman"));
             Assert.That(player.GetComponent<Character.PlayerCombat>(), Is.Not.Null);
             Assert.That(player.GetComponent<Character.MartialArtsSystem>(), Is.Not.Null);
 

@@ -35,16 +35,19 @@ namespace YuanHaiLu.Tests.PlayMode
             yield return null;
 
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Demo_YanLiuTown"));
-            Assert.That(Object.FindAnyObjectByType<RegionSceneDefinition>()?.SceneId,
-                Is.EqualTo("yanliu"));
+            var definition = Object.FindAnyObjectByType<RegionSceneDefinition>();
+            Assert.That(definition, Is.Not.Null);
+            Assert.That(definition.SceneId, Is.EqualTo("yanliu"));
             Assert.That(GameManager.Instance.PlayerArtId, Is.EqualTo("player_male_swordsman"));
             Assert.That(GameManager.Instance.WeaponStyleId, Is.EqualTo("gauntlets"));
             var player = GameObject.FindGameObjectWithTag("Player");
             Assert.That(player, Is.Not.Null);
-            Assert.That(player.GetComponent<CharacterVisual>()?.ArtId,
-                Is.EqualTo("player_male_swordsman"));
-            Assert.That(player.GetComponent<Character.PlayerCombat>()?.WeaponStyleId,
-                Is.EqualTo("gauntlets"));
+            var playerVisual = player.GetComponent<CharacterVisual>();
+            Assert.That(playerVisual, Is.Not.Null);
+            Assert.That(playerVisual.ArtId, Is.EqualTo("player_male_swordsman"));
+            var playerCombat = player.GetComponent<Character.PlayerCombat>();
+            Assert.That(playerCombat, Is.Not.Null);
+            Assert.That(playerCombat.WeaponStyleId, Is.EqualTo("gauntlets"));
 
             // 复审 P1：开场引导（约 1 秒延迟）后，新游戏玩家必须被放到
             // 客栈门外的出生点，而不是旧默认 (0,-5) 的地图外位置。

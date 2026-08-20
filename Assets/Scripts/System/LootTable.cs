@@ -67,12 +67,13 @@ namespace YuanHaiLu.GameSystem
             }
 
             // === 金币 ===
+            // 金币即时入账；地面铜钱只是短命纯视觉反馈，无碰撞、无拾取组件（复审四轮 Spec-P2）。
             int gold = Random.Range(minGold, maxGold + 1);
             if (gold > 0)
             {
-                SpawnLootDrop(transform.position, null, 0, gold);
                 var inventory = InventoryManager.Instance;
                 if (inventory != null) inventory.AddGold(gold);
+                SpawnGoldFeedback(transform.position);
             }
 
             // === 物品掉落 ===
@@ -86,23 +87,39 @@ namespace YuanHaiLu.GameSystem
                 // 在附近随机位置生成掉落物
                 Vector2 dropPos = (Vector2)transform.position +
                     Random.insideUnitCircle * dropSpread;
-                SpawnLootDrop(dropPos, entry.itemId, amount, 0);
+                SpawnItemDrop(dropPos, entry.itemId, amount);
             }
 
             string enemyName = _stats != null ? _stats.characterName : "敌人";
             Debug.Log($"[掉落] {enemyName} 击杀奖励: {gold}文, {expReward}经验");
         }
 
-        private void SpawnLootDrop(Vector2 position, string itemId, int amount, int gold)
+        internal void SpawnGoldFeedback(Vector2 position)
         {
-            // 掉落必须使用持久精灵（Resources/Art/MVP，复审 P1）：
-            // 金币用 loot_gold，物品用 loot_item 按物品类型染色；
-            // 禁止运行时 Texture2D/Sprite.Create（docs/15 冻结条款）。
-            var sprite = Art.MvpArtCatalog.Load(gold > 0 ? "loot_gold" : "loot_item");
+            // 金币已在 OnEnemyDeath 直接入账，这里只弹出一枚短命铜钱作反馈；
+            // 无碰撞体、无 ItemPickup，不留拾取不了的假掉落（复审四轮 Spec-P2）。
+            var sprite = Art.MvpArtCatalog.Load("loot_gold");
+            if (sprite == null) return;
+
+            var coin = new GameObject("Loot_Gold_Feedback");
+            coin.transform.position = position;
+
+            var sr = coin.AddComponent<SpriteRenderer>();
+            sr.sortingLayerName = "Foreground";
+            sr.sortingOrder = 45;
+            sr.sprite = sprite;
+            coin.AddComponent<GoldFeedbackSprite>();
+        }
+
+        internal void SpawnItemDrop(Vector2 position, string itemId, int amount)
+        {
+            // 物品掉落必须使用持久精灵（Resources/Art/MVP，复审三轮 P1）：
+            // loot_item 按物品类型染色；禁止运行时 Texture2D/Sprite.Create。
+            var sprite = Art.MvpArtCatalog.Load("loot_item");
             if (sprite == null) return;
 
             // 创建掉落物
-            var dropObj = new GameObject(itemId != null ? $"Loot_{itemId}" : "Loot_Gold");
+            var dropObj = new GameObject($"Loot_{itemId}");
             dropObj.transform.position = position;
 
             // 精灵渲染器
@@ -110,24 +127,25 @@ namespace YuanHaiLu.GameSystem
             sr.sortingLayerName = "Foreground";
             sr.sortingOrder = 45;
             sr.sprite = sprite;
-            sr.color = gold > 0 ? Color.white : GetItemTint(itemId);
+            sr.color = GetItemTint(itemId);
 
             // 碰撞体
             var col = dropObj.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
             col.size = new Vector2(0.8f, 0.8f);
 
-            // 掉落物组件：必须携带物品 ID 与数量，否则永远无法拾取（复审 P1）。
+            // 掉落物组件：必须携带物品 ID 与数量，否则永远无法拾取（复审三轮 P1）。
             var pickup = dropObj.AddComponent<ItemPickup>();
-            pickup.itemId = itemId != null ? itemId : "";
+            pickup.itemId = itemId;
             pickup.amount = Mathf.Max(1, amount);
 
             // 弹出动画
             dropObj.AddComponent<Rigidbody2D>().gravityScale = 0f;
-            StartCoroutine(PopAnimation(dropObj, position));
-
-            // 自动消失
-            Destroy(dropObj, dropDuration);
+            if (Application.isPlaying)
+            {
+                StartCoroutine(PopAnimation(dropObj, position));
+                Destroy(dropObj, dropDuration);
+            }
         }
 
         /// <summary>物品掉落按类型染色的色板（只改颜色，不再运行时生成贴图）。</summary>
@@ -164,6 +182,47 @@ namespace YuanHaiLu.GameSystem
             }
 
             obj.transform.position = targetPos;
+        }
+    }
+
+    /// <summary>击杀金币入账后弹出的地面铜钱：纯视觉反馈，自带弹出+淡出并自毁；
+    /// 无碰撞、无拾取组件，也不依赖敌人对象存活（复审四轮 Spec-P2）。</summary>
+    public class GoldFeedbackSprite : MonoBehaviour
+    {
+        private const float PopSeconds = 0.3f;
+        private const float FadeSeconds = 0.9f;
+
+        private Vector2 _origin;
+        private SpriteRenderer _renderer;
+        private float _age;
+
+        private void Awake()
+        {
+            _origin = transform.position;
+            _renderer = GetComponent<SpriteRenderer>();
+        }
+
+        private void Update()
+        {
+            _age += Time.deltaTime;
+            if (_age < PopSeconds)
+            {
+                float progress = _age / PopSeconds;
+                transform.position = _origin + Vector2.up * (Mathf.Sin(progress * Mathf.PI) * 1.5f);
+                return;
+            }
+
+            float fade = (_age - PopSeconds) / FadeSeconds;
+            if (fade >= 1f || _renderer == null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            var color = _renderer.color;
+            color.a = 1f - fade;
+            _renderer.color = color;
+            transform.position = _origin + Vector2.up * (fade * 0.5f);
         }
     }
 

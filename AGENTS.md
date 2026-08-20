@@ -13,7 +13,7 @@
 | 代码规模 | 76 个运行时/编辑器 C# 文件；另有 26 个测试/测试工具文件 |
 | 状态 | 单主角 MVP 垂直切片（docs/15）：固定男主 + 三武器流派 + 烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/single-hero-mvp-v2`（复审后重建的干净分支） |
-| 测试 | 128 EditMode + 12 PlayMode + 45 Python 全通过 |
+| 测试 | 129 EditMode + 12 PlayMode + 45 Python 全通过 |
 | 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md`、`docs/15-single-hero-mvp-design.md` |
 
 ## 1. 如何运行
@@ -244,7 +244,7 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。`-executeMethod` 场景重建则必须带 `-quit`，否则批处理编辑器会常驻。当前全量基线为 EditMode 128/128、PlayMode 12/12、Python 45/45；证据 XML 必须晚于其证明的提交时间。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。`-executeMethod` 场景重建则必须带 `-quit`，否则批处理编辑器会常驻。当前全量基线为 EditMode 129/129、PlayMode 12/12、Python 45/45；证据 XML 必须晚于其证明的提交时间。
 
 美术确定性验证：
 
@@ -266,7 +266,7 @@ python3 -m tools.art_pipeline.validate --all
 
 - v5 已保存主角外观、武器流派与活跃任务，但尚未保存敌人状态、唯一拾取物、一次性事件、区域标志和其他世界状态（读档后 Demo 敌人与门控对象按场景初始状态重置，任务进度仍按存档恢复）。
 - `MVP_01` 已在 Demo/客栈全链路接线；`M01_01`–`M01_05` 运行时模板已完成但烟柳镇场景尚未为其配置 `QuestGiver` 与目标，属阶段二内容。
-- docs/15 冻结项仍然有效：其余 11 套主角外观、85 个非 MVP 角色、10 户外、12 个非 inn 室内与批量美术流水线保持原样；本分支（v2）不含任何美术资产改动。
+- docs/15 冻结项仍然有效：其余 11 套主角外观、85 个非 MVP 角色、10 户外、12 个非 inn 室内与批量美术流水线保持原样。唯一美术豁免（docs/15 §风险已同步登记）：`Assets/Resources/Art/MVP/` 下 7 张 16×16 功能性小图 —— weapon_sword/gauntlets/dart、proj_qi、proj_dart、loot_gold、loot_item；它们是"武器小图随流派真实切换"与弹体/掉落反馈的运行时必需资源，经 `MvpArtCatalog` 持久加载，正式角色/环境美术零改动。
 - 正式 97 角色和 23 环境已完成确定性第一版，但仍需要人工精修表情、攻击动作节奏、地标细节和区域独特构图。
 - 角色 Controller/动画资源已生成；当前基础状态切换仅完整覆盖 down 向 idle/walk，四方向 BlendTree 和所有动作的运行时过渡仍可继续深化。
 - 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
@@ -283,7 +283,7 @@ python3 -m tools.art_pipeline.validate --all
 yuanHaiLu/
 ├── Assets/
 │   ├── Scripts/                 76 个运行时/编辑器 .cs
-│   ├── Tests/EditMode/          128 个测试用例
+│   ├── Tests/EditMode/          129 个测试用例
 │   ├── Tests/PlayMode/          12 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
 │   ├── Art/                     97 角色 + 23 环境输出和验收图
@@ -403,12 +403,16 @@ yuanHaiLu/
 
 ## 8. 当前人工 QA 清单
 
-自动测试不能替代 Play 验证。涉及本批改动时至少检查：
+自动测试不能替代 Play 验证。docs/15 验收标准第 6 条要求**三种流派各完成一次完整试玩**，当前状态：**待执行**（需可见 Unity 窗口人工操作；自动侧已由 EditMode/PlayMode 全覆盖）。每条流派（剑/拳套/暗器）各跑一遍下面的完整链路：
 
-- 主菜单三流派按钮可选且预览恒为同一男主；新游戏能进入 Demo，玩家出生在客栈门外 (7.5, 7.6) 而非地图外。
-- 三种流派在 Demo 中战斗差异可感（剑中距均衡、拳短距快连、镖远程弱近战；主动技 1 键分别为剑气/冲拳/扇形三镖）。
-- 接任务前先去河岸：看不到水匪与荷包（阶段门关闭）；接取 MVP_01 并到达河岸后水匪才出现。
-- 接取 MVP_01 → 客栈门进入 Demo_Inn → 河岸杀 2 水匪 → 拾荷包 → 回掌柜复命提交；顺序外行为不推进。
+1. 主菜单选中该流派 → 确认预览恒为同一男主、武器小图为该流派 → 新游戏。
+2. 出生在客栈门外 (7.5, 7.6)；先去河岸确认无水匪/荷包（阶段门关闭），进客栈向掌柜接取 MVP_01。
+3. 回镇 → 河岸杀 2 水匪（感受该流派攻击距离/连击节奏/主动技差异）→ 拾荷包 → 回掌柜提交。
+4. 击杀后金币即时入账，地面铜钱为短命视觉反馈（约 1.2 秒淡出），无卡脚碰撞；物品掉落可正常拾取。
+5. 保存 → 退出到主菜单 → 继续游戏，恢复该流派与全部进度。
+
+通用检查（任一流派跑一遍即可）：
+
 - 烟柳镇 ↔ 客栈往返不卡门（落地不会立即被传回），等级/HP/MP/武学不重置。
 - Demo 世界、HUD 和像素视口正确显示，场景切换无残影。
 - WASD、J、Shift 和 ESC 可用；暂停时应显示默认暂停面板。
@@ -416,7 +420,7 @@ yuanHaiLu/
 - 读档不发初始物资、不覆盖位置；卸装后属性正确。
 - 后续场景加载不会重复应用旧存档。
 
-2026-08-13 已通过真实 Unity 相机离屏渲染验收主菜单与正式烟柳镇；主菜单→选择男拳师→Demo 外观保持由端到端 PlayMode 覆盖。因最终 GUI 控制时 Mac 处于锁屏，本轮没有补做可见 Unity 窗口鼠标点击；解锁后仍建议按上表做 2 分钟人工操作复核。
+2026-08-13 已通过真实 Unity 相机离屏渲染验收主菜单与正式烟柳镇；主菜单→选择男拳师→Demo 外观保持由端到端 PlayMode 覆盖。三流派完整人工试玩（2026-08-20 复审 Spec-P1 提出）尚未执行，完成前不满足合并门禁。
 
 ## 9. 推送到 GitHub（尚未执行）
 

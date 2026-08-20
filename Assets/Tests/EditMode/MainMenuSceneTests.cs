@@ -68,12 +68,18 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(styleButtons.Select(button => button.name).OrderBy(name => name),
                 Is.EqualTo(new[] { "Btn_流派_dart", "Btn_流派_gauntlets", "Btn_流派_sword" }));
             Assert.That(appearanceButtons, Is.Empty);
-            var preview = GameObject.Find("CharacterPreview")?.GetComponent<Image>();
+            var previewObject = GameObject.Find("CharacterPreview");
+            Assert.That(previewObject, Is.Not.Null);
+            var preview = previewObject.GetComponent<Image>();
             Assert.That(preview, Is.Not.Null);
             Assert.That(preview.sprite, Is.Not.Null);
             Assert.That(AssetDatabase.Contains(preview.sprite), Is.True);
-            Assert.That(GameObject.Find("StyleSelectionLabel")?.GetComponent<Text>(), Is.Not.Null);
-            Assert.That(GameObject.Find("StyleSelectionHint")?.GetComponent<Text>(), Is.Not.Null);
+            var label = GameObject.Find("StyleSelectionLabel");
+            Assert.That(label, Is.Not.Null);
+            Assert.That(label.GetComponent<Text>(), Is.Not.Null);
+            var hint = GameObject.Find("StyleSelectionHint");
+            Assert.That(hint, Is.Not.Null);
+            Assert.That(hint.GetComponent<Text>(), Is.Not.Null);
             Assert.That(GameObject.Find("Btn_设置"), Is.Null);
             Assert.That(GameObject.Find("Btn_退出"), Is.Null);
         }
@@ -84,9 +90,11 @@ namespace YuanHaiLu.Tests.EditMode
             EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity", OpenSceneMode.Single);
 
             // 大图标（复审 P1-c）：随所选流派切换的持久精灵，禁止运行时生成。
-            var weaponIcon = GameObject.Find("WeaponIcon")?.GetComponent<Image>();
-            Assert.That(weaponIcon, Is.Not.Null,
+            var weaponIconObject = GameObject.Find("WeaponIcon");
+            Assert.That(weaponIconObject, Is.Not.Null,
                 "WeaponStyleSelector must contain the WeaponIcon image.");
+            var weaponIcon = weaponIconObject.GetComponent<Image>();
+            Assert.That(weaponIcon, Is.Not.Null);
             Assert.That(weaponIcon.sprite, Is.Not.Null);
             Assert.That(AssetDatabase.Contains(weaponIcon.sprite), Is.True,
                 "Weapon icons must be persistent sprite assets.");
@@ -131,8 +139,9 @@ namespace YuanHaiLu.Tests.EditMode
 
             var player = GameObject.FindGameObjectWithTag("Player");
             Assert.That(player, Is.Not.Null);
-            Assert.That(player.GetComponent<CharacterVisual>()?.ArtId,
-                Is.EqualTo(PlayerAppearance.Default.ArtId));
+            var playerVisual = player.GetComponent<CharacterVisual>();
+            Assert.That(playerVisual, Is.Not.Null);
+            Assert.That(playerVisual.ArtId, Is.EqualTo(PlayerAppearance.Default.ArtId));
 
             var visuals = Object.FindObjectsByType<CharacterVisual>(
                 FindObjectsInactive.Include,

@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using YuanHaiLu.Art;
@@ -44,6 +45,40 @@ namespace YuanHaiLu.Tests.EditMode
                 "loot_gold persistent sprite is missing from Resources/Art/MVP.");
             Assert.That(Art.MvpArtCatalog.Load("loot_item"), Is.Not.Null,
                 "loot_item persistent sprite is missing from Resources/Art/MVP.");
+        }
+
+        [Test]
+        public void GoldDropIsPureVisualFeedbackAndItemDropsRemainCollectable()
+        {
+            // 复审四轮 Spec-P2：金币击杀即时入账，地面铜钱必须是短命纯视觉反馈，
+            // 不得再携带碰撞体或 ItemPickup 留下拾取不了的假掉落；
+            // 物品掉落仍必须带 itemId/数量且可拾取（复审三轮 P1）。
+            var lootTable = TestSceneFactory.Create("LootEnemy").AddComponent<LootTable>();
+
+            lootTable.SpawnGoldFeedback(Vector2.zero);
+            var goldDrop = GameObject.Find("Loot_Gold_Feedback");
+            Assert.That(goldDrop, Is.Not.Null);
+            Assert.That(goldDrop.GetComponent<Collider2D>(), Is.Null,
+                "Gold is credited on kill; the coin feedback must not carry a collider.");
+            Assert.That(goldDrop.GetComponent<Map.ItemPickup>(), Is.Null,
+                "The coin feedback must not pose as a collectable pickup.");
+            Assert.That(goldDrop.GetComponent<GoldFeedbackSprite>(), Is.Not.Null,
+                "The coin must self-animate and self-destroy via GoldFeedbackSprite.");
+            var goldRenderer = goldDrop.GetComponent<SpriteRenderer>();
+            Assert.That(goldRenderer.sprite, Is.Not.Null);
+            Assert.That(AssetDatabase.Contains(goldRenderer.sprite), Is.True,
+                "The coin must use the persistent loot_gold sprite asset.");
+
+            lootTable.SpawnItemDrop(Vector2.zero, "herb_medicinal", 2);
+            var itemDrop = GameObject.Find("Loot_herb_medicinal");
+            Assert.That(itemDrop, Is.Not.Null);
+            var pickup = itemDrop.GetComponent<Map.ItemPickup>();
+            Assert.That(pickup, Is.Not.Null);
+            Assert.That(pickup.itemId, Is.EqualTo("herb_medicinal"));
+            Assert.That(pickup.amount, Is.EqualTo(2));
+
+            Object.DestroyImmediate(goldDrop);
+            Object.DestroyImmediate(itemDrop);
         }
 
         [Test]
