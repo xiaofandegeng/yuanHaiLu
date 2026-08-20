@@ -185,6 +185,8 @@ namespace YuanHaiLu.Core
             var stats = player.GetComponent<CharacterStats>();
             if (stats == null) return;
 
+            // 复审 P1：组件/单例一律显式 == null，规避 Unity fake-null。
+            var martialArts = player.GetComponent<MartialArtsSystem>();
             _pendingTransitionCarry = new TransitionCarry
             {
                 playerName = stats.characterName,
@@ -197,7 +199,7 @@ namespace YuanHaiLu.Core
                 baseAgility = stats.BaseAgility,
                 baseMaxHp = stats.BaseMaxHp,
                 baseMaxMp = stats.BaseMaxMp,
-                martialArts = player.GetComponent<MartialArtsSystem>()?.GetSaveData()
+                martialArts = martialArts != null ? martialArts.GetSaveData() : null
             };
         }
 
@@ -219,9 +221,13 @@ namespace YuanHaiLu.Core
                 carry.currentHp, carry.currentMp);
 
             if (carry.martialArts != null)
-                player.GetComponent<MartialArtsSystem>()?.LoadSaveData(
-                    carry.martialArts,
-                    GameSystem.MartialSkillDatabase.AllSkills);
+            {
+                var martialArts = player.GetComponent<MartialArtsSystem>();
+                if (martialArts != null)
+                    martialArts.LoadSaveData(
+                        carry.martialArts,
+                        GameSystem.MartialSkillDatabase.AllSkills);
+            }
             return true;
         }
 

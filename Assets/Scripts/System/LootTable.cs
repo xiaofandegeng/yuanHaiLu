@@ -30,7 +30,6 @@ namespace YuanHaiLu.GameSystem
         public LootEntry[] lootItems;
 
         [Header("掉落物设置")]
-        public GameObject lootDropPrefab;    // 掉落物预制体（null则自动创建）
         public float dropSpread = 1f;        // 掉落散布范围
         public float dropDuration = 30f;     // 掉落物存在时间
 
@@ -58,7 +57,6 @@ namespace YuanHaiLu.GameSystem
             var player = GameObject.FindGameObjectWithTag("Player");
             if (player == null) return;
 
-            var playerStats = player.GetComponent<CharacterStats>();
             var levelSys = player.GetComponent<LevelSystem>();
 
             // === 经验 ===
@@ -72,8 +70,9 @@ namespace YuanHaiLu.GameSystem
             int gold = Random.Range(minGold, maxGold + 1);
             if (gold > 0)
             {
-                SpawnLootDrop(transform.position, null, gold);
-                InventoryManager.Instance?.AddGold(gold);
+                SpawnLootDrop(transform.position, null, 0, gold);
+                var inventory = InventoryManager.Instance;
+                if (inventory != null) inventory.AddGold(gold);
             }
 
             // === 物品掉落 ===
@@ -87,14 +86,21 @@ namespace YuanHaiLu.GameSystem
                 // 在附近随机位置生成掉落物
                 Vector2 dropPos = (Vector2)transform.position +
                     Random.insideUnitCircle * dropSpread;
-                SpawnLootDrop(dropPos, entry.itemId, 0);
+                SpawnLootDrop(dropPos, entry.itemId, amount, 0);
             }
 
-            Debug.Log($"[掉落] {_stats?.characterName ?? "敌人"} 击杀奖励: {gold}文, {expReward}经验");
+            string enemyName = _stats != null ? _stats.characterName : "敌人";
+            Debug.Log($"[掉落] {enemyName} 击杀奖励: {gold}文, {expReward}经验");
         }
 
-        private void SpawnLootDrop(Vector2 position, string itemId, int gold)
+        private void SpawnLootDrop(Vector2 position, string itemId, int amount, int gold)
         {
+            // 掉落必须使用持久精灵（Resources/Art/MVP，复审 P1）：
+            // 金币用 loot_gold，物品用 loot_item 按物品类型染色；
+            // 禁止运行时 Texture2D/Sprite.Create（docs/15 冻结条款）。
+            var sprite = Art.MvpArtCatalog.Load(gold > 0 ? "loot_gold" : "loot_item");
+            if (sprite == null) return;
+
             // 创建掉落物
             var dropObj = new GameObject(itemId != null ? $"Loot_{itemId}" : "Loot_Gold");
             dropObj.transform.position = position;
@@ -103,15 +109,18 @@ namespace YuanHaiLu.GameSystem
             var sr = dropObj.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Foreground";
             sr.sortingOrder = 45;
-            sr.sprite = CreateLootSprite(itemId, gold > 0);
+            sr.sprite = sprite;
+            sr.color = gold > 0 ? Color.white : GetItemTint(itemId);
 
             // 碰撞体
             var col = dropObj.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
             col.size = new Vector2(0.8f, 0.8f);
 
-            // 掉落物组件
+            // 掉落物组件：必须携带物品 ID 与数量，否则永远无法拾取（复审 P1）。
             var pickup = dropObj.AddComponent<ItemPickup>();
+            pickup.itemId = itemId != null ? itemId : "";
+            pickup.amount = Mathf.Max(1, amount);
 
             // 弹出动画
             dropObj.AddComponent<Rigidbody2D>().gravityScale = 0f;
@@ -121,55 +130,20 @@ namespace YuanHaiLu.GameSystem
             Destroy(dropObj, dropDuration);
         }
 
-        private Sprite CreateLootSprite(string itemId, bool isGold)
+        /// <summary>物品掉落按类型染色的色板（只改颜色，不再运行时生成贴图）。</summary>
+        private static Color GetItemTint(string itemId)
         {
-            var tex = new Texture2D(16, 16);
-            tex.filterMode = FilterMode.Point;
-
-            if (isGold)
+            var itemData = ItemDatabase.Get(itemId);
+            if (itemData == null) return Color.white;
+            return itemData.type switch
             {
-                // 金币：黄色圆形
-                for (int x = 0; x < 16; x++)
-                    for (int y = 0; y < 16; y++)
-                    {
-                        float d = Vector2.Distance(new Vector2(x, y), new Vector2(7.5f, 7.5f));
-                        if (d < 6f)
-                            tex.SetPixel(x, y, d < 4f ? new Color(1f, 0.85f, 0.1f) : new Color(0.9f, 0.7f, 0f));
-                        else
-                            tex.SetPixel(x, y, Color.clear);
-                    }
-            }
-            else
-            {
-                // 物品：按类型配色
-                Color itemColor = Color.white;
-                var itemData = ItemDatabase.Get(itemId);
-                if (itemData != null)
-                {
-                    itemColor = itemData.type switch
-                    {
-                        ItemType.Consumable => new Color(0.3f, 0.9f, 0.3f),
-                        ItemType.Weapon => new Color(0.7f, 0.8f, 1f),
-                        ItemType.Armor => new Color(0.8f, 0.7f, 0.5f),
-                        ItemType.Material => new Color(0.7f, 0.7f, 0.7f),
-                        ItemType.SkillBook => new Color(0.9f, 0.6f, 1f),
-                        _ => Color.white
-                    };
-                }
-
-                for (int x = 0; x < 16; x++)
-                    for (int y = 0; y < 16; y++)
-                    {
-                        float d = Vector2.Distance(new Vector2(x, y), new Vector2(7.5f, 7.5f));
-                        if (d < 6f)
-                            tex.SetPixel(x, y, itemColor);
-                        else
-                            tex.SetPixel(x, y, Color.clear);
-                    }
-            }
-
-            tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
+                ItemType.Consumable => new Color(0.55f, 0.95f, 0.55f),
+                ItemType.Weapon => new Color(0.78f, 0.85f, 1f),
+                ItemType.Armor => new Color(0.9f, 0.82f, 0.68f),
+                ItemType.Material => new Color(0.85f, 0.85f, 0.85f),
+                ItemType.SkillBook => new Color(0.95f, 0.75f, 1f),
+                _ => Color.white
+            };
         }
 
         private IEnumerator PopAnimation(GameObject obj, Vector2 targetPos)

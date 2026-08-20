@@ -3,6 +3,7 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
+using YuanHaiLu.Art;
 using YuanHaiLu.Core;
 using YuanHaiLu.GameSystem;
 using YuanHaiLu.UI;
@@ -32,6 +33,17 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(clearCamera.cullingMask, Is.Zero);
             Assert.That(clearCamera.clearFlags, Is.EqualTo(CameraClearFlags.SolidColor));
             Assert.That(clearCamera.depth, Is.LessThan(mainCamera.depth));
+        }
+
+        [Test]
+        public void MvpLootDropSpritesArePersistentAssets()
+        {
+            // 复审 P1：敌人掉落必须用 Resources/Art/MVP 下的持久精灵，
+            // 禁止运行时 Texture2D/Sprite.Create 生成掉落贴图。
+            Assert.That(Art.MvpArtCatalog.Load("loot_gold"), Is.Not.Null,
+                "loot_gold persistent sprite is missing from Resources/Art/MVP.");
+            Assert.That(Art.MvpArtCatalog.Load("loot_item"), Is.Not.Null,
+                "loot_item persistent sprite is missing from Resources/Art/MVP.");
         }
 
         [Test]

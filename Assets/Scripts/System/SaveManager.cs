@@ -257,8 +257,12 @@ namespace YuanHaiLu.GameSystem
             string playerArtId = ResolvePlayerArtId(saveData);
             string weaponStyleId = ResolveWeaponStyleId(saveData);
 
-            gameManager?.SetPlayerAppearance(playerArtId);
-            gameManager?.SetWeaponStyle(weaponStyleId);
+            // 复审 P1：单例/组件一律显式 == null，规避 Unity fake-null。
+            if (gameManager != null)
+            {
+                gameManager.SetPlayerAppearance(playerArtId);
+                gameManager.SetWeaponStyle(weaponStyleId);
+            }
 
             if (player == null)
             {
@@ -268,7 +272,9 @@ namespace YuanHaiLu.GameSystem
             {
                 player.transform.position = new Vector2(saveData.positionX, saveData.positionY);
                 CharacterVisual.ApplyTo(player, playerArtId);
-                player.GetComponent<PlayerCombat>()?.ApplyWeaponStyle(weaponStyleId);
+                var combat = player.GetComponent<PlayerCombat>();
+                if (combat != null)
+                    combat.ApplyWeaponStyle(weaponStyleId);
 
                 stats = player.GetComponent<CharacterStats>();
                 if (stats == null)

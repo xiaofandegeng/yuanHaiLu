@@ -21,74 +21,81 @@ namespace YuanHaiLu.Core
     {
         public const string DefaultStyleId = "sword";
 
-        /// <summary>流派档案：ID、显示文案、主动技、武器小图与全部普攻数值。</summary>
+        /// <summary>流派档案：ID、显示文案、主动技、武器小图与全部普攻数值。
+        /// 复审 P2：私有 set 只在本类 BuildTable 的对象初始化器里赋值，构建后对所有外部代码（含包含类型）只读。
+        /// 表必须由本类构建：C# 包含类型访问不到嵌套类型的私有 set。</summary>
         private sealed class StyleProfile
         {
-            public string Id;
-            public string DisplayName;
-            public string Description;
-            public string ActiveSkillId;
-            public string WeaponSpriteId;
-            public float MeleeRange;
-            public Vector2 MeleeBoxSize;
-            public int MaxCombo;
-            public float AttackDuration;
-            public float MeleeDamageMultiplier;
-            public Color SlashColor;
+            public string Id { get; private set; }
+            public string DisplayName { get; private set; }
+            public string Description { get; private set; }
+            public string ActiveSkillId { get; private set; }
+            public string WeaponSpriteId { get; private set; }
+            public float MeleeRange { get; private set; }
+            public Vector2 MeleeBoxSize { get; private set; }
+            public int MaxCombo { get; private set; }
+            public float AttackDuration { get; private set; }
+            public float MeleeDamageMultiplier { get; private set; }
+            public Color SlashColor { get; private set; }
+
+            public static Dictionary<WeaponStyleKind, StyleProfile> BuildTable()
+            {
+                return new Dictionary<WeaponStyleKind, StyleProfile>
+                {
+                    {
+                        WeaponStyleKind.Sword, new StyleProfile
+                        {
+                            Id = "sword",
+                            WeaponSpriteId = "weapon_sword",
+                            DisplayName = "长剑",
+                            Description = "中距均衡，三段连斩，剑气前冲破敌",
+                            ActiveSkillId = "sword_qi_wave",
+                            MeleeRange = 1.2f,
+                            MeleeBoxSize = new Vector2(1.0f, 0.8f),
+                            MaxCombo = 3,
+                            AttackDuration = 0.5f,
+                            MeleeDamageMultiplier = 1f,
+                            SlashColor = new Color(0.7f, 0.9f, 1f, 0.8f),
+                        }
+                    },
+                    {
+                        WeaponStyleKind.Gauntlets, new StyleProfile
+                        {
+                            Id = "gauntlets",
+                            WeaponSpriteId = "weapon_gauntlets",
+                            DisplayName = "拳套",
+                            Description = "短距疾风连拳，一记冲拳贴身突进",
+                            ActiveSkillId = "fist_dash_punch",
+                            MeleeRange = 0.8f,
+                            MeleeBoxSize = new Vector2(0.8f, 0.7f),
+                            MaxCombo = 5,
+                            AttackDuration = 0.32f,
+                            MeleeDamageMultiplier = 0.65f,
+                            SlashColor = new Color(1f, 0.7f, 0.3f, 0.8f),
+                        }
+                    },
+                    {
+                        WeaponStyleKind.Dart, new StyleProfile
+                        {
+                            Id = "dart",
+                            WeaponSpriteId = "weapon_dart",
+                            DisplayName = "飞镖",
+                            Description = "远程点杀，扇形三镖齐发，近身较弱",
+                            ActiveSkillId = "dart_fan_throw",
+                            MeleeRange = 0.9f,
+                            MeleeBoxSize = new Vector2(0.7f, 0.6f),
+                            MaxCombo = 3,
+                            AttackDuration = 0.45f,
+                            MeleeDamageMultiplier = 0.55f,
+                            SlashColor = new Color(0.85f, 0.8f, 1f, 0.8f),
+                        }
+                    },
+                };
+            }
         }
 
         private static readonly Dictionary<WeaponStyleKind, StyleProfile> ProfilesByKind =
-            new Dictionary<WeaponStyleKind, StyleProfile>
-            {
-                {
-                    WeaponStyleKind.Sword, new StyleProfile
-                    {
-                        Id = "sword",
-                        WeaponSpriteId = "weapon_sword",
-                        DisplayName = "长剑",
-                        Description = "中距均衡，三段连斩，剑气前冲破敌",
-                        ActiveSkillId = "sword_qi_wave",
-                        MeleeRange = 1.2f,
-                        MeleeBoxSize = new Vector2(1.0f, 0.8f),
-                        MaxCombo = 3,
-                        AttackDuration = 0.5f,
-                        MeleeDamageMultiplier = 1f,
-                        SlashColor = new Color(0.7f, 0.9f, 1f, 0.8f),
-                    }
-                },
-                {
-                    WeaponStyleKind.Gauntlets, new StyleProfile
-                    {
-                        Id = "gauntlets",
-                        WeaponSpriteId = "weapon_gauntlets",
-                        DisplayName = "拳套",
-                        Description = "短距疾风连拳，一记冲拳贴身突进",
-                        ActiveSkillId = "fist_dash_punch",
-                        MeleeRange = 0.8f,
-                        MeleeBoxSize = new Vector2(0.8f, 0.7f),
-                        MaxCombo = 5,
-                        AttackDuration = 0.32f,
-                        MeleeDamageMultiplier = 0.65f,
-                        SlashColor = new Color(1f, 0.7f, 0.3f, 0.8f),
-                    }
-                },
-                {
-                    WeaponStyleKind.Dart, new StyleProfile
-                    {
-                        Id = "dart",
-                        WeaponSpriteId = "weapon_dart",
-                        DisplayName = "飞镖",
-                        Description = "远程点杀，扇形三镖齐发，近身较弱",
-                        ActiveSkillId = "dart_fan_throw",
-                        MeleeRange = 0.9f,
-                        MeleeBoxSize = new Vector2(0.7f, 0.6f),
-                        MaxCombo = 3,
-                        AttackDuration = 0.45f,
-                        MeleeDamageMultiplier = 0.55f,
-                        SlashColor = new Color(0.85f, 0.8f, 1f, 0.8f),
-                    }
-                },
-            };
+            StyleProfile.BuildTable();
 
         private static readonly WeaponStyleKind[] Kinds =
             (WeaponStyleKind[])Enum.GetValues(typeof(WeaponStyleKind));

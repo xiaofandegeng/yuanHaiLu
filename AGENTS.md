@@ -10,10 +10,10 @@
 | 项目 | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
-| 代码规模 | 72 个运行时/编辑器 C# 文件；另有 25 个测试/测试工具文件 |
+| 代码规模 | 76 个运行时/编辑器 C# 文件；另有 26 个测试/测试工具文件 |
 | 状态 | 单主角 MVP 垂直切片（docs/15）：固定男主 + 三武器流派 + 烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/single-hero-mvp-v2`（复审后重建的干净分支） |
-| 测试 | 125 EditMode + 11 PlayMode + 45 Python 全通过 |
+| 测试 | 128 EditMode + 12 PlayMode + 45 Python 全通过 |
 | 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md`、`docs/15-single-hero-mvp-design.md` |
 
 ## 1. 如何运行
@@ -244,7 +244,7 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前全量基线为 EditMode 101/101、PlayMode 7/7、Python 45/45。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。`-executeMethod` 场景重建则必须带 `-quit`，否则批处理编辑器会常驻。当前全量基线为 EditMode 128/128、PlayMode 12/12、Python 45/45；证据 XML 必须晚于其证明的提交时间。
 
 美术确定性验证：
 
@@ -282,9 +282,9 @@ python3 -m tools.art_pipeline.validate --all
 ```text
 yuanHaiLu/
 ├── Assets/
-│   ├── Scripts/                 68 个运行时/编辑器 .cs
-│   ├── Tests/EditMode/          101 个测试用例
-│   ├── Tests/PlayMode/          7 个测试用例
+│   ├── Scripts/                 76 个运行时/编辑器 .cs
+│   ├── Tests/EditMode/          128 个测试用例
+│   ├── Tests/PlayMode/          12 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
 │   ├── Art/                     97 角色 + 23 环境输出和验收图
 │   ├── Prefabs/Characters/      97 个正式 Prefab

@@ -39,8 +39,8 @@ namespace YuanHaiLu.Editor
             transObj.AddComponent<UnityEngine.UI.CanvasScaler>();
             transObj.AddComponent<ScreenTransition>();
 
-            ItemDatabase.Initialize();
-            MartialSkillDatabase.Initialize();
+            ItemDatabase.EnsureInitialized();
+            MartialSkillDatabase.EnsureInitialized();
 
             var deathObj = new GameObject("[PlayerDeathHandler]");
             deathObj.AddComponent<PlayerDeathHandler>();

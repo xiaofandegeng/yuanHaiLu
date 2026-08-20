@@ -49,10 +49,10 @@ namespace YuanHaiLu.GameSystem
             }
         }
 
-        /// <summary>显式触发代码表构建（场景生成与测试入口使用，避免以废弃局部变量触发 getter）。</summary>
-        public static void Initialize()
+        /// <summary>显式确保代码表已构建（场景生成与测试入口使用，复审 P2）。</summary>
+        public static void EnsureInitialized()
         {
-            var _ = AllSkills;
+            if (_skills == null) BuildDatabase();
         }
 
         public static MartialSkill Get(string id)

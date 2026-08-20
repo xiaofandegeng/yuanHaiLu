@@ -125,10 +125,13 @@ namespace YuanHaiLu.Map
             if (!InventoryManager.Instance.AddItem(targetItemId, targetAmount))
                 return false;
 
-            QuestManager.Instance?.UpdateObjective(
-                QuestObjective.ObjectiveType.CollectItem,
-                targetItemId,
-                targetAmount);
+            // 显式 == null，规避 Unity fake-null（复审 P1）。
+            var questManager = QuestManager.Instance;
+            if (questManager != null)
+                questManager.UpdateObjective(
+                    QuestObjective.ObjectiveType.CollectItem,
+                    targetItemId,
+                    targetAmount);
             return true;
         }
 

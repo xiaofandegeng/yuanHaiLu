@@ -109,15 +109,21 @@ namespace YuanHaiLu.Map
             if (saveManager != null) saveManager.SaveGame(-1);
 
             var gameManager = GameManager.Instance;
+            if (gameManager == null)
+            {
+                Debug.LogError("[AreaTrigger] GameManager 缺失，无法切换场景！");
+                if (controller != null) controller.SetInputEnabled(true);
+                yield break;
+            }
 
             // HP/MP/基础属性/武学挂在场景本地玩家上，切换前捕获、落地后回放。
-            gameManager?.BeginTransitionCarry(player);
+            gameManager.BeginTransitionCarry(player);
 
             // 加载目标场景
             Debug.Log($"[AreaTrigger] 切换场景: {targetSceneName}");
 
             // 标记为"场景过渡"而非新游戏：SceneDirector 将跳过出生点/初始物资覆盖。
-            gameManager?.BeginSceneEntry(GameManager.SceneEntryMode.SceneTransition);
+            gameManager.BeginSceneEntry(GameManager.SceneEntryMode.SceneTransition);
 
             // 单次具名回调：新场景加载后把玩家放到指定入口，并回放过渡携带。
             // 闭包只捕获值类型与持久 GameManager 引用（不捕获 this），
@@ -131,9 +137,9 @@ namespace YuanHaiLu.Map
                 if (newPlayer != null)
                 {
                     newPlayer.transform.position = targetSpawn;
-                    gameManager?.ApplyTransitionCarry(newPlayer);
+                    gameManager.ApplyTransitionCarry(newPlayer);
                 }
-                gameManager?.CompleteSceneEntry();
+                gameManager.CompleteSceneEntry();
             };
             SceneManager.sceneLoaded += onSceneLoaded;
 
