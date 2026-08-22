@@ -34,34 +34,71 @@ namespace YuanHaiLu.UI
         private int _choiceCount = 0;
         private int _selectedChoice = 0;
 
+        // 本 UI 实际订阅的持久对话管理器（docs/16 阶段 B）：
+        // 匿名 OnDialogueStart 订阅无法退订，旧场景 UI 被卸载后仍留在
+        // DialogueManager 调用链里，跨场景交谈会先调用已销毁 UI 抛
+        // MissingReferenceException；必须记录实例并对同一实例完整退订。
+        private DialogueManager _subscribedManager;
+
         private void Awake()
         {
             BuildUI();
             Hide();
+        }
 
-            var dm = DialogueManager.Instance;
-            if (dm != null)
-            {
-                dm.OnLineShown += OnLineShown;
-                dm.OnChoicesPresented += OnChoicesPresented;
-                dm.OnDialogueEnd += Hide;
-                dm.OnDialogueStart += (s, t) => Show();
-            }
+        private void OnEnable()
+        {
+            SubscribeToManager();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeFromManager();
         }
 
         private void OnDestroy()
         {
+            // 失活状态下销毁不经过 OnDisable，这里兜底；重复退订无害。
+            UnsubscribeFromManager();
+        }
+
+        private void SubscribeToManager()
+        {
+            if (_subscribedManager != null) return;
+
             var dm = DialogueManager.Instance;
-            if (dm != null)
-            {
-                dm.OnLineShown -= OnLineShown;
-                dm.OnChoicesPresented -= OnChoicesPresented;
-                dm.OnDialogueEnd -= Hide;
-            }
+            if (dm == null) return;
+
+            _subscribedManager = dm;
+            dm.OnLineShown += OnLineShown;
+            dm.OnChoicesPresented += OnChoicesPresented;
+            dm.OnDialogueEnd += Hide;
+            dm.OnDialogueStart += HandleDialogueStart;
+        }
+
+        private void UnsubscribeFromManager()
+        {
+            var dm = _subscribedManager;
+            if (dm == null) return;
+
+            dm.OnLineShown -= OnLineShown;
+            dm.OnChoicesPresented -= OnChoicesPresented;
+            dm.OnDialogueEnd -= Hide;
+            dm.OnDialogueStart -= HandleDialogueStart;
+            _subscribedManager = null;
+        }
+
+        private void HandleDialogueStart(string speaker, string text)
+        {
+            Show();
         }
 
         private void Update()
         {
+            // Manager 可能晚于 UI 创建（场景重建顺序不保证）；补订阅一次。
+            if (_subscribedManager == null)
+                SubscribeToManager();
+
             // 选择分支的上下键
             if (_choicesPanel != null && _choicesPanel.activeSelf && _choiceCount > 0)
             {
