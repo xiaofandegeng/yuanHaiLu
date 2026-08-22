@@ -14,6 +14,7 @@ namespace YuanHaiLu.Core
         public const float SPRITE_PPU = 16f;     // 瓦片/环境 PPU
         public const float CHARACTER_PPU = 16f;  // 角色 PPU（32x32角色 = 2单位高）
         public const int CHARACTER_FRAME_SIZE = 32;
+        public const int MVP_HERO_FRAME_SIZE = 48;
 
         // === 移动 ===
         public const float MOVE_SPEED = 3.5f;         // 基础移动速度（单位/秒）

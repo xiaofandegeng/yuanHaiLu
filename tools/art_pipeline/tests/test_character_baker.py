@@ -8,7 +8,7 @@ from PIL import Image
 from tools.art_pipeline.build import build_manifest
 from tools.art_pipeline.canvas import PixelBoundsError, PixelCanvas
 from tools.art_pipeline.character_baker import bake_character
-from tools.art_pipeline.schema import AnimationRow, CharacterRecipe
+from tools.art_pipeline.schema import AnimationRow, CharacterRecipe, ManifestError
 from tools.art_pipeline.validate import validate_outputs
 
 
@@ -63,6 +63,24 @@ class CharacterBakerTests(unittest.TestCase):
         self.assertEqual(first.image.size, (64, 64))
         self.assertEqual(first.image.size[0] % 32, 0)
         self.assertEqual(first.image.size[1] % 32, 0)
+
+    def test_only_fixed_male_player_can_use_a_48_pixel_frame(self):
+        payload = {
+            "id": "player_male_swordsman",
+            "frameSize": 48,
+            "modules": [str(self.module_path)],
+            "animations": [],
+        }
+
+        try:
+            fixed_male = CharacterRecipe.from_dict(payload)
+        except ManifestError as error:
+            self.fail("fixed male player must accept 48px frames: {}".format(error))
+        self.assertEqual(fixed_male.frame_size, 48)
+
+        payload["id"] = "player_female_swordsman"
+        with self.assertRaisesRegex(ManifestError, "frameSize must be 32"):
+            CharacterRecipe.from_dict(payload)
 
     def test_character_metadata_names_frames_and_bottom_pivots(self):
         baked = bake_character(self.recipe, self.root / "output")

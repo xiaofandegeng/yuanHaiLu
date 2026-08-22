@@ -84,8 +84,12 @@ class CharacterRecipe:
             raise ManifestError("character recipe must be an object")
         art_id = _stable_id(payload.get("id"))
         frame_size = payload.get("frameSize")
-        if frame_size != 32:
-            raise ManifestError("{} frameSize must be 32".format(art_id))
+        allowed_frame_sizes = {32}
+        if art_id == "player_male_swordsman":
+            allowed_frame_sizes.add(48)
+        if frame_size not in allowed_frame_sizes:
+            expected = " or ".join(str(size) for size in sorted(allowed_frame_sizes))
+            raise ManifestError("{} frameSize must be {}".format(art_id, expected))
         modules = _module_names(payload.get("modules"), art_id)
         rows = tuple(AnimationRow.from_dict(row) for row in payload.get("animations", []))
         keys = [(row.name, row.direction) for row in rows]
