@@ -35,7 +35,7 @@
 
 - 其余 11 套主角外观、85 名非试玩角色、10 个大区域、其余 12 个室内与全量美术生产。
 - 商店、技能树、小地图、BOSS 战、完整剧情章节、世界状态持久化和全区域传送网络。
-- 新的运行时生成精灵、3D/URP/后处理，以及 `ProjectSettings/` 平台改动。唯一例外：`EditorBuildSettings.asset` 的场景清单允许注册试玩场景 `Demo_Inn`；除此之外任何 `ProjectSettings/` 文件零变更。
+- 新的运行时生成精灵、3D/URP/后处理，以及 `ProjectSettings/` 平台改动。唯一例外：`EditorBuildSettings.asset` 的场景清单允许注册试玩场景 `Demo_Inn`；除此之外任何 `ProjectSettings/` 文件零变更。docs/17 另批准**两处 Demo 的原生像素美术返工**：固定男主源帧、烟柳镇/客栈的三层背景和掌柜/两名水匪/荷包静态精灵；不得扩展到正式区域、正式 NPC/敌人/Boss 或其 Prefab/Controller。
 
 冻结内容保留在仓库中，不删除、不重命名、不合并至本期资产目录。
 
@@ -80,4 +80,4 @@
 
 - 三种武器共用身体动画会让姿势差异受限；本期以武器层和命中/特效差异建立玩法辨识，不扩展新的角色骨架或职业动作集。
 - 现有 12 外观、97 角色和 23 环境是历史资产；它们可继续保留用于以后评估，但不代表试玩版承诺。
-- 本规格不批准任何美术资产。视觉方向仍必须先经过缩样 Gate，再做关键帧与 Unity 美术接入。唯一例外（2026-08 复审登记）：`Assets/Resources/Art/MVP/` 下的功能性小图 —— weapon_sword/gauntlets/dart 武器小图、proj_qi/proj_dart 弹体、loot_gold/loot_item 掉落图，共 7 张 16×16 PNG。它们直接服务于验收标准第 2 条"武器小图随流派真实切换"与战斗/掉落反馈，属运行时必需资源而非美术方向产出，以持久资产经 `MvpArtCatalog` 加载、禁止运行时生成；正式角色、环境与批量美术流水线仍全部冻结。
+- docs/17 已在 MVP 限定范围内批准美术返工：`player_male_swordsman` 的可动画源帧、`Assets/Art{Source}/Environment/MVP/v2/` 下两处场景的 `Ground/Environment/Foreground` 原生像素层，以及 `Assets/Resources/Art/MVP/` 下掌柜、两名水匪和荷包的 32×32 持久精灵。此前 7 张功能小图（weapon_sword/gauntlets/dart、proj_qi/proj_dart、loot_gold/loot_item）继续保留。它们都由持久资产加载、禁止运行时生成；正式角色、环境与批量美术流水线仍全部冻结。

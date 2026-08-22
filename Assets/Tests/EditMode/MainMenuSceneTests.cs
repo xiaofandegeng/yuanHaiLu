@@ -129,7 +129,7 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void DemoUsesFormalYanliuSceneAndFormalCharacterBindings()
+        public void DemoUsesFormalYanliuLayoutAndMvpCharacterBindings()
         {
             EditorSceneManager.OpenScene("Assets/Scenes/Demo_YanLiuTown.unity", OpenSceneMode.Single);
 
@@ -146,10 +146,21 @@ namespace YuanHaiLu.Tests.EditMode
             var visuals = Object.FindObjectsByType<CharacterVisual>(
                 FindObjectsInactive.Include,
                 FindObjectsSortMode.None);
-            // MVP 范围（docs/15）：男主 + 苏婉清 + 钓鱼翁 + 两名河岸水匪。
-            Assert.That(visuals, Has.Length.EqualTo(5));
+            // docs/17：男主仍保留可动画的正式角色绑定；两名水匪改用同调色板
+            // 的 MVP 静态精灵，镇上的冻结 NPC 不再混入试玩画面。
+            Assert.That(visuals, Has.Length.EqualTo(1));
             Assert.That(visuals.All(value => AssetDatabase.Contains(
                 value.GetComponent<SpriteRenderer>().sprite)), Is.True);
+
+            var mvpActors = Object.FindObjectsByType<MvpStaticVisual>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            Assert.That(mvpActors, Has.Length.EqualTo(3),
+                "Demo must contain two bandits and the lost-pouch pickup on persistent MVP sprites.");
+            Assert.That(mvpActors.Select(actor => actor.SpriteId).OrderBy(id => id), Is.EqualTo(new[]
+            {
+                "mvp_bandit_a", "mvp_bandit_b", "mvp_lost_pouch",
+            }));
         }
 
         [Test]

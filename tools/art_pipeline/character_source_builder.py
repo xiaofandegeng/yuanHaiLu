@@ -52,19 +52,22 @@ PALETTES = {
 # paper dolls.  Keep this palette explicit: it is used by the source builder and
 # the visual contract test to protect 1× readability in the finished game view.
 MVP_HERO_COLORS = {
-    "ink": (18, 25, 35, 255),
-    "hair": (35, 31, 39, 255),
-    "hair_light": (79, 76, 84, 255),
-    "skin_shadow": (139, 83, 57, 255),
-    "skin": (208, 145, 99, 255),
-    "skin_light": (241, 192, 139, 255),
-    "robe_shadow": (23, 65, 83, 255),
-    "robe": (46, 122, 151, 255),
-    "robe_light": (124, 196, 211, 255),
-    "paper": (238, 220, 185, 255),
-    "vermilion": (181, 65, 52, 255),
-    "gold": (222, 178, 83, 255),
-    "steel": (201, 228, 230, 255),
+    # These values intentionally share the MVP scene palette.  The hero used to
+    # be cyan/white against a separately-rendered concept backdrop, which made
+    # him read as a pasted icon rather than a person standing in the town.
+    "ink": (24, 31, 40, 255),
+    "hair": (38, 35, 40, 255),
+    "hair_light": (75, 71, 76, 255),
+    "skin_shadow": (126, 78, 59, 255),
+    "skin": (203, 145, 105, 255),
+    "skin_light": (231, 184, 135, 255),
+    "robe_shadow": (32, 48, 70, 255),
+    "robe": (54, 76, 111, 255),
+    "robe_light": (101, 125, 151, 255),
+    "paper": (221, 207, 169, 255),
+    "vermilion": (176, 65, 48, 255),
+    "gold": (216, 165, 75, 255),
+    "steel": (188, 204, 205, 255),
 }
 
 REGION_PALETTES = {
@@ -182,6 +185,16 @@ def build_all_character_sources():
         build_character_sources(recipe, designs[recipe.id], GENERATED_ROOT / recipe.id)
     assert_character_sources_complete(recipes)
     return len(recipes)
+
+
+def build_character_source(art_id):
+    """Rebuild one authored source sheet without touching the frozen roster."""
+    designs = load_character_designs(DESIGN_PATH)
+    recipes = {recipe.id: recipe for recipe in build_roster()}
+    if art_id not in recipes or art_id not in designs:
+        raise ValueError("unknown formal character '{}'".format(art_id))
+    return build_character_sources(
+        recipes[art_id], designs[art_id], GENERATED_ROOT / art_id)
 
 
 def _draw_pose(layers, design, action, direction, frame, row_y):
@@ -687,16 +700,20 @@ def _accent_for(art_id):
 
 def _parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--all", action="store_true", help="build every formal character source")
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--all", action="store_true", help="build every formal character source")
+    selection.add_argument("--id", help="build one formal character source")
     return parser.parse_args()
 
 
 def main():
     args = _parse_args()
-    if not args.all:
-        raise SystemExit("pass --all to build formal character sources")
-    count = build_all_character_sources()
-    print("built={} character sources".format(count))
+    if args.all:
+        count = build_all_character_sources()
+        print("built={} character sources".format(count))
+        return
+    build_character_source(args.id)
+    print("built=1 character source ({})".format(args.id))
 
 
 if __name__ == "__main__":

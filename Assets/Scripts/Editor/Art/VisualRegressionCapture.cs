@@ -164,7 +164,10 @@ namespace YuanHaiLu.Editor
             Directory.CreateDirectory(reviewDirectory);
             CaptureDemoGameplayFrame(
                 "Assets/Scenes/Demo_YanLiuTown.unity",
-                new Vector2(7.5f, 8.6f),
+                // The real new-game spawn is one tile below the inn threshold.
+                // Keeping the review hero here verifies that the 32px silhouette
+                // reads on the path, rather than hiding it inside the doorway.
+                new Vector2(7.5f, 7.6f),
                 Path.Combine(reviewDirectory, "town-spawn-1x.png"));
             CaptureDemoGameplayFrame(
                 "Assets/Scenes/Demo_YanLiuTown.unity",
@@ -174,7 +177,7 @@ namespace YuanHaiLu.Editor
                 "Assets/Scenes/Demo_Inn.unity",
                 // 柜台前一格：同屏可辨男主、掌柜和交互距离，避免把审查角色
                 // 摆在左下角而看不出“进入后去找谁”的主流程。
-                new Vector2(15f, 9f),
+                new Vector2(15f, 8.4f),
                 Path.Combine(reviewDirectory, "inn-counter-1x.png"));
             Debug.Log("[VisualRegressionCapture] wrote MVP gameplay images to " + reviewDirectory);
         }

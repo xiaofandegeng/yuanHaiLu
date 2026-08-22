@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .character_baker import bake_character
 from .environment_baker import bake_environment
+from .mvp_scene_layer_builder import build_mvp_scene_art_with_change_count
 from .schema import load_character_manifest, load_environment_manifest
 
 
@@ -94,6 +95,13 @@ def main(argv=None):
     for manifest in manifests:
         result = build_manifest(manifest, args.output_dir)
         total = BuildResult(total.built + result.built, total.skipped + result.skipped)
+    if args.all:
+        _, changed = build_mvp_scene_art_with_change_count(
+            PROJECT_ROOT / "Assets" / "ArtSource" / "Environment" / "MVP" / "v2",
+            PROJECT_ROOT / "Assets" / "Art" / "Environment" / "MVP" / "v2",
+            PROJECT_ROOT / "Assets" / "ArtSource" / "Characters" / "MVP",
+            PROJECT_ROOT / "Assets" / "Resources" / "Art" / "MVP")
+        total = BuildResult(total.built + changed, total.skipped + 10 - changed)
     print("built={} skipped={}".format(total.built, total.skipped))
     return 0
 

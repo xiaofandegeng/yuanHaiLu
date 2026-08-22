@@ -6,6 +6,7 @@ using YuanHaiLu.Character;
 using YuanHaiLu.Map;
 using YuanHaiLu.GameSystem;
 using YuanHaiLu.Art;
+using YuanHaiLu.Core;
 
 namespace YuanHaiLu.Editor
 {
@@ -18,8 +19,12 @@ namespace YuanHaiLu.Editor
     {
         private const float MvpWidth = 30f;
         private const float MvpHeight = 16.875f;
-        private const string MvpTownBackdrop =
-            "Assets/Art/Environment/MVP/mvp_yanliu_backdrop.png";
+        private const string MvpTownGround =
+            "Assets/Art/Environment/MVP/v2/mvp_yanliu_ground_v2.png";
+        private const string MvpTownEnvironment =
+            "Assets/Art/Environment/MVP/v2/mvp_yanliu_environment_v2.png";
+        private const string MvpTownForeground =
+            "Assets/Art/Environment/MVP/v2/mvp_yanliu_foreground_v2.png";
 
         [MenuItem("Tools/渊海录/生成Demo场景")]
         public static void Generate()
@@ -116,10 +121,15 @@ namespace YuanHaiLu.Editor
 
         private static void CreateMvpVisualStage()
         {
-            PlaySceneAssembler.CreateMvpBackdrop(
+            PlaySceneAssembler.CreateMvpSceneLayers(
                 GameObject.Find("yanliu"),
-                MvpTownBackdrop,
+                MvpTownGround,
+                MvpTownEnvironment,
+                MvpTownForeground,
                 new Vector2(MvpWidth * 0.5f, MvpHeight * 0.5f));
+            PlaySceneAssembler.ConfigureMvpActorSprite("mvp_bandit_a");
+            PlaySceneAssembler.ConfigureMvpActorSprite("mvp_bandit_b");
+            PlaySceneAssembler.ConfigureMvpActorSprite("mvp_lost_pouch");
         }
 
         private static void CreateFormalColliders()
@@ -371,27 +381,9 @@ namespace YuanHaiLu.Editor
         // ========== NPC ==========
         private static void CreateNPCs()
         {
-            // 掌柜老赵移入客栈室内场景（InnSceneGenerator 负责），镇上不再摆放。
-
-            // 苏婉清（药铺）
-            CreateNPC("苏婉清", "su_wanqing", new Vector2(30.5f, 9f),
-                new string[] {
-                    "我是柳家药铺的苏婉清。",
-                    "我父亲留下的这枚玉佩碎片……上面刻着奇怪的铭文。",
-                    "你能帮我去找镇东的陈先生看看吗？",
-                    "这可能是渊朝皇室的东西……"
-                });
-
-            // 钓鱼老翁
-            CreateNPC("钓鱼翁", "fishing_elder", new Vector2(34f, 5.5f),
-                new string[] {
-                    "嗬……今天的鱼不太上钩啊。",
-                    "年轻人，你也来钓鱼？",
-                    "我年轻的时候啊，江湖上的人都叫我'疾风剑'。",
-                    "不过那都是过去的事了……"
-                });
-
-            Debug.Log("[Demo] NPC创建完成");
+            // MVP 镇场景只承载客栈入口和河岸战斗；掌柜在室内，其他剧情 NPC
+            // 属冻结内容。去掉视口外的旧正式角色，避免它们与新单主角画面混搭。
+            Debug.Log("[Demo] MVP 镇不创建额外 NPC");
         }
 
         private static void CreateNPC(string name, string artId, Vector2 pos, string[] dialogue)
@@ -421,15 +413,15 @@ namespace YuanHaiLu.Editor
             // 复审 P1：Demo 只保留 MVP_01 的两名河岸水匪（docs/15“两个敌人、
             // 一个任务闭环”）。旧的山贼/路匪巡逻组与 BOSS 战事件已随收缩移除，
             // 不再引用其他冻结角色资产。
-            CreateEnemy("河岸水匪甲", "yanliu_river_bandit", new Vector2(14f, 3.2f), 22, 5,
+            CreateEnemy("河岸水匪甲", "mvp_bandit_a", new Vector2(14f, 3.2f), 22, 5,
                 questTargetId: "river_bandit");
-            CreateEnemy("河岸水匪乙", "yanliu_marsh_raider", new Vector2(17f, 2.6f), 22, 5,
+            CreateEnemy("河岸水匪乙", "mvp_bandit_b", new Vector2(17f, 2.6f), 22, 5,
                 questTargetId: "river_bandit");
 
             Debug.Log("[Demo] 敌人创建完成");
         }
 
-        private static void CreateEnemy(string name, string artId, Vector2 pos, int hp, int atk,
+        private static void CreateEnemy(string name, string spriteId, Vector2 pos, int hp, int atk,
             string questTargetId = null)
         {
             var enemy = new GameObject($"Enemy_{name}");
@@ -439,7 +431,7 @@ namespace YuanHaiLu.Editor
 
             var sr = enemy.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Character";
-            CharacterVisual.ApplyTo(enemy, artId);
+            MvpStaticVisual.ApplyTo(enemy, spriteId);
 
             var rb = enemy.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
@@ -478,11 +470,8 @@ namespace YuanHaiLu.Editor
         // ========== 可破坏物体 ==========
         private static void CreateDestructibles()
         {
-            CreateCrate(new Vector2(16f, 15f), new string[] { "herb_medicinal" });
-            CreateCrate(new Vector2(18f, 16f), new string[] { "food_mantou", "herb_spirit" });
-            CreateCrate(new Vector2(24f, 15f), new string[] { });
-
-            Debug.Log("[Demo] 可破坏物体创建完成");
+            // 木箱属于旧正式场景填充，不在本轮 10–15 分钟 MVP 的任务闭环内。
+            Debug.Log("[Demo] MVP 不创建额外可破坏物");
         }
 
         private static void CreateCrate(Vector2 pos, string[] drops)
@@ -535,10 +524,12 @@ namespace YuanHaiLu.Editor
             var pouch = new GameObject("ItemPickup_LostPouch");
             pouch.transform.position = new Vector3(24f, 3f, 0);
             var pouchSr = pouch.AddComponent<SpriteRenderer>();
-            pouchSr.sortingLayerName = "Environment";
+            MvpStaticVisual.ApplyTo(pouch, "mvp_lost_pouch");
+            // MvpStaticVisual assigns normal actors to Character.  The pouch is an
+            // environment-side pickup and must remain below the player instead.
+            pouchSr.sortingLayerName = GameConfig.SORTING_ENVIRONMENT;
             pouchSr.sortingOrder = 5;
-            var pouchTiles = EnvironmentTileBuilder.LoadTiles("yanliu");
-            pouchSr.sprite = pouchTiles["yanliu__decor__0"].sprite;
+            pouch.transform.localScale = Vector3.one * 0.5f;
             var pouchCol = pouch.AddComponent<BoxCollider2D>();
             pouchCol.isTrigger = true;
             pouchCol.size = new Vector2(0.8f, 0.8f);

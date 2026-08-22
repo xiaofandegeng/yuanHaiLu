@@ -299,11 +299,11 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void DemoScenesHavePersistentBackdropsCoveringTheLogicalFrame()
+        public void DemoScenesHavePersistentLayeredMvpArtWithCharacterDepth()
         {
-            // docs/16 Gate R1：相机清屏色只能在地图之外作为保护，不能成为试玩
-            // 截图的大面积底色。两个 Demo 都要有一张 480×270 @ PPU16 的持久
-            // 像素背景，精确覆盖 30×16.875 的世界视口。
+            // docs/17：MVP 必须是原生 480×270 像素层，不允许把整张高密度概念
+            // 图置于所有游戏物体下面。角色在 Environment 与 Foreground 之间，
+            // 所以门帘、屋檐、柜台等前景可形成真实遮挡。
             foreach (var scenePath in new[]
                      {
                          "Assets/Scenes/Demo_YanLiuTown.unity",
@@ -311,16 +311,69 @@ namespace YuanHaiLu.Tests.EditMode
                      })
             {
                 EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-                var backdrop = GameObject.Find("[MVP Backdrop]");
-                Assert.That(backdrop, Is.Not.Null, $"{scenePath} 缺少全帧试玩背景");
-                var renderer = backdrop.GetComponent<SpriteRenderer>();
-                Assert.That(renderer, Is.Not.Null);
-                Assert.That(renderer.sprite, Is.Not.Null);
-                Assert.That(AssetDatabase.Contains(renderer.sprite), Is.True,
-                    $"{scenePath} 的背景必须是持久资源，禁止运行时生成贴图");
-                Assert.That(renderer.bounds.size.x, Is.EqualTo(30f).Within(0.01f));
-                Assert.That(renderer.bounds.size.y, Is.EqualTo(16.875f).Within(0.01f));
+                Assert.That(GameObject.Find("[MVP Backdrop]"), Is.Null,
+                    $"{scenePath} 不能保留整张概念背景");
+
+                var expectedLayers = new[]
+                {
+                    // Existing formal scenes use Unity's Default layer for their
+                    // bottom tilemap.  The MVP keeps that convention instead of
+                    // rewriting every frozen asset merely to rename Ground.
+                    ("[MVP Ground]", "Default"),
+                    ("[MVP Environment]", GameConfig.SORTING_ENVIRONMENT),
+                    ("[MVP Foreground]", GameConfig.SORTING_FOREGROUND),
+                };
+                foreach (var (layerName, sortingLayer) in expectedLayers)
+                {
+                    var layer = GameObject.Find(layerName);
+                    Assert.That(layer, Is.Not.Null, $"{scenePath} 缺少 {layerName}");
+                    var renderer = layer.GetComponent<SpriteRenderer>();
+                    Assert.That(renderer, Is.Not.Null);
+                    Assert.That(renderer.sprite, Is.Not.Null);
+                    Assert.That(AssetDatabase.Contains(renderer.sprite), Is.True,
+                        $"{scenePath} 的 {layerName} 必须是持久资源");
+                    Assert.That(renderer.sortingLayerName, Is.EqualTo(sortingLayer));
+                    Assert.That(renderer.bounds.size.x, Is.EqualTo(30f).Within(0.01f));
+                    Assert.That(renderer.bounds.size.y, Is.EqualTo(16.875f).Within(0.01f));
+                }
+
+                var player = GameObject.Find("Player");
+                Assert.That(player, Is.Not.Null);
+                var playerRenderer = player.GetComponent<SpriteRenderer>();
+                Assert.That(playerRenderer, Is.Not.Null);
+                Assert.That(playerRenderer.sortingLayerName,
+                    Is.EqualTo(GameConfig.SORTING_CHARACTER));
             }
+        }
+
+        [Test]
+        public void MvpOnlyActorsUsePersistentSpritesFromTheSharedPixelPalette()
+        {
+            foreach (var spriteId in new[]
+                     {
+                         "mvp_innkeeper", "mvp_bandit_a", "mvp_bandit_b", "mvp_lost_pouch",
+                     })
+            {
+                var sprite = MvpArtCatalog.Load(spriteId);
+                Assert.That(sprite, Is.Not.Null, $"MVP actor sprite '{spriteId}' is required");
+                Assert.That(AssetDatabase.Contains(sprite), Is.True,
+                    $"MVP actor sprite '{spriteId}' cannot be generated at runtime");
+                Assert.That(sprite.rect.size, Is.EqualTo(new Vector2(32f, 32f)));
+            }
+
+            EditorSceneManager.OpenScene("Assets/Scenes/Demo_YanLiuTown.unity", OpenSceneMode.Single);
+            var bandits = Object.FindObjectsByType<Character.EnemyAI>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Assert.That(bandits, Has.Length.EqualTo(2));
+            Assert.That(bandits.All(bandit => bandit.GetComponent<MvpStaticVisual>() != null), Is.True);
+            Assert.That(bandits.All(bandit => bandit.GetComponent<CharacterVisual>() == null), Is.True,
+                "MVP bandits cannot mix frozen formal art into the new scene palette.");
+
+            EditorSceneManager.OpenScene("Assets/Scenes/Demo_Inn.unity", OpenSceneMode.Single);
+            var innkeeper = GameObject.Find("NPC_掌柜老赵");
+            Assert.That(innkeeper, Is.Not.Null);
+            Assert.That(innkeeper.GetComponent<MvpStaticVisual>(), Is.Not.Null);
+            Assert.That(innkeeper.GetComponent<CharacterVisual>(), Is.Null);
         }
 
         [Test]

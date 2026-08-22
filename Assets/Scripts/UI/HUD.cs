@@ -96,15 +96,19 @@ namespace YuanHaiLu.UI
             var barsPanel = CreatePanel("Bars", transform,
                 new Vector2(0f, 1f), new Vector2(0f, 1f),
                 new Vector2(8, -42), new Vector2(116, -8));
+            // A deliberately quiet ink plaque keeps status information legible
+            // without leaving bare neon strips over the hand-authored pixel world.
+            barsPanel.AddComponent<Image>().color = new Color(24f / 255f, 31f / 255f,
+                40f / 255f, 0.78f);
 
             // HP条
             CreateLabel("HP_Label", barsPanel.transform,
                 new Vector2(0f, 0.66f), new Vector2(0.16f, 1f),
-                "气", 8, new Color(1f, 0.52f, 0.45f));
+                "气", 8, new Color(221f / 255f, 207f / 255f, 169f / 255f));
 
             _hpBarFill = CreateBar("HP_Bar", barsPanel.transform,
                 new Vector2(0.18f, 0.68f), new Vector2(1f, 0.98f),
-                new Color(0.8f, 0.15f, 0.15f));
+                new Color(176f / 255f, 65f / 255f, 48f / 255f));
 
             _hpText = CreateLabel("HP_Text", barsPanel.transform,
                 new Vector2(0.18f, 0.68f), new Vector2(1f, 0.98f),
@@ -113,11 +117,11 @@ namespace YuanHaiLu.UI
             // MP条
             CreateLabel("MP_Label", barsPanel.transform,
                 new Vector2(0f, 0.32f), new Vector2(0.16f, 0.64f),
-                "内", 8, new Color(0.5f, 0.72f, 1f));
+                "内", 8, new Color(221f / 255f, 207f / 255f, 169f / 255f));
 
             _mpBarFill = CreateBar("MP_Bar", barsPanel.transform,
                 new Vector2(0.18f, 0.34f), new Vector2(1f, 0.64f),
-                new Color(0.1f, 0.25f, 0.75f));
+                new Color(54f / 255f, 76f / 255f, 111f / 255f));
 
             _mpText = CreateLabel("MP_Text", barsPanel.transform,
                 new Vector2(0.18f, 0.34f), new Vector2(1f, 0.64f),
@@ -126,7 +130,7 @@ namespace YuanHaiLu.UI
             // 经验条（细条）
             _expBarFill = CreateBar("EXP_Bar", barsPanel.transform,
                 new Vector2(0.18f, 0.07f), new Vector2(1f, 0.18f),
-                new Color(0.65f, 0.48f, 0.9f));
+                new Color(216f / 255f, 165f / 255f, 75f / 255f));
 
             // 等级
             _levelText = CreateLabel("Level", barsPanel.transform,

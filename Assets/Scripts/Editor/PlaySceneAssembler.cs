@@ -82,12 +82,16 @@ namespace YuanHaiLu.Editor
         }
 
         /// <summary>
-        /// 使用持久 480×270 像素背景替换 Demo 中与 MVP 构图不一致的正式场景视觉。
-        /// 正式 Tilemap 源、锚点与场景本体仍保留；只禁用 Demo 克隆中的旧渲染与碰撞，
-        /// 由调用方按新的单屏构图建立碰撞。
+        /// 用三张同格、持久的原生像素层搭建 MVP 场景。角色处在 Environment 与
+        /// Foreground 之间，因此柳枝、门帘和柜台边缘是真实的层级关系，而不是把
+        /// 高分辨率概念图直接铺在所有游戏物体下面。
         /// </summary>
-        public static void CreateMvpBackdrop(
-            GameObject formalSceneRoot, string assetPath, Vector2 center)
+        public static void CreateMvpSceneLayers(
+            GameObject formalSceneRoot,
+            string groundAssetPath,
+            string environmentAssetPath,
+            string foregroundAssetPath,
+            Vector2 center)
         {
             if (formalSceneRoot != null)
             {
@@ -99,21 +103,39 @@ namespace YuanHaiLu.Editor
                     collider.enabled = false;
             }
 
-            ConfigureMvpBackdropImporter(assetPath);
+            CreateMvpSceneLayer("[MVP Ground]", groundAssetPath,
+                // The legacy project reserves Default for its bottom-most tile
+                // layer. Keep the MVP ground there: it is below Environment,
+                // Character and Foreground without migrating every frozen scene.
+                "Default", -100, center);
+            CreateMvpSceneLayer("[MVP Environment]", environmentAssetPath,
+                GameConfig.SORTING_ENVIRONMENT, -100, center);
+            CreateMvpSceneLayer("[MVP Foreground]", foregroundAssetPath,
+                GameConfig.SORTING_FOREGROUND, 0, center);
+        }
+
+        private static void CreateMvpSceneLayer(
+            string objectName,
+            string assetPath,
+            string sortingLayer,
+            int sortingOrder,
+            Vector2 center)
+        {
+            ConfigureMvpSpriteImporter(assetPath);
             var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
             if (sprite == null)
                 throw new System.InvalidOperationException(
-                    "MVP backdrop is missing or not importable: " + assetPath);
+                    "MVP scene layer is missing or not importable: " + assetPath);
 
-            var backdrop = new GameObject("[MVP Backdrop]");
-            var renderer = backdrop.AddComponent<SpriteRenderer>();
+            var layer = new GameObject(objectName);
+            var renderer = layer.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
-            renderer.sortingLayerName = GameConfig.SORTING_GROUND;
-            renderer.sortingOrder = -100;
-            backdrop.transform.position = new Vector3(center.x, center.y, 0f);
+            renderer.sortingLayerName = sortingLayer;
+            renderer.sortingOrder = sortingOrder;
+            layer.transform.position = new Vector3(center.x, center.y, 0f);
         }
 
-        private static void ConfigureMvpBackdropImporter(string assetPath)
+        private static void ConfigureMvpSpriteImporter(string assetPath)
         {
             var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (importer == null)
@@ -133,6 +155,16 @@ namespace YuanHaiLu.Editor
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.mipmapEnabled = false;
             importer.SaveAndReimport();
+        }
+
+        /// <summary>
+        /// Static MVP actors share the same persistent, point-filtered import
+        /// contract as the three environment layers. This is editor-only setup;
+        /// gameplay still loads the baked Sprite via Resources.
+        /// </summary>
+        public static void ConfigureMvpActorSprite(string spriteId)
+        {
+            ConfigureMvpSpriteImporter("Assets/Resources/Art/MVP/" + spriteId + ".png");
         }
 
         // ========== 玩家（固定男主 + 全套战斗/交互组件，docs/15） ==========

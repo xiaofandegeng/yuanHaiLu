@@ -11,9 +11,9 @@
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
 | 代码规模 | 76 个运行时/编辑器 C# 文件；另有 26 个测试/测试工具文件 |
-| 状态 | 单主角 MVP 垂直切片（docs/15/16）：固定男主 + 三武器流派 + 可读烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
+| 状态 | 单主角 MVP 垂直切片（docs/15/17）：固定男主 + 三武器流派 + 原生像素烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/mvp-presentation-flow-rework`（基于单主角 MVP 复审基线） |
-| 测试 | 137 EditMode + 14 PlayMode + 47 Python 全通过（最终提交后须重跑并以 XML 为准） |
+| 测试 | 138 EditMode + 14 PlayMode + 48 Python 全通过（最终提交后须重跑并以 XML 为准） |
 | 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md`、`docs/15-single-hero-mvp-design.md` |
 
 ## 1. 如何运行
@@ -221,7 +221,7 @@ Ground → Environment → Character → Foreground → UI
 - 角色分类固定：12 Player、15 Named、36 NPC、24 Enemies、10 Bosses。
 - 环境固定：10 Regions（tianshu/cangyue/yanliu/chisha/youhuang/hanyuan/prologue_village/luoyuan/jueyun/zhenyue）和 13 Interiors（inn/residence/shop/pharmacy/academy/yamen/palace/temple/cave/tomb/dungeon/military_camp/ship_cabin）。
 - `CharacterVisual.Apply` 中 UnityEngine.Object 的组件检查必须用显式两段 `== null`；禁止 `GetComponent<T>() ?? AddComponent<T>()`，Unity “fake null” 曾导致 `MissingComponentException`。
-- docs/16 的 MVP 试玩画面只例外使用两张持久背景：`Assets/ArtSource/Environment/MVP/` 的 480×270 源图及 `Assets/Art/Environment/MVP/` 的烘焙输出；它们只接入两个 `Demo_*` 场景，不改正式区域/室内基线。离屏截图必须**先**绑定 480×270 `RenderTexture`，再刷新 `PixelPerfectCamera`，否则 Unity 会把视口按编辑器 Game View 钳制并在两侧留下清屏色。
+- docs/17 的 MVP 试玩画面使用原生 480×270、同调色板的三层像素资源：`Assets/ArtSource/Environment/MVP/v2/` 与 `Assets/Art/Environment/MVP/v2/` 的 `Ground/Environment/Foreground`；角色排序在后两层之间。掌柜、两水匪、荷包使用 `Resources/Art/MVP/mvp_*` 持久精灵；只接入两个 `Demo_*` 场景，不改正式区域/室内基线。离屏截图必须**先**绑定 480×270 `RenderTexture`，再刷新 `PixelPerfectCamera`，否则 Unity 会把视口按编辑器 Game View 钳制并在两侧留下清屏色。
 - 主菜单与烟柳镇实际渲染基线见 `Assets/Art/Characters/Player/previews/main-menu-character-selection.png`、`Assets/Art/Environment/previews/demo-yanliu-gameplay.png`。
 
 ## 4. 开发与测试流程
@@ -251,7 +251,7 @@ PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件
 
 ```bash
 python3 -m unittest discover -s tools/art_pipeline/tests -v
-python3 -m tools.art_pipeline.build --all   # 当前应 built=0 skipped=121
+python3 -m tools.art_pipeline.build --all   # 当前应 built=0 skipped=131
 python3 -m tools.art_pipeline.validate --all
 ```
 
@@ -267,7 +267,7 @@ python3 -m tools.art_pipeline.validate --all
 
 - v5 已保存主角外观、武器流派与活跃任务，但尚未保存敌人状态、唯一拾取物、一次性事件、区域标志和其他世界状态（读档后 Demo 敌人与门控对象按场景初始状态重置，任务进度仍按存档恢复）。
 - `MVP_01` 已在 Demo/客栈全链路接线；`M01_01`–`M01_05` 运行时模板已完成但烟柳镇场景尚未为其配置 `QuestGiver` 与目标，属阶段二内容。
-- docs/15 冻结项仍然有效：其余 11 套主角外观、85 个非 MVP 角色、10 户外、12 个非 inn 室内与批量美术流水线保持原样。唯一美术豁免（docs/15 §风险已同步登记）：`Assets/Resources/Art/MVP/` 下 7 张 16×16 功能性小图 —— weapon_sword/gauntlets/dart、proj_qi、proj_dart、loot_gold、loot_item；它们是"武器小图随流派真实切换"与弹体/掉落反馈的运行时必需资源，经 `MvpArtCatalog` 持久加载，正式角色/环境美术零改动。
+- docs/15 冻结项仍然有效：其余 11 套主角外观、85 个非 MVP 角色、10 户外、12 个非 inn 室内与批量美术流水线保持原样。docs/17 的严格 MVP 美术例外为：固定男主的可动画源帧、两张 Demo 的六个原生像素层，及 `Resources/Art/MVP/` 下掌柜/两水匪/荷包四张静态精灵；此前 7 张功能小图继续保留。所有例外均经持久资源加载，禁止运行时生成；正式角色/环境美术零改动。
 - 正式 97 角色和 23 环境已完成确定性第一版，但仍需要人工精修表情、攻击动作节奏、地标细节和区域独特构图。
 - 角色 Controller/动画资源已生成；当前基础状态切换仅完整覆盖 down 向 idle/walk，四方向 BlendTree 和所有动作的运行时过渡仍可继续深化。
 - 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
@@ -408,6 +408,12 @@ yuanHaiLu/
 68. 修复出生点→客栈门碰撞立面封死的路径，拆出真实门洞；掌柜移到柜台前沿可交互位；直开客栈/烟柳镇时由 `MvpDirectPlayFallback` 进入探索状态。
 69. `VisualRegressionCapture` 隔离附加场景并在绑定 RenderTexture 后刷新像素相机，杜绝叠景和左右清屏色边带；河岸审查图临时展示任务门控对象后完整恢复。
 70. 新增全帧离屏截图、紧凑 HUD、直开回退、相机边界与门洞路线回归；最终人工视觉批准与三流派完整试玩仍是合并门禁。
+
+### 第十一批：MVP 原生像素美术整合（2026-08-22，docs/17）
+
+71. 淘汰 Demo 中“高密度整图概念背景 + 旧角色贴片”的混搭，烟柳镇与客栈改为 `Ground → Environment → Character → Foreground` 原生 480×270 像素层；玩家重画为靛蓝短披、米白内衫、朱砂腰绦与钢剑，掌柜/水匪/荷包切换为同调色板 32×32 持久精灵。
+72. 两个 Demo 的碰撞、任务锚点与可走路线保持原坐标；视口外旧镇 NPC 和冻结角色不再混入试玩画面。`build --all` 纳入 MVP 层与静态精灵的确定性构建。
+73. 验证：Python 48/48、EditMode 138/138、PlayMode 14/14；三张 480×270 实拍写入 `/private/tmp/yuanhailu-mvp-rework-review/`，仍需用户按 1× 画面做最终视觉验收。
 
 ## 8. 当前人工 QA 清单
 

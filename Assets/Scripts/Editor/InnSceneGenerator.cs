@@ -19,8 +19,12 @@ namespace YuanHaiLu.Editor
     {
         private const float MvpWidth = 30f;
         private const float MvpHeight = 16.875f;
-        private const string MvpInnBackdrop =
-            "Assets/Art/Environment/MVP/mvp_inn_backdrop.png";
+        private const string MvpInnGround =
+            "Assets/Art/Environment/MVP/v2/mvp_inn_ground_v2.png";
+        private const string MvpInnEnvironment =
+            "Assets/Art/Environment/MVP/v2/mvp_inn_environment_v2.png";
+        private const string MvpInnForeground =
+            "Assets/Art/Environment/MVP/v2/mvp_inn_foreground_v2.png";
 
         // 玩法内容放在独立 Demo 路径，正式 Interiors/inn.unity 保持纯 Tilemap 基线，
         // 供 EnvironmentArtTests 反复重建（与 Demo_YanLiuTown / Regions/yanliu 同构）。
@@ -101,10 +105,13 @@ namespace YuanHaiLu.Editor
 
         private static void CreateMvpVisualStage()
         {
-            PlaySceneAssembler.CreateMvpBackdrop(
+            PlaySceneAssembler.CreateMvpSceneLayers(
                 GameObject.Find("inn"),
-                MvpInnBackdrop,
+                MvpInnGround,
+                MvpInnEnvironment,
+                MvpInnForeground,
                 new Vector2(MvpWidth * 0.5f, MvpHeight * 0.5f));
+            PlaySceneAssembler.ConfigureMvpActorSprite("mvp_innkeeper");
 
             var root = new GameObject("MvpInnCollision");
             root.layer = LayerMask.NameToLayer("Environment");
@@ -155,7 +162,7 @@ namespace YuanHaiLu.Editor
 
             var sr = npc.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Character";
-            CharacterVisual.ApplyTo(npc, "innkeeper_zhao");
+            MvpStaticVisual.ApplyTo(npc, "mvp_innkeeper");
 
             var col = npc.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
