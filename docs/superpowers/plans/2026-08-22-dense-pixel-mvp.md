@@ -43,7 +43,7 @@
 - Modify: tools/art_pipeline/schema.py:74-92
 - Modify: tools/art_pipeline/tests/test_character_baker.py
 - Modify: Assets/Scripts/Core/GameConfig.cs:13-17
-- Modify: Assets/Tests/EditMode/ArtAssetTests.cs
+- Modify: Assets/Tests/EditMode/CharacterArtTests.cs
 
 **Interfaces:**
 - Consumes: CharacterRecipe.from_dict(payload).
