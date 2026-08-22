@@ -82,6 +82,49 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
+        public void PixelCameraKeepsConstantWorldCoverageAcrossWindowSizes()
+        {
+            // docs/16 C.1 契约：逻辑画面 480×270、PPU 16 → 世界正交尺寸恒为
+            // 270/(2×16)=8.4375；窗口尺寸与整数倍率只决定 pixelRect，不得扩大世界覆盖。
+            var method = typeof(PixelPerfectCamera).GetMethod(
+                "UpdateCameraForScreen",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.That(method, Is.Not.Null,
+                "PixelPerfectCamera 必须提供可注入窗口尺寸的刷新入口，" +
+                "否则无法在测试中模拟不同外层屏幕尺寸（docs/16 C.1）。");
+
+            var cameraObject = TestSceneFactory.Create("Main Camera");
+            cameraObject.AddComponent<Camera>();
+            var pixelCamera = cameraObject.AddComponent<PixelPerfectCamera>();
+            var camera = cameraObject.GetComponent<Camera>();
+
+            // 1440×900（3× 可用）：世界覆盖必须保持 480×270。
+            method.Invoke(pixelCamera, new object[] { 1440, 900 });
+            Assert.That(camera.orthographicSize, Is.EqualTo(8.4375f).Within(0.0001f),
+                "1440×900 窗口下 orthographicSize 必须恒为 8.4375，" +
+                "旧公式按屏幕高参与计算会把世界缩成缩略图（docs/16 P0）。");
+            Assert.That(pixelCamera.GetCurrentScale(), Is.EqualTo(3));
+            Assert.That(camera.pixelRect.width, Is.EqualTo(1440f).Within(0.5f));
+            Assert.That(camera.pixelRect.height, Is.EqualTo(810f).Within(0.5f));
+            Assert.That(camera.pixelRect.center.x, Is.EqualTo(720f).Within(0.5f),
+                "pixelRect 必须水平居中");
+            Assert.That(camera.pixelRect.center.y, Is.EqualTo(450f).Within(0.5f),
+                "pixelRect 必须垂直居中");
+
+            // 480×270（1× 恰好）：同一世界覆盖。
+            method.Invoke(pixelCamera, new object[] { 480, 270 });
+            Assert.That(camera.orthographicSize, Is.EqualTo(8.4375f).Within(0.0001f));
+            Assert.That(pixelCamera.GetCurrentScale(), Is.EqualTo(1));
+            Assert.That(camera.pixelRect, Is.EqualTo(new Rect(0f, 0f, 480f, 270f)));
+
+            // 不足一倍（安全降级）：世界覆盖仍不得改变。
+            method.Invoke(pixelCamera, new object[] { 320, 200 });
+            Assert.That(camera.orthographicSize, Is.EqualTo(8.4375f).Within(0.0001f),
+                "小于逻辑画面的窗口只能裁剪显示，不得缩放世界。");
+            Assert.That(pixelCamera.GetCurrentScale(), Is.EqualTo(1));
+        }
+
+        [Test]
         public void CameraFollowDoesNotJumpOutsideUnconfiguredBounds()
         {
             var cameraObject = TestSceneFactory.Create("Main Camera");
