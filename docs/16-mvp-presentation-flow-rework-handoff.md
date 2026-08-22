@@ -360,4 +360,8 @@ python3 -m tools.art_pipeline.validate --all
 | 日期 | 执行者 | 阶段 | 结果／证据 | 审批 |
 | --- | --- | --- | --- | --- |
 | 2026-08-22 | Codex | 规格建立 | 已在可见 Unity 中复现客栈 `MissingReferenceException`、确认像素相机 `OrthoSize: 13.31` 与 480×270/PPU16 契约不符；本文创建。 | 待执行 |
+| 2026-08-22 | Codex | A 红基线 | 分支 `codex/mvp-presentation-flow-rework`（自 dfdae67）；F1 对话测试以文档同款 `MissingReferenceException` 红、F3/F4 相机契约红。提交 `144938b`（本文）、`e8002e3`（红基线）。 | 已按序执行 |
+| 2026-08-22 | Codex | B 对话修复 | `DialogueUI` 具名处理器 + 记录订阅实例 + OnDisable/OnDestroy 全量退订 + Update 迟到管理器重订；F1 红→绿。提交 `6d569de`。 | 已按序执行 |
+| 2026-08-22 | Codex | C 相机/UI 契约 | `PixelPerfectCamera` ortho 恒定 8.4375、RT 检测、纯函数视口；HUD/对话/暂停/过场画布统一 ScreenSpaceCamera+Scaler 480×270；两 Demo 场景经生成器重建；F2/F4/F5/F6 绿（影子副本 EditMode 4/4、PlayMode 4/4）。三张 480×270 实拍（出生/河岸/客栈）输出至 `/private/tmp/yuanhailu-mvp-rework-review/`，人工核对男主/满屏/HUD/无黑帧。提交 `8eefe7c`。 | 自动侧已绿；1× 视觉属 Gate R1 待用户 |
+| 2026-08-22 | Codex | D 缩样 | 三张 160×90 无 UI 构图缩样 + 确定性生成脚本入库 `docs/16-thumbnails/`（烟柳出生/主路、烟柳河岸、客栈掌柜）。 | **待用户批准缩样后方可进入 Tile/烘焙** |
 
