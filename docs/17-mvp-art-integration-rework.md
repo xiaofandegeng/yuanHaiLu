@@ -1,6 +1,6 @@
-# MVP 美术整合返工
+# MVP 美术整合返工（历史方案）
 
-> 状态：已完成并验证。本文取代 docs/16 中“整张概念图直接作为 Demo 背景”的实现选择；docs/15 的单男主、三流派和双场景范围保持不变。
+> 状态：已被后续模块化方案取代。本文记录 480×270 三静态层阶段的历史实现，不再是后续开发或验收依据。请改读 [docs/18-dense-pixel-mvp-implementation-handoff.md](18-dense-pixel-mvp-implementation-handoff.md)。
 
 ## 问题定性
 

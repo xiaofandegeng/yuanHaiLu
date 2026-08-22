@@ -8,6 +8,8 @@
 
 **Tech Stack:** Unity 6000.4.10f1 built-in 2D, C# / UnityEditor, Python 3 + Pillow, NUnit EditMode/PlayMode, existing tools.art_pipeline.
 
+> **Execution record (2026-08-22):** Task 1 is complete in `e26de10`. Task 2's Python asset pipeline, deterministic build and redundancy cleanup are implemented but its Unity EditMode proof is blocked by the local Unity 6000.4.10f1 license dialog; do not commit or begin Task 3 integration until that proof can run. The asset and handoff record is `docs/18-dense-pixel-mvp-implementation-handoff.md`.
+
 ## Global Constraints
 
 - Keep 480×270, PPU 16, Point filtering, uncompressed textures and no antialiasing.
@@ -49,7 +51,7 @@
 - Consumes: CharacterRecipe.from_dict(payload).
 - Produces: only CharacterRecipe("player_male_swordsman", 48, ...) may use 48px.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ~~~python
 def test_only_fixed_male_player_can_use_a_48_pixel_frame(self):
@@ -64,13 +66,13 @@ def test_only_fixed_male_player_can_use_a_48_pixel_frame(self):
         CharacterRecipe.from_dict(payload)
 ~~~
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: python3 -m unittest tools.art_pipeline.tests.test_character_baker -v
 
 Expected: the new test fails because the schema permits only frame size 32.
 
-- [ ] **Step 3: Implement the exact narrow rule**
+- [x] **Step 3: Implement the exact narrow rule**
 
 ~~~python
 allowed_frame_sizes = {32}
@@ -83,11 +85,11 @@ if frame_size not in allowed_frame_sizes:
 
 Add public const int MVP_HERO_FRAME_SIZE = 48 next to CHARACTER_FRAME_SIZE; retain the latter at 32.
 
-- [ ] **Step 4: Verify green**
+- [x] **Step 4: Verify green**
 
 Run the Python test. Confirm all non-default recipes still validate at 32px.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ~~~bash
 git add tools/art_pipeline/schema.py tools/art_pipeline/tests/test_character_baker.py Assets/Scripts/Core/GameConfig.cs Assets/Tests/EditMode/ArtAssetTests.cs
@@ -116,7 +118,7 @@ git commit -m "feat(art): allow 48px MVP male hero frames"
 - Consumes: roster animation rows and the Task-1 schema rule.
 - Produces: build_dense_mvp_art(project_root) -> tuple[Path, ...], six aligned 48px source modules, the existing MvpArtCatalog.Load("weapon_<style>") sprites and CharacterAnimationBuilder.RebuildOnly("player_male_swordsman").
 
-- [ ] **Step 1: Write the failing source-art test**
+- [x] **Step 1: Write the failing source-art test**
 
 ~~~python
 def test_dense_hero_has_48_pixel_nonmirrored_directions_and_three_weapon_layers(self):
@@ -132,19 +134,19 @@ def test_dense_hero_has_48_pixel_nonmirrored_directions_and_three_weapon_layers(
 Direction helpers hash cropped RGBA frame bytes rather than file names. Add a second test that a second build writes no changed files.
 Add an EditMode test that the rebuilt male catalog sprite rect is 48×48 while player_female_swordsman remains 32×32; this assertion must fail until the player source is rebuilt.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: python3 -m unittest tools.art_pipeline.tests.test_mvp_dense_art_builder -v
 
 Expected: import failure because the dense builder does not exist.
 
-- [ ] **Step 3: Implement the 1× source master**
+- [x] **Step 3: Implement the 1× source master**
 
 Implement build_dense_mvp_art with source-scale RGBA Pillow canvases. It writes all six current player module sheets at roster dimensions and redraws the three existing weapon layers under Assets/Resources/Art/MVP, preserving their stable IDs for MainMenu and PlayerCombat.
 
 Every direction contains an 8–10px dark hair knot, 20–24px indigo short cloak, 12–18px paper inner robe, 4–6px vermilion waist band, 18–28px weapon silhouette and 3–5px ground shadow. Draw left/right independently. Preserve existing idle, walk, dash and attack rows/hit frames. Change only the fixed male roster entry to frameSize 48. Call build_dense_mvp_art(PROJECT_ROOT) before manifest bakes in build.py.
 
-- [ ] **Step 4: Verify green**
+- [ ] **Step 4: Verify green** — Python build/validation is green; Unity EditMode confirmation is blocked by the local license dialog.
 
 ~~~bash
 python3 -m unittest tools.art_pipeline.tests.test_mvp_dense_art_builder -v
