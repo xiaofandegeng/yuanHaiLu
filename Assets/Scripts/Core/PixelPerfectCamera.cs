@@ -29,6 +29,7 @@ namespace YuanHaiLu.Core
         private int _currentScale;
         private int _lastScreenWidth;
         private int _lastScreenHeight;
+        private RenderTexture _lastTargetTexture;
 
         private const string ClearCameraName = "[PixelPerfectBackground]";
 
@@ -55,8 +56,10 @@ namespace YuanHaiLu.Core
         {
             if (!autoScale) return;
 
-            // 屏幕尺寸变化时重新计算
-            if (Screen.width != _lastScreenWidth || Screen.height != _lastScreenHeight)
+            // 屏幕或渲染目标（离屏 RT/截图工具）变化时重新计算
+            var target = _camera != null ? _camera.targetTexture : null;
+            if (Screen.width != _lastScreenWidth || Screen.height != _lastScreenHeight ||
+                target != _lastTargetTexture)
             {
                 UpdateCamera();
             }
@@ -64,20 +67,36 @@ namespace YuanHaiLu.Core
 
         private void UpdateCamera()
         {
+            var target = _camera.targetTexture;
+            _lastTargetTexture = target;
+            // 渲染到离屏 RT 时，逻辑尺寸取 RT 的像素尺寸。
+            UpdateCameraForScreen(
+                target != null ? target.width : Screen.width,
+                target != null ? target.height : Screen.height);
+        }
+
+        /// <summary>
+        /// 以注入的窗口尺寸刷新相机（docs/16 C.1 契约与测试缝）。
+        /// 世界正交尺寸只由逻辑画面决定：targetHeight / (2 × PPU) = 8.4375；
+        /// 窗口尺寸与整数倍率只决定 pixelRect 的整数缩放与居中，
+        /// 不得扩大或缩小世界覆盖。窗口不足 1× 时保持 1×（安全降级=裁剪显示）。
+        /// </summary>
+        public void UpdateCameraForScreen(int screenWidth, int screenHeight)
+        {
             if (_camera == null) _camera = GetComponent<Camera>();
             ConfigureClearCamera();
 
-            _lastScreenWidth = Screen.width;
-            _lastScreenHeight = Screen.height;
+            _lastScreenWidth = screenWidth;
+            _lastScreenHeight = screenHeight;
 
             // 计算最大整数缩放倍数
             int scaleX = _lastScreenWidth / targetWidth;
             int scaleY = _lastScreenHeight / targetHeight;
             _currentScale = Mathf.Max(minScale, Mathf.Min(scaleX, scaleY));
 
-            // 设置正交摄像机大小
-            // orthographicSize = (屏幕高度 / 2) / (缩放倍数 * PPU)
-            float orthoSize = (_lastScreenHeight / 2f) / (_currentScale * (float)pixelsPerUnit);
+            // 世界正交尺寸恒定（docs/16 C.1：旧公式用屏幕高参与计算，
+            // 大窗口下 OrthoSize 膨胀到 13.31，世界被缩成地图缩略图）。
+            float orthoSize = targetHeight / (2f * pixelsPerUnit);
             _camera.orthographicSize = orthoSize;
 
             // 关闭抗锯齿（像素游戏不需要）
@@ -151,12 +170,23 @@ namespace YuanHaiLu.Core
 
         private Rect CalculatePixelRect()
         {
-            int viewportWidth = targetWidth * _currentScale;
-            int viewportHeight = targetHeight * _currentScale;
+            return CalculateViewportRect(
+                _lastScreenWidth, _lastScreenHeight, targetWidth, targetHeight, _currentScale);
+        }
+
+        /// <summary>
+        /// 居中的整数倍视口矩形（纯函数，docs/16 C.1 测试缝）。
+        /// 注意 Camera.pixelRect 赋值会被实际屏幕钳制，居中数学以本函数为准。
+        /// </summary>
+        public static Rect CalculateViewportRect(
+            int screenWidth, int screenHeight, int targetWidth, int targetHeight, int scale)
+        {
+            int viewportWidth = targetWidth * scale;
+            int viewportHeight = targetHeight * scale;
 
             // 居中
-            int x = (_lastScreenWidth - viewportWidth) / 2;
-            int y = (_lastScreenHeight - viewportHeight) / 2;
+            int x = (screenWidth - viewportWidth) / 2;
+            int y = (screenHeight - viewportHeight) / 2;
 
             return new Rect(x, y, viewportWidth, viewportHeight);
         }

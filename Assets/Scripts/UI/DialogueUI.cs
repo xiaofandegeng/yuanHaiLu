@@ -124,7 +124,10 @@ namespace YuanHaiLu.UI
         private void BuildUI()
         {
             _canvas = GetComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            // 场景装配器已把画布绑定到 480×270 像素相机（Screen Space - Camera，
+            // docs/16 C.2）；仅在独立创建、无相机绑定时回退 Overlay。
+            if (_canvas.worldCamera == null)
+                _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             _canvas.sortingOrder = 500;
 
             if (GetComponent<CanvasScaler>() == null)

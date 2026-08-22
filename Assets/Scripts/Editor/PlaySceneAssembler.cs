@@ -116,32 +116,66 @@ namespace YuanHaiLu.Editor
             return player;
         }
 
-        // ========== UI（HUD / 对话 / 暂停 / EventSystem） ==========
-        public static void CreateHudCanvas()
+        // ========== UI（HUD / 对话 / 暂停 / 过场 / EventSystem） ==========
+        // docs/16 C.2：玩法 UI 与世界共用同一 480×270 逻辑展示面 ——
+        // Screen Space - Camera 绑定像素相机 + 固定参考分辨率 scaler，
+        // 画布随相机 pixelRect 整数缩放居中，禁止漂在外层窗口/letterbox 上。
+
+        public static void ConfigureCanvasForPixelSurface(
+            GameObject canvasObject, Camera uiCamera, int sortingOrder)
+        {
+            var canvas = canvasObject.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = uiCamera;
+            canvas.planeDistance = 1f;
+            canvas.sortingOrder = sortingOrder;
+
+            var scaler = canvasObject.GetComponent<CanvasScaler>();
+            if (scaler == null)
+                scaler = canvasObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(
+                GameConfig.NATIVE_WIDTH, GameConfig.NATIVE_HEIGHT);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
+        }
+
+        /// <summary>[ScreenTransition] 画布先于相机创建；相机就绪后补绑定同一逻辑展示面。</summary>
+        public static void BindScreenTransitionToCamera(Camera uiCamera)
+        {
+            var transitions = Object.FindObjectsByType<ScreenTransition>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (transitions.Length == 0) return;
+
+            ConfigureCanvasForPixelSurface(transitions[0].gameObject, uiCamera, 9998);
+        }
+
+        public static void CreateHudCanvas(Camera uiCamera)
         {
             var canvasObj = new GameObject("[HUD Canvas]");
             canvasObj.AddComponent<Canvas>();
             canvasObj.AddComponent<CanvasScaler>();
+            ConfigureCanvasForPixelSurface(canvasObj, uiCamera, 400);
             // HUD v2 自动构建所有UI
             canvasObj.AddComponent<HUD>();
         }
 
-        public static void CreateDialogueCanvas()
+        public static void CreateDialogueCanvas(Camera uiCamera)
         {
             var dlgCanvas = new GameObject("[Dialogue Canvas]");
             dlgCanvas.AddComponent<Canvas>();
             dlgCanvas.AddComponent<CanvasScaler>();
+            ConfigureCanvasForPixelSurface(dlgCanvas, uiCamera, 500);
             // DialogueUI v2 自动构建对话框+选择面板
             dlgCanvas.AddComponent<DialogueUI>();
         }
 
-        public static void CreatePauseCanvas()
+        public static void CreatePauseCanvas(Camera uiCamera)
         {
             var pauseCanvas = new GameObject("[Pause Canvas]");
-            var canvas = pauseCanvas.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 300;
+            pauseCanvas.AddComponent<Canvas>();
             pauseCanvas.AddComponent<CanvasScaler>();
+            ConfigureCanvasForPixelSurface(pauseCanvas, uiCamera, 300);
             pauseCanvas.AddComponent<PauseMenu>();
         }
 

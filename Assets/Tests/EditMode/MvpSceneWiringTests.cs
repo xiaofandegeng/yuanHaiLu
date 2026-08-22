@@ -232,5 +232,70 @@ namespace YuanHaiLu.Tests.EditMode
                 LayerMask.GetMask("Environment"));
             return hit == null;
         }
+
+        [Test]
+        public void DemoScenesShareThePixelCameraLogicalUiSurface()
+        {
+            // docs/16 C.2/F6：HUD、对话、暂停与过场画布必须与 480×270 世界
+            // 共用同一逻辑展示面 —— Screen Space - Camera 绑定像素相机 +
+            // 480×270 固定参考分辨率 scaler，禁止 Overlay 漂在 letterbox 上。
+            foreach (var scenePath in new[]
+                     {
+                         "Assets/Scenes/Demo_YanLiuTown.unity",
+                         "Assets/Scenes/Demo_Inn.unity",
+                     })
+            {
+                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+
+                var pixelCameras = Object.FindObjectsByType<PixelPerfectCamera>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+                Assert.That(pixelCameras.Length, Is.EqualTo(1),
+                    $"{scenePath} 必须恰好一台像素相机");
+                var gameCamera = pixelCameras[0].GetComponent<Camera>();
+                Assert.That(gameCamera, Is.Not.Null);
+
+                foreach (var canvasName in new[]
+                         {
+                             "[HUD Canvas]", "[Dialogue Canvas]", "[Pause Canvas]",
+                         })
+                {
+                    AssertCanvasOnPixelSurface(scenePath, canvasName, gameCamera);
+                }
+
+                var transitions = Object.FindObjectsByType<ScreenTransition>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+                Assert.That(transitions.Length, Is.GreaterThanOrEqualTo(1),
+                    $"{scenePath} 必须有过场画布");
+                var transitionCanvas = transitions[0].GetComponent<Canvas>();
+                Assert.That(transitionCanvas, Is.Not.Null);
+                Assert.That(transitionCanvas.renderMode,
+                    Is.EqualTo(RenderMode.ScreenSpaceCamera),
+                    $"{scenePath} 过场画布必须在像素相机逻辑展示面上");
+                Assert.That(transitionCanvas.worldCamera, Is.EqualTo(gameCamera),
+                    $"{scenePath} 过场画布必须绑定游戏相机");
+            }
+        }
+
+        private static void AssertCanvasOnPixelSurface(
+            string scenePath, string canvasName, Camera gameCamera)
+        {
+            var canvasObject = GameObject.Find(canvasName);
+            Assert.That(canvasObject, Is.Not.Null,
+                $"{scenePath} 缺少 {canvasName}");
+            var canvas = canvasObject.GetComponent<Canvas>();
+            Assert.That(canvas, Is.Not.Null);
+            Assert.That(canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceCamera),
+                $"{scenePath} {canvasName} 必须绑定像素相机（docs/16 C.2）");
+            Assert.That(canvas.worldCamera, Is.EqualTo(gameCamera),
+                $"{scenePath} {canvasName} 必须绑定游戏相机");
+            var scaler = canvasObject.GetComponent<UnityEngine.UI.CanvasScaler>();
+            Assert.That(scaler, Is.Not.Null);
+            Assert.That(scaler.uiScaleMode,
+                Is.EqualTo(UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize),
+                $"{scenePath} {canvasName} 缩放模式");
+            Assert.That(scaler.referenceResolution,
+                Is.EqualTo(new Vector2(480f, 270f)),
+                $"{scenePath} {canvasName} 参考分辨率必须为 480×270");
+        }
     }
 }

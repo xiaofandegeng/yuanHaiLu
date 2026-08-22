@@ -76,13 +76,17 @@ namespace YuanHaiLu.Editor
         }
 
         // ========== 摄像机 ==========
+        private static Camera _uiCamera;
+
         private static void CreateMainCamera()
         {
-            PlaySceneAssembler.CreateMainCamera(
+            _uiCamera = PlaySceneAssembler.CreateMainCamera(
                 "Inn",
                 new Vector3(11.5f, 8f, -10f),
-                8.5f,
+                8.4375f,
                 new Color(0.14f, 0.11f, 0.09f));
+            // [ScreenTransition] 画布先于相机创建，此处补绑同一逻辑展示面。
+            PlaySceneAssembler.BindScreenTransitionToCamera(_uiCamera);
         }
 
         // ========== 玩家 ==========
@@ -93,9 +97,9 @@ namespace YuanHaiLu.Editor
             PlaySceneAssembler.CreatePlayer("Inn", new Vector3(11.5f, 2.5f, 0));
 
             // UI
-            PlaySceneAssembler.CreateHudCanvas();
-            PlaySceneAssembler.CreateDialogueCanvas();
-            PlaySceneAssembler.CreatePauseCanvas();
+            PlaySceneAssembler.CreateHudCanvas(_uiCamera);
+            PlaySceneAssembler.CreateDialogueCanvas(_uiCamera);
+            PlaySceneAssembler.CreatePauseCanvas(_uiCamera);
             PlaySceneAssembler.EnsureEventSystem();
 
             Debug.Log("[Inn] 玩家与UI创建完成");

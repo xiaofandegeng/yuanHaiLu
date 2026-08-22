@@ -104,24 +104,34 @@ namespace YuanHaiLu.Tests.EditMode
                 "1440×900 窗口下 orthographicSize 必须恒为 8.4375，" +
                 "旧公式按屏幕高参与计算会把世界缩成缩略图（docs/16 P0）。");
             Assert.That(pixelCamera.GetCurrentScale(), Is.EqualTo(3));
-            Assert.That(camera.pixelRect.width, Is.EqualTo(1440f).Within(0.5f));
-            Assert.That(camera.pixelRect.height, Is.EqualTo(810f).Within(0.5f));
-            Assert.That(camera.pixelRect.center.x, Is.EqualTo(720f).Within(0.5f),
-                "pixelRect 必须水平居中");
-            Assert.That(camera.pixelRect.center.y, Is.EqualTo(450f).Within(0.5f),
-                "pixelRect 必须垂直居中");
 
             // 480×270（1× 恰好）：同一世界覆盖。
             method.Invoke(pixelCamera, new object[] { 480, 270 });
             Assert.That(camera.orthographicSize, Is.EqualTo(8.4375f).Within(0.0001f));
             Assert.That(pixelCamera.GetCurrentScale(), Is.EqualTo(1));
-            Assert.That(camera.pixelRect, Is.EqualTo(new Rect(0f, 0f, 480f, 270f)));
 
             // 不足一倍（安全降级）：世界覆盖仍不得改变。
             method.Invoke(pixelCamera, new object[] { 320, 200 });
             Assert.That(camera.orthographicSize, Is.EqualTo(8.4375f).Within(0.0001f),
                 "小于逻辑画面的窗口只能裁剪显示，不得缩放世界。");
             Assert.That(pixelCamera.GetCurrentScale(), Is.EqualTo(1));
+
+            // 居中整数倍视口矩形（纯函数；Camera.pixelRect 会被实际屏幕钳制，
+            // 居中数学以 CalculateViewportRect 为准）。
+            Assert.That(
+                PixelPerfectCamera.CalculateViewportRect(1440, 900, 480, 270, 3),
+                Is.EqualTo(new Rect(0f, 45f, 1440f, 810f)));
+            Assert.That(
+                PixelPerfectCamera.CalculateViewportRect(480, 270, 480, 270, 1),
+                Is.EqualTo(new Rect(0f, 0f, 480f, 270f)));
+            var centered = PixelPerfectCamera.CalculateViewportRect(
+                1000, 600, 480, 270, 2);
+            Assert.That(centered.x + centered.width / 2f, Is.EqualTo(500f).Within(0.5f),
+                "pixelRect 必须水平居中");
+            Assert.That(centered.y + centered.height / 2f, Is.EqualTo(300f).Within(0.5f),
+                "pixelRect 必须垂直居中");
+            Assert.That(centered.width, Is.LessThanOrEqualTo(1000f));
+            Assert.That(centered.height, Is.LessThanOrEqualTo(600f));
         }
 
         [Test]

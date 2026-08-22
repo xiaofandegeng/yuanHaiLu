@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using YuanHaiLu.Art;
+using YuanHaiLu.Core;
+using YuanHaiLu.UI;
 
 namespace YuanHaiLu.Editor
 {
@@ -143,6 +146,89 @@ namespace YuanHaiLu.Editor
         public static void CaptureTemporaryReviewFromCommandLine()
         {
             CaptureTemporaryReview();
+        }
+
+        // ========== docs/16 MVP 试玩画面实拍（Gate R1 审查输入） ==========
+
+        private const string MvpReviewDirectory =
+            "/private/tmp/yuanhailu-mvp-rework-review";
+
+        /// <summary>
+        /// 三张 480×270、1×、无标注的 Demo 游戏实拍（docs/16 E.3）：
+        /// 客栈门外出生点、河岸战斗点、客栈掌柜柜台。
+        /// 使用场景自带像素相机与绑定 UI，输出前不作为正式视觉基线。
+        /// </summary>
+        public static void CaptureMvpGameplay(string reviewDirectory)
+        {
+            Directory.CreateDirectory(reviewDirectory);
+            CaptureDemoGameplayFrame(
+                "Assets/Scenes/Demo_YanLiuTown.unity",
+                new Vector2(7.5f, 8.6f),
+                Path.Combine(reviewDirectory, "town-spawn-1x.png"));
+            CaptureDemoGameplayFrame(
+                "Assets/Scenes/Demo_YanLiuTown.unity",
+                new Vector2(15f, 4.2f),
+                Path.Combine(reviewDirectory, "town-riverbank-1x.png"));
+            CaptureDemoGameplayFrame(
+                "Assets/Scenes/Demo_Inn.unity",
+                new Vector2(9.5f, 6.6f),
+                Path.Combine(reviewDirectory, "inn-counter-1x.png"));
+            Debug.Log("[VisualRegressionCapture] wrote MVP gameplay images to " + reviewDirectory);
+        }
+
+        public static void CaptureMvpGameplayFromCommandLine()
+        {
+            CaptureMvpGameplay(MvpReviewDirectory);
+        }
+
+        private static void CaptureDemoGameplayFrame(
+            string scenePath, Vector2 cameraCenter, string outputPath)
+        {
+            var before = CaptureEditorState.Read();
+            Scene captureScene = default;
+            var addedScene = false;
+            Vector3 previousCameraPosition = default;
+            Camera gameCamera = null;
+            try
+            {
+                captureScene = OpenForCapture(scenePath, out addedScene);
+                var pixelCamera = FindInScene<PixelPerfectCamera>(captureScene);
+                if (pixelCamera == null)
+                    throw new InvalidOperationException(
+                        "Demo scene requires a PixelPerfectCamera for gameplay captures.");
+                gameCamera = pixelCamera.GetComponent<Camera>();
+
+                previousCameraPosition = gameCamera.transform.position;
+                gameCamera.transform.position =
+                    new Vector3(cameraCenter.x, cameraCenter.y, previousCameraPosition.z);
+                // 离屏 480×270：世界覆盖与视口都按 1× 逻辑画面刷新（docs/16 C.1）。
+                pixelCamera.UpdateCameraForScreen(Width, Height);
+                // 编辑模式不走 Awake/Start；显式构建一次 HUD，保证实拍含 UI（docs/16 E.5）。
+                BuildRuntimeUiForCapture(captureScene);
+                Canvas.ForceUpdateCanvases();
+                RenderCamera(gameCamera, outputPath);
+            }
+            finally
+            {
+                if (gameCamera != null)
+                    gameCamera.transform.position = previousCameraPosition;
+                if (addedScene && captureScene.IsValid() && captureScene.isLoaded)
+                    EditorSceneManager.CloseScene(captureScene, true);
+                before.Restore();
+            }
+        }
+
+        private static void BuildRuntimeUiForCapture(Scene scene)
+        {
+            var hud = FindInScene<HUD>(scene);
+            if (hud == null)
+                throw new InvalidOperationException(
+                    "Demo scene requires a HUD for gameplay captures.");
+            var buildUi = typeof(HUD).GetMethod(
+                "BuildUI", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (buildUi == null)
+                throw new InvalidOperationException("HUD.BuildUI was not found for capture.");
+            buildUi.Invoke(hud, null);
         }
 
         private static readonly string[] OutdoorSceneIds =

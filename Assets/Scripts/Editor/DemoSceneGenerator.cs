@@ -93,13 +93,17 @@ namespace YuanHaiLu.Editor
         }
 
         // ========== 摄像机 ==========
+        private static Camera _uiCamera;
+
         private static void CreateMainCamera()
         {
-            PlaySceneAssembler.CreateMainCamera(
+            _uiCamera = PlaySceneAssembler.CreateMainCamera(
                 "Demo",
                 new Vector3(20f, 12f, -10f),
-                8.5f,
+                8.4375f,
                 new Color(0.18f, 0.22f, 0.16f)); // 暗绿底色
+            // [ScreenTransition] 画布先于相机创建，此处补绑同一逻辑展示面。
+            PlaySceneAssembler.BindScreenTransitionToCamera(_uiCamera);
         }
 
         private static void CreateFormalColliders()
@@ -614,19 +618,19 @@ namespace YuanHaiLu.Editor
         // ========== HUD ==========
         private static void CreateHUD()
         {
-            PlaySceneAssembler.CreateHudCanvas();
+            PlaySceneAssembler.CreateHudCanvas(_uiCamera);
         }
 
         // ========== 对话UI ==========
         private static void CreateDialogueUI()
         {
-            PlaySceneAssembler.CreateDialogueCanvas();
+            PlaySceneAssembler.CreateDialogueCanvas(_uiCamera);
         }
 
         // ========== 暂停菜单 ==========
         private static void CreatePauseMenu()
         {
-            PlaySceneAssembler.CreatePauseCanvas();
+            PlaySceneAssembler.CreatePauseCanvas(_uiCamera);
         }
 
         // ========== Canvas设置 ==========
