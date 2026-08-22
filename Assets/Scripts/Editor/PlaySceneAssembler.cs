@@ -1,6 +1,8 @@
 using UnityEngine;
+using UnityEditor;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.Tilemaps;
 using YuanHaiLu.Art;
 using YuanHaiLu.Core;
 using YuanHaiLu.Character;
@@ -68,6 +70,69 @@ namespace YuanHaiLu.Editor
 
             Debug.Log($"[{logPrefix}] 摄像机创建完成");
             return cam;
+        }
+
+        /// <summary>为固定 480×270 试玩镜头配置可玩画面的真实边界。</summary>
+        public static void ConfigureCameraBounds(Camera camera, Vector2 minimum, Vector2 maximum)
+        {
+            if (camera == null) return;
+            var follow = camera.GetComponent<CameraFollow>();
+            if (follow == null) return;
+            follow.ConfigureBounds(minimum, maximum);
+        }
+
+        /// <summary>
+        /// 使用持久 480×270 像素背景替换 Demo 中与 MVP 构图不一致的正式场景视觉。
+        /// 正式 Tilemap 源、锚点与场景本体仍保留；只禁用 Demo 克隆中的旧渲染与碰撞，
+        /// 由调用方按新的单屏构图建立碰撞。
+        /// </summary>
+        public static void CreateMvpBackdrop(
+            GameObject formalSceneRoot, string assetPath, Vector2 center)
+        {
+            if (formalSceneRoot != null)
+            {
+                foreach (var tilemapRenderer in formalSceneRoot.GetComponentsInChildren<TilemapRenderer>(true))
+                    tilemapRenderer.enabled = false;
+                foreach (var formalRenderer in formalSceneRoot.GetComponentsInChildren<SpriteRenderer>(true))
+                    formalRenderer.enabled = false;
+                foreach (var collider in formalSceneRoot.GetComponentsInChildren<Collider2D>(true))
+                    collider.enabled = false;
+            }
+
+            ConfigureMvpBackdropImporter(assetPath);
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            if (sprite == null)
+                throw new System.InvalidOperationException(
+                    "MVP backdrop is missing or not importable: " + assetPath);
+
+            var backdrop = new GameObject("[MVP Backdrop]");
+            var renderer = backdrop.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingLayerName = GameConfig.SORTING_GROUND;
+            renderer.sortingOrder = -100;
+            backdrop.transform.position = new Vector3(center.x, center.y, 0f);
+        }
+
+        private static void ConfigureMvpBackdropImporter(string assetPath)
+        {
+            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer == null)
+                throw new System.InvalidOperationException("Missing TextureImporter: " + assetPath);
+            var changed = importer.textureType != TextureImporterType.Sprite
+                || importer.spriteImportMode != SpriteImportMode.Single
+                || importer.spritePixelsPerUnit != GameConfig.PIXELS_PER_UNIT
+                || importer.filterMode != FilterMode.Point
+                || importer.textureCompression != TextureImporterCompression.Uncompressed
+                || importer.mipmapEnabled;
+            if (!changed) return;
+
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = GameConfig.PIXELS_PER_UNIT;
+            importer.filterMode = FilterMode.Point;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.mipmapEnabled = false;
+            importer.SaveAndReimport();
         }
 
         // ========== 玩家（固定男主 + 全套战斗/交互组件，docs/15） ==========

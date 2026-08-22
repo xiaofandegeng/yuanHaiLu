@@ -1,6 +1,6 @@
 # 单男主 MVP：画面可读性与主流程返工交接书
 
-> 状态：待执行。本文是交给下一位开发 AI 的唯一执行规格，不是验收通过声明。
+> 状态：实现与自动回归进行中。本文仍是执行规格，不是用户视觉验收通过声明。
 >
 > 基线：`codex/single-hero-mvp-v2` @ `dfdae6784498c46c625bd032bd0b55b56f36c8e4`。
 > 新工作分支必须从该提交创建，例如 `codex/mvp-presentation-flow-rework`；不得从历史全量美术分支迁移，也不得直接修改 `main`。
@@ -103,6 +103,8 @@ Assets/Scenes/Demo_YanLiuTown.unity
 Assets/Scenes/Demo_Inn.unity
 Assets/ArtSource/Characters/Generated/player_male_swordsman/**
 Assets/Art/Characters/Player/player_male_swordsman.*
+Assets/ArtSource/Environment/MVP/**              （仅两张 480×270 MVP 场景源图）
+Assets/Art/Environment/MVP/**                    （上述源图的持久烘焙输出）
 Assets/ArtSource/Environment/Layouts/yanliu.json
 Assets/ArtSource/Environment/Layouts/interiors/inn.json
 Assets/ArtSource/Environment/Manifests/regions.json
@@ -111,7 +113,7 @@ Assets/ArtSource/Environment/Modules/**          （只限 yanliu / inn 所需�
 Assets/Art/Environment/Regions/yanliu/**
 Assets/Art/Environment/Interiors/inn/**
 Assets/Tilemaps/Formal/**                         （只限 yanliu / inn 的持久 Tile）
-tools/art_pipeline/**                             （只限上述两处的确定性烘焙与验证）
+tools/art_pipeline/**                             （只限上述两处及 MVP 背景的确定性烘焙与验证）
 docs/16-mvp-presentation-flow-rework-handoff.md  （更新执行记录）
 AGENTS.md                                        （只更新长期事实、测试基线和已知风险）
 ```
@@ -363,5 +365,6 @@ python3 -m tools.art_pipeline.validate --all
 | 2026-08-22 | Codex | A 红基线 | 分支 `codex/mvp-presentation-flow-rework`（自 dfdae67）；F1 对话测试以文档同款 `MissingReferenceException` 红、F3/F4 相机契约红。提交 `144938b`（本文）、`e8002e3`（红基线）。 | 已按序执行 |
 | 2026-08-22 | Codex | B 对话修复 | `DialogueUI` 具名处理器 + 记录订阅实例 + OnDisable/OnDestroy 全量退订 + Update 迟到管理器重订；F1 红→绿。提交 `6d569de`。 | 已按序执行 |
 | 2026-08-22 | Codex | C 相机/UI 契约 | `PixelPerfectCamera` ortho 恒定 8.4375、RT 检测、纯函数视口；HUD/对话/暂停/过场画布统一 ScreenSpaceCamera+Scaler 480×270；两 Demo 场景经生成器重建；F2/F4/F5/F6 绿（影子副本 EditMode 4/4、PlayMode 4/4）。三张 480×270 实拍（出生/河岸/客栈）输出至 `/private/tmp/yuanhailu-mvp-rework-review/`，人工核对男主/满屏/HUD/无黑帧。提交 `8eefe7c`。 | 自动侧已绿；1× 视觉属 Gate R1 待用户 |
-| 2026-08-22 | Codex | D 缩样 | 三张 160×90 无 UI 构图缩样 + 确定性生成脚本入库 `docs/16-thumbnails/`（烟柳出生/主路、烟柳河岸、客栈掌柜）。 | **待用户批准缩样后方可进入 Tile/烘焙** |
-
+| 2026-08-22 | Codex | D 缩样 | 三张 160×90 无 UI 构图缩样 + 确定性生成脚本入库 `docs/16-thumbnails/`（烟柳出生/主路、烟柳河岸、客栈掌柜）。 | 用户已批准，进入 E |
+| 2026-08-22 | Codex | E MVP 场景接线 | 在用户允许继续后，仅为 `Demo_YanLiuTown` / `Demo_Inn` 接入两张持久 480×270 背景、固定 30×16.875 相机边界、紧凑 HUD、男主可读四向帧、客栈门洞与柜台前掌柜位置；未改正式区域/室内基线和冻结角色。 | 自动侧待最终全量复核；R1/R2 仍待用户 |
+| 2026-08-22 | Codex | F 截图全帧修复 | 真实离屏审查发现先算 `pixelRect`、后绑 RenderTexture 会将世界钳成中央 362px，左右出现清屏色边带。新增全帧红测（左侧边带 59px）后，改为先绑 RT 再刷新像素相机，红→绿；三张最终 480×270 实拍位于 `/private/tmp/yuanhailu-mvp-rework-review/`。 | R1 待用户 |

@@ -151,6 +151,9 @@ namespace YuanHaiLu.Core
             _clearCamera.depth = _camera.depth - 1f;
             _clearCamera.rect = new Rect(0f, 0f, 1f, 1f);
             _clearCamera.targetDisplay = _camera.targetDisplay;
+            // 离屏审查也要由清屏相机覆盖同一 RenderTexture；否则仅主相机的
+            // 整数 pixelRect 会清除，视口外保留 RT 的默认黑色。
+            _clearCamera.targetTexture = _camera.targetTexture;
             _clearCamera.allowHDR = false;
             _clearCamera.allowMSAA = false;
             _clearCamera.useOcclusionCulling = false;

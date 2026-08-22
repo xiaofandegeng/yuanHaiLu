@@ -1,7 +1,7 @@
 # AGENTS.md — 渊海录项目交接与记忆
 
 > 本文件是接手本项目（开发者或 AI 助手）的首选入口。长期事实以本文件为准。
-> 最后更新：2026-08-17
+> 最后更新：2026-08-22
 
 ## 0. 30 秒速览
 
@@ -11,9 +11,9 @@
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
 | 代码规模 | 76 个运行时/编辑器 C# 文件；另有 26 个测试/测试工具文件 |
-| 状态 | 单主角 MVP 垂直切片（docs/15）：固定男主 + 三武器流派 + 烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
-| 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/single-hero-mvp-v2`（复审后重建的干净分支） |
-| 测试 | 129 EditMode + 12 PlayMode + 45 Python 全通过 |
+| 状态 | 单主角 MVP 垂直切片（docs/15/16）：固定男主 + 三武器流派 + 可读烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
+| 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/mvp-presentation-flow-rework`（基于单主角 MVP 复审基线） |
+| 测试 | 137 EditMode + 14 PlayMode + 47 Python 全通过（最终提交后须重跑并以 XML 为准） |
 | 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md`、`docs/15-single-hero-mvp-design.md` |
 
 ## 1. 如何运行
@@ -46,7 +46,7 @@ Build Profiles / Build Settings 应包含：
 13–25 Assets/Scenes/Interiors/*.unity
 ```
 
-`Demo_Inn.unity` 是客栈玩法场景：从正式 `Interiors/inn.unity` Tilemap 克隆后叠加玩家、掌柜老赵（MVP_01）与回镇出口；正式室内基线文件保持纯 Tilemap，供 EnvironmentArtTests 反复重建（与 Demo_YanLiuTown / Regions/yanliu 同构）。可从主菜单运行，也可直接打开 Demo；直接运行 Demo 默认按新游戏初始化。
+`Demo_Inn.unity` 是客栈玩法场景：从正式 `Interiors/inn.unity` Tilemap 克隆后叠加玩家、掌柜老赵（MVP_01）与回镇出口；正式室内基线文件保持纯 Tilemap，供 EnvironmentArtTests 反复重建（与 Demo_YanLiuTown / Regions/yanliu 同构）。可从主菜单运行，也可直接打开 Demo；`MvpDirectPlayFallback` 会在直开玩法场景且仍处于 `MainMenu` 状态时进入 `Exploration`，不会覆盖正常读档或跨场景状态。
 
 > ProjectSettings 例外说明：本分支相对 main 唯一的 ProjectSettings 变更是
 > `EditorBuildSettings.asset` 加入 `Demo_Inn.unity`（运行时按场景名加载所必需）。
@@ -221,6 +221,7 @@ Ground → Environment → Character → Foreground → UI
 - 角色分类固定：12 Player、15 Named、36 NPC、24 Enemies、10 Bosses。
 - 环境固定：10 Regions（tianshu/cangyue/yanliu/chisha/youhuang/hanyuan/prologue_village/luoyuan/jueyun/zhenyue）和 13 Interiors（inn/residence/shop/pharmacy/academy/yamen/palace/temple/cave/tomb/dungeon/military_camp/ship_cabin）。
 - `CharacterVisual.Apply` 中 UnityEngine.Object 的组件检查必须用显式两段 `== null`；禁止 `GetComponent<T>() ?? AddComponent<T>()`，Unity “fake null” 曾导致 `MissingComponentException`。
+- docs/16 的 MVP 试玩画面只例外使用两张持久背景：`Assets/ArtSource/Environment/MVP/` 的 480×270 源图及 `Assets/Art/Environment/MVP/` 的烘焙输出；它们只接入两个 `Demo_*` 场景，不改正式区域/室内基线。离屏截图必须**先**绑定 480×270 `RenderTexture`，再刷新 `PixelPerfectCamera`，否则 Unity 会把视口按编辑器 Game View 钳制并在两侧留下清屏色。
 - 主菜单与烟柳镇实际渲染基线见 `Assets/Art/Characters/Player/previews/main-menu-character-selection.png`、`Assets/Art/Environment/previews/demo-yanliu-gameplay.png`。
 
 ## 4. 开发与测试流程
@@ -244,7 +245,7 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。`-executeMethod` 场景重建则必须带 `-quit`，否则批处理编辑器会常驻。当前全量基线为 EditMode 129/129、PlayMode 12/12、Python 45/45；证据 XML 必须晚于其证明的提交时间。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。`-executeMethod` 场景重建则必须带 `-quit`，否则批处理编辑器会常驻。当前全量基线为 EditMode 137/137、PlayMode 14/14、Python 47/47；证据 XML 必须晚于其证明的提交时间。
 
 美术确定性验证：
 
@@ -283,8 +284,8 @@ python3 -m tools.art_pipeline.validate --all
 yuanHaiLu/
 ├── Assets/
 │   ├── Scripts/                 76 个运行时/编辑器 .cs
-│   ├── Tests/EditMode/          129 个测试用例
-│   ├── Tests/PlayMode/          12 个测试用例
+│   ├── Tests/EditMode/          137 个测试用例
+│   ├── Tests/PlayMode/          14 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
 │   ├── Art/                     97 角色 + 23 环境输出和验收图
 │   ├── Prefabs/Characters/      97 个正式 Prefab
@@ -298,7 +299,7 @@ yuanHaiLu/
 │   ├── 03-art-production-handoff.md
 │   ├── 04-external-ai-development-handoff.md
 │   └── 05-post-development-review-plan.md
-├── tools/art_pipeline/          确定性美术 baker/validator（45 测试）
+├── tools/art_pipeline/          确定性美术 baker/validator（47 测试）
 ├── ProjectSettings/             修改后需重启 Unity
 ├── Packages/manifest.json
 ├── README.md
@@ -400,6 +401,13 @@ yuanHaiLu/
 64. 复审 P2：`WeaponStyle` 九组 switch 收敛为不可变配置表；`MartialSkillDatabase` 改 `SkillSpec` 配置对象。
 65. 冻结范围整改：从 main 重建 `codex/single-hero-mvp-v2`，只包含 docs/15 + MVP 代码/测试/场景；不改任何美术资产、正式场景基线与 `VisualRegressionCapture`（后者在 main 上不含审查角色功能）；唯一 ProjectSettings 变更为 EditorBuildSettings 加入 Demo_Inn（文档化例外）。
 66. 最终验证：EditMode 125/125、PlayMode 11/11、Python 45/45（main 基线）。
+
+### 第十批：MVP 呈现与流程可读性返工（2026-08-22，docs/16）
+
+67. 两个 `Demo_*` 场景改为固定 30×16.875 玩法视口，接入持久 480×270 MVP 背景；HUD 压缩到左上状态条、底部技能栏与右上金币，主角改为可读的四向 32×32 男主帧。
+68. 修复出生点→客栈门碰撞立面封死的路径，拆出真实门洞；掌柜移到柜台前沿可交互位；直开客栈/烟柳镇时由 `MvpDirectPlayFallback` 进入探索状态。
+69. `VisualRegressionCapture` 隔离附加场景并在绑定 RenderTexture 后刷新像素相机，杜绝叠景和左右清屏色边带；河岸审查图临时展示任务门控对象后完整恢复。
+70. 新增全帧离屏截图、紧凑 HUD、直开回退、相机边界与门洞路线回归；最终人工视觉批准与三流派完整试玩仍是合并门禁。
 
 ## 8. 当前人工 QA 清单
 

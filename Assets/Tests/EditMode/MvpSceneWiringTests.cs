@@ -1,11 +1,14 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using YuanHaiLu.Art;
 using YuanHaiLu.Core;
+using YuanHaiLu.Editor;
 using YuanHaiLu.GameSystem;
 using YuanHaiLu.Map;
 
@@ -129,6 +132,25 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(questGiver.questId, Is.EqualTo("MVP_01"));
             Assert.That(questGiver.interactionTargetId, Is.EqualTo("innkeeper_zhao"));
             Assert.That(innkeeper.GetComponent<Character.NPCBase>().canWander, Is.False);
+
+            // 掌柜站在柜台后的画面构图不能牺牲任务入口：玩家在柜台前的可行走
+            // 位置必须落在 1.2 世界单位交互圈内。旧布局将掌柜放在 y=11.9、
+            // 碰撞柜台后方，玩家最近只能到 y≈9.4，首步“找掌柜”无法完成。
+            Physics2D.SyncTransforms();
+            var counterFront = new Vector2(15f, 9f);
+            var playerFootprint = Physics2D.OverlapBox(
+                counterFront + new Vector2(0f, 0.6f),
+                new Vector2(0.9f, 1.3f),
+                0f,
+                LayerMask.GetMask("Environment"));
+            Assert.That(playerFootprint, Is.Null,
+                "柜台前必须留出玩家可站立的交互格");
+            Assert.That(Vector2.Distance(counterFront, innkeeper.transform.position),
+                Is.LessThanOrEqualTo(1.2f),
+                "掌柜必须能从柜台前以默认交互距离触达");
+
+            Assert.That(Object.FindAnyObjectByType<MvpDirectPlayFallback>(), Is.Not.Null,
+                "Demo_Inn 直接按 Play 时必须补回 Exploration，不能锁死在 MainMenu。");
 
             var exit = Object.FindObjectsByType<AreaTrigger>(
                     FindObjectsInactive.Include,
@@ -273,6 +295,126 @@ namespace YuanHaiLu.Tests.EditMode
                     $"{scenePath} 过场画布必须在像素相机逻辑展示面上");
                 Assert.That(transitionCanvas.worldCamera, Is.EqualTo(gameCamera),
                     $"{scenePath} 过场画布必须绑定游戏相机");
+            }
+        }
+
+        [Test]
+        public void DemoScenesHavePersistentBackdropsCoveringTheLogicalFrame()
+        {
+            // docs/16 Gate R1：相机清屏色只能在地图之外作为保护，不能成为试玩
+            // 截图的大面积底色。两个 Demo 都要有一张 480×270 @ PPU16 的持久
+            // 像素背景，精确覆盖 30×16.875 的世界视口。
+            foreach (var scenePath in new[]
+                     {
+                         "Assets/Scenes/Demo_YanLiuTown.unity",
+                         "Assets/Scenes/Demo_Inn.unity",
+                     })
+            {
+                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                var backdrop = GameObject.Find("[MVP Backdrop]");
+                Assert.That(backdrop, Is.Not.Null, $"{scenePath} 缺少全帧试玩背景");
+                var renderer = backdrop.GetComponent<SpriteRenderer>();
+                Assert.That(renderer, Is.Not.Null);
+                Assert.That(renderer.sprite, Is.Not.Null);
+                Assert.That(AssetDatabase.Contains(renderer.sprite), Is.True,
+                    $"{scenePath} 的背景必须是持久资源，禁止运行时生成贴图");
+                Assert.That(renderer.bounds.size.x, Is.EqualTo(30f).Within(0.01f));
+                Assert.That(renderer.bounds.size.y, Is.EqualTo(16.875f).Within(0.01f));
+            }
+        }
+
+        [Test]
+        public void GameplayCaptureIsolatesItsTargetSceneFromTheOpenEditorScene()
+        {
+            // CaptureMvpGameplay 过去以 Additive 打开目标场景但没有隐藏当前场景，
+            // 因此从打开的客栈执行时，烟柳镇截图会被同层的客栈背景覆盖。两幅
+            // 不同地点的 480×270 画面必须有实质像素差异，不能只是玩家位置不同。
+            var directory = Path.Combine(Path.GetTempPath(), "yuanhailu-capture-isolation-test");
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+            try
+            {
+                EditorSceneManager.OpenScene("Assets/Scenes/Demo_Inn.unity", OpenSceneMode.Single);
+                VisualRegressionCapture.CaptureMvpGameplay(directory);
+
+                var town = Path.Combine(directory, "town-spawn-1x.png");
+                var inn = Path.Combine(directory, "inn-counter-1x.png");
+                Assert.That(File.Exists(town), Is.True);
+                Assert.That(File.Exists(inn), Is.True);
+                Assert.That(VisualRegressionCapture.ChangedPixelRatio(town, inn),
+                    Is.GreaterThan(0.25f),
+                    "Town capture must not be overdrawn by an already-open inn scene.");
+            }
+            finally
+            {
+                if (Directory.Exists(directory))
+                    Directory.Delete(directory, true);
+            }
+        }
+
+        [Test]
+        public void GameplayCaptureUsesTheFullLogicalFrameWithoutSideClearBands()
+        {
+            // 截图必须与真实 480×270 逻辑画面同宽。此前先设置 pixelRect、后绑定
+            // RenderTexture，Unity 会把 rect 按当前编辑器 Game View 钳制为 362px，
+            // 两侧留下大块清屏色，正是用户看到“画面很小”的根因。
+            var directory = Path.Combine(Path.GetTempPath(), "yuanhailu-capture-full-frame-test");
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, true);
+            try
+            {
+                EditorSceneManager.OpenScene("Assets/Scenes/Demo_YanLiuTown.unity", OpenSceneMode.Single);
+                var reviewBandit = Object.FindObjectsByType<GameObject>(
+                        FindObjectsInactive.Include, FindObjectsSortMode.None)
+                    .Single(gameObject => gameObject.name == "Enemy_河岸水匪甲");
+                var reviewPouch = Object.FindObjectsByType<GameObject>(
+                        FindObjectsInactive.Include, FindObjectsSortMode.None)
+                    .Single(gameObject => gameObject.name == "ItemPickup_LostPouch");
+                var banditWasActive = reviewBandit.activeSelf;
+                var pouchWasActive = reviewPouch.activeSelf;
+                VisualRegressionCapture.CaptureMvpGameplay(directory);
+                AssertCaptureReachesBothEdges(
+                    Path.Combine(directory, "town-spawn-1x.png"),
+                    new Color32(46, 56, 41, 255));
+                AssertCaptureReachesBothEdges(
+                    Path.Combine(directory, "inn-counter-1x.png"),
+                    new Color32(36, 28, 23, 255));
+                Assert.That(reviewBandit.activeSelf, Is.EqualTo(banditWasActive),
+                    "Review capture must restore the kill gate after temporarily showing combat targets.");
+                Assert.That(reviewPouch.activeSelf, Is.EqualTo(pouchWasActive),
+                    "Review capture must restore the pouch gate after temporarily showing combat targets.");
+            }
+            finally
+            {
+                if (Directory.Exists(directory))
+                    Directory.Delete(directory, true);
+            }
+        }
+
+        private static void AssertCaptureReachesBothEdges(string imagePath, Color32 clearColor)
+        {
+            var image = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                Assert.That(ImageConversion.LoadImage(image, File.ReadAllBytes(imagePath)), Is.True);
+                const int sampleY = 135;
+                var firstContent = 0;
+                while (firstContent < image.width &&
+                       image.GetPixel(firstContent, sampleY) == (Color)clearColor)
+                    firstContent++;
+                var lastContent = image.width - 1;
+                while (lastContent >= 0 &&
+                       image.GetPixel(lastContent, sampleY) == (Color)clearColor)
+                    lastContent--;
+
+                Assert.That(firstContent, Is.LessThanOrEqualTo(2),
+                    $"{Path.GetFileName(imagePath)} 左侧出现清屏色边带");
+                Assert.That(lastContent, Is.GreaterThanOrEqualTo(image.width - 3),
+                    $"{Path.GetFileName(imagePath)} 右侧出现清屏色边带");
+            }
+            finally
+            {
+                Object.DestroyImmediate(image);
             }
         }
 

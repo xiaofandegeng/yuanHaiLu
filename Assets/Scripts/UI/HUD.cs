@@ -90,51 +90,53 @@ namespace YuanHaiLu.UI
             if (GetComponent<CanvasScaler>() == null)
                 gameObject.AddComponent<CanvasScaler>();
 
-            // --- 左上角：HP/MP/EXP 条 ---
+            // --- 左上角：紧凑 HP/MP/EXP 条 ---
+            // 480×270 试玩画面只留一块 108×34 的安全区；旧版以 22%×30%
+            // 的大面板占满左侧，视觉上像调试条块并挤压场景阅读。
             var barsPanel = CreatePanel("Bars", transform,
-                new Vector2(0f, 0.7f), new Vector2(0.22f, 1f),
-                new Vector2(8, -8), new Vector2(-8, -50));
+                new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(8, -42), new Vector2(116, -8));
 
             // HP条
             CreateLabel("HP_Label", barsPanel.transform,
-                new Vector2(0f, 0.72f), new Vector2(0.2f, 1f),
-                "气血", 12, new Color(1f, 0.4f, 0.4f));
+                new Vector2(0f, 0.66f), new Vector2(0.16f, 1f),
+                "气", 8, new Color(1f, 0.52f, 0.45f));
 
             _hpBarFill = CreateBar("HP_Bar", barsPanel.transform,
-                new Vector2(0.22f, 0.72f), new Vector2(1f, 1f),
+                new Vector2(0.18f, 0.68f), new Vector2(1f, 0.98f),
                 new Color(0.8f, 0.15f, 0.15f));
 
             _hpText = CreateLabel("HP_Text", barsPanel.transform,
-                new Vector2(0.22f, 0.72f), new Vector2(1f, 1f),
-                "", 11, Color.white, TextAnchor.MiddleCenter);
+                new Vector2(0.18f, 0.68f), new Vector2(1f, 0.98f),
+                "", 8, Color.white, TextAnchor.MiddleCenter);
 
             // MP条
             CreateLabel("MP_Label", barsPanel.transform,
-                new Vector2(0f, 0.38f), new Vector2(0.2f, 0.68f),
-                "内力", 12, new Color(0.4f, 0.6f, 1f));
+                new Vector2(0f, 0.32f), new Vector2(0.16f, 0.64f),
+                "内", 8, new Color(0.5f, 0.72f, 1f));
 
             _mpBarFill = CreateBar("MP_Bar", barsPanel.transform,
-                new Vector2(0.22f, 0.38f), new Vector2(1f, 0.68f),
+                new Vector2(0.18f, 0.34f), new Vector2(1f, 0.64f),
                 new Color(0.1f, 0.25f, 0.75f));
 
             _mpText = CreateLabel("MP_Text", barsPanel.transform,
-                new Vector2(0.22f, 0.38f), new Vector2(1f, 0.68f),
-                "", 11, Color.white, TextAnchor.MiddleCenter);
+                new Vector2(0.18f, 0.34f), new Vector2(1f, 0.64f),
+                "", 8, Color.white, TextAnchor.MiddleCenter);
 
             // 经验条（细条）
             _expBarFill = CreateBar("EXP_Bar", barsPanel.transform,
-                new Vector2(0f, 0.05f), new Vector2(1f, 0.3f),
-                new Color(0.6f, 0.4f, 0.9f), height: 6);
+                new Vector2(0.18f, 0.07f), new Vector2(1f, 0.18f),
+                new Color(0.65f, 0.48f, 0.9f));
 
             // 等级
             _levelText = CreateLabel("Level", barsPanel.transform,
-                new Vector2(0f, 0.3f), new Vector2(0.35f, 0.6f),
-                "Lv.1", 12, new Color(1f, 0.85f, 0.3f));
+                new Vector2(0f, 0.06f), new Vector2(0.18f, 0.28f),
+                "1", 8, new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleCenter);
 
-            // --- 左下角：技能快捷栏 ---
+            // --- 底部中间：紧凑技能快捷栏 ---
             var skillPanel = CreatePanel("SkillBar", transform,
-                new Vector2(0.3f, 0f), new Vector2(0.7f, 0f),
-                new Vector2(0, 8), new Vector2(0, 48));
+                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
+                new Vector2(-52, 8), new Vector2(52, 32));
 
             // 背景
             var spBg = skillPanel.AddComponent<Image>();
@@ -147,7 +149,7 @@ namespace YuanHaiLu.UI
 
                 var slot = CreatePanel($"Skill_{i}", skillPanel.transform,
                     new Vector2(left, 0f), new Vector2(right, 1f),
-                    new Vector2(3, 3), new Vector2(-3, -3));
+                    new Vector2(1, 1), new Vector2(-1, -1));
 
                 var slotBg = slot.AddComponent<Image>();
                 slotBg.color = new Color(0.15f, 0.15f, 0.2f, 0.9f);
@@ -156,14 +158,14 @@ namespace YuanHaiLu.UI
 
                 // 技能图标（用颜色方块代替）
                 var iconObj = CreatePanel($"SkillIcon_{i}", slot.transform,
-                    new Vector2(0.15f, 0.1f), new Vector2(0.85f, 0.9f),
+                    new Vector2(0.25f, 0.16f), new Vector2(0.84f, 0.82f),
                     Vector2.zero, Vector2.zero);
                 var iconImg = iconObj.AddComponent<Image>();
                 iconImg.color = Color.clear;
 
                 // 冷却遮罩
                 var cdObj = CreatePanel($"CD_{i}", slot.transform,
-                    new Vector2(0.15f, 0.1f), new Vector2(0.85f, 0.9f),
+                    new Vector2(0.25f, 0.16f), new Vector2(0.84f, 0.82f),
                     Vector2.zero, Vector2.zero);
                 var cdImg = cdObj.AddComponent<Image>();
                 cdImg.color = new Color(0, 0, 0, 0.5f);
@@ -173,42 +175,42 @@ namespace YuanHaiLu.UI
 
                 // 快捷键标签
                 var keyLabel = CreateLabel($"Key_{i}", slot.transform,
-                    new Vector2(0f, 0.6f), new Vector2(0.4f, 1f),
-                    (i + 1).ToString(), 10, new Color(0.6f, 0.6f, 0.6f));
+                    new Vector2(0.04f, 0.55f), new Vector2(0.42f, 0.96f),
+                    (i + 1).ToString(), 7, new Color(0.72f, 0.72f, 0.72f));
                 _skillKeyLabels[i] = keyLabel;
             }
 
             // --- 右上角：金币 ---
             var goldPanel = CreatePanel("Gold", transform,
-                new Vector2(0.78f, 0.92f), new Vector2(0.98f, 1f),
-                Vector2.zero, new Vector2(-8, -8));
+                new Vector2(1f, 1f), new Vector2(1f, 1f),
+                new Vector2(-76, -28), new Vector2(-8, -8));
             goldPanel.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.7f);
 
             var goldIcon = CreateLabel("GoldIcon", goldPanel.transform,
                 new Vector2(0f, 0f), new Vector2(0.3f, 1f),
-                "💰", 14, Color.white);
+                "●", 8, new Color(1f, 0.82f, 0.32f));
             _goldText = CreateLabel("GoldAmount", goldPanel.transform,
                 new Vector2(0.3f, 0f), new Vector2(1f, 1f),
-                "0", 13, new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleLeft);
+                "0", 9, new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleLeft);
 
             // --- 交互提示（中央底部） ---
             _interactPrompt = CreatePanel("InteractPrompt", transform,
-                new Vector2(0.35f, 0.08f), new Vector2(0.65f, 0.13f),
-                Vector2.zero, Vector2.zero);
+                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
+                new Vector2(-72, 38), new Vector2(72, 58));
             _interactPrompt.AddComponent<Image>().color = new Color(0, 0, 0, 0.6f);
             _interactText = CreateLabel("InteractText", _interactPrompt.transform,
                 new Vector2(0f, 0f), new Vector2(1f, 1f),
-                "[K] 交互", 14, Color.white, TextAnchor.MiddleCenter);
+                "[K/E] 交互", 9, Color.white, TextAnchor.MiddleCenter);
             _interactPrompt.SetActive(false);
 
             // --- 升级横幅 ---
             _levelUpBanner = CreatePanel("LevelUpBanner", transform,
-                new Vector2(0.2f, 0.55f), new Vector2(0.8f, 0.65f),
-                Vector2.zero, Vector2.zero);
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(-96, -18), new Vector2(96, 18));
             _levelUpBanner.AddComponent<Image>().color = new Color(0.1f, 0.05f, 0.2f, 0.85f);
             _levelUpText = CreateLabel("LevelUpText", _levelUpBanner.transform,
                 new Vector2(0f, 0f), new Vector2(1f, 1f),
-                "等级提升！", 20, new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleCenter);
+                "等级提升！", 14, new Color(1f, 0.85f, 0.3f), TextAnchor.MiddleCenter);
             _levelUpBanner.SetActive(false);
         }
 

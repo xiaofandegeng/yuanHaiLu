@@ -47,6 +47,26 @@ PALETTES = {
     "skin": ((91, 53, 37), (183, 120, 84), (237, 183, 127)),
 }
 
+
+# The playable slice has one authored hero rather than a roster of interchangeable
+# paper dolls.  Keep this palette explicit: it is used by the source builder and
+# the visual contract test to protect 1× readability in the finished game view.
+MVP_HERO_COLORS = {
+    "ink": (18, 25, 35, 255),
+    "hair": (35, 31, 39, 255),
+    "hair_light": (79, 76, 84, 255),
+    "skin_shadow": (139, 83, 57, 255),
+    "skin": (208, 145, 99, 255),
+    "skin_light": (241, 192, 139, 255),
+    "robe_shadow": (23, 65, 83, 255),
+    "robe": (46, 122, 151, 255),
+    "robe_light": (124, 196, 211, 255),
+    "paper": (238, 220, 185, 255),
+    "vermilion": (181, 65, 52, 255),
+    "gold": (222, 178, 83, 255),
+    "steel": (201, 228, 230, 255),
+}
+
 REGION_PALETTES = {
     "tianshu": ("ink_blue", "paper_white", "gold"),
     "cangyue": ("snow_slate", "jade_green", "paper_white"),
@@ -168,10 +188,13 @@ def _draw_pose(layers, design, action, direction, frame, row_y):
     """Draw one 32px top-down pose using only integer pixel clusters."""
 
     draw = {name: ImageDraw.Draw(image) for name, image in layers.items()}
+    frame_x = frame * 32
+    if design.id == "player_male_swordsman":
+        _draw_mvp_hero_pose(draw, action, direction, frame, frame_x, row_y)
+        return
     outline, primary, highlight = _design_colors(design)
     skin_outline, skin_mid, skin_highlight = _palette("skin")
     marker = _stable_number(design.accent_style)
-    frame_x = frame * 32
     center = frame_x + 16 + _horizontal_motion(action, frame)
     top = row_y + _vertical_motion(action, frame)
     if "beast" in design.silhouette or "quadruped" in design.silhouette:
@@ -238,6 +261,144 @@ def _draw_pose(layers, design, action, direction, frame, row_y):
     # Props differ by action and direction: weapons, scrolls, gourds and talismans all keep a readable cluster.
     _draw_prop(draw["weapon"], design, action, direction, center, top, outline, primary, highlight, marker)
     _draw_accessory(draw["accessory"], design, center, top, outline, primary, highlight, marker)
+
+
+def _draw_mvp_hero_pose(draw, action, direction, frame, frame_x, row_y):
+    """Author the only MVP protagonist as a readable 32px four-direction sprite.
+
+    This intentionally does not reuse the broad roster recipe.  At 480×270 the
+    protagonist needs an unbroken ink silhouette, a paper collar, blue coat and
+    a visible steel weapon; those four clues survive at native scale.
+    """
+
+    c = MVP_HERO_COLORS
+    bob = _vertical_motion(action, frame)
+    stride = _stride(action, frame)
+    if action == "dash":
+        stride = -2 + (frame % 4)
+    x = frame_x
+    y = row_y + bob
+
+    def rect(layer, bounds, color):
+        left, top, right, bottom = bounds
+        _rect(draw[layer], (x + left, y + top, x + right, y + bottom), color)
+
+    def line(layer, start, end, color):
+        _stepped_line(draw[layer], x + start[0], y + start[1], x + end[0], y + end[1], color)
+
+    def mirrored(left, right):
+        return 31 - right, 31 - left
+
+    is_attack = action.startswith("attack") or action.startswith("skill")
+    is_hurt = action == "hurt"
+
+    if action == "death":
+        rect("body", (5, 22, 27, 28), c["ink"])
+        rect("body", (6, 23, 25, 27), c["robe_shadow"])
+        rect("outfit", (10, 22, 23, 26), c["robe"])
+        rect("face", (24, 20, 30, 25), c["skin_shadow"])
+        rect("hair", (23, 19, 30, 22), c["hair"])
+        line("weapon", (3, 28), (21, 30), c["ink"])
+        line("weapon", (4, 27), (22, 29), c["steel"])
+        return
+
+    # A small dark ground contact is important in the dense water-town art: it
+    # stops the figure from reading as a detached icon.
+    rect("body", (8, 30, 23, 31), c["ink"])
+
+    if direction == "down":
+        rect("body", (9 + stride, 25, 14 + stride, 30), c["ink"])
+        rect("body", (18 - stride, 25, 23 - stride, 30), c["ink"])
+        rect("body", (10 + stride, 27, 14 + stride, 29), c["robe_shadow"])
+        rect("body", (18 - stride, 27, 22 - stride, 29), c["robe_shadow"])
+        rect("body", (7, 15, 25, 27), c["ink"])
+        rect("body", (8, 16, 24, 26), c["robe_shadow"])
+        rect("body", (5, 17, 10, 23), c["ink"])
+        rect("body", (22, 17, 27, 23), c["ink"])
+        rect("outfit", (6, 18, 9, 22), c["robe"])
+        rect("outfit", (23, 18, 26, 22), c["robe"])
+        rect("outfit", (9, 17, 23, 26), c["robe"])
+        rect("outfit", (10, 18, 12, 25), c["robe_light"])
+        rect("outfit", (20, 18, 22, 25), c["robe_shadow"])
+        rect("outfit", (8, 24, 24, 26), c["robe_shadow"])
+        rect("outfit", (9, 24, 16, 24), c["robe"])
+        rect("outfit", (8, 21, 24, 22), c["ink"])
+        rect("outfit", (10, 21, 21, 21), c["vermilion"])
+        rect("outfit", (15, 21, 17, 22), c["gold"])
+        rect("face", (9, 6, 22, 15), c["ink"])
+        rect("face", (11, 8, 20, 14), c["skin"])
+        rect("face", (12, 9, 13, 10), c["ink"])
+        rect("face", (18, 9, 19, 10), c["ink"])
+        rect("face", (15, 12, 16, 12), c["skin_light"])
+        rect("hair", (9, 4, 22, 10), c["hair"])
+        rect("hair", (13, 2, 18, 5), c["ink"])
+        rect("hair", (14, 1, 17, 4), c["hair"])
+        rect("hair", (11, 5, 20, 6), c["hair_light"])
+        rect("hair", (9, 9, 11, 14), c["hair"])
+        rect("hair", (20, 9, 22, 14), c["hair"])
+        rect("outfit", (11, 15, 20, 17), c["paper"])
+        rect("outfit", (14, 15, 17, 19), c["paper"])
+        weapon_start, weapon_end = (22, 18), (29, 27)
+    elif direction == "up":
+        rect("body", (9 + stride, 25, 14 + stride, 30), c["ink"])
+        rect("body", (18 - stride, 25, 23 - stride, 30), c["ink"])
+        rect("body", (7, 14, 25, 27), c["ink"])
+        rect("body", (8, 15, 24, 26), c["robe_shadow"])
+        rect("outfit", (9, 16, 23, 26), c["robe"])
+        rect("outfit", (10, 17, 12, 25), c["robe_light"])
+        rect("outfit", (8, 23, 24, 26), c["robe_shadow"])
+        rect("outfit", (15, 17, 17, 25), c["ink"])
+        rect("hair", (9, 5, 22, 15), c["ink"])
+        rect("hair", (10, 6, 21, 14), c["hair"])
+        rect("hair", (12, 7, 19, 8), c["hair_light"])
+        rect("hair", (13, 2, 18, 6), c["ink"])
+        rect("hair", (14, 1, 17, 4), c["hair"])
+        rect("accessory", (14, 15, 17, 16), c["vermilion"])
+        weapon_start, weapon_end = (21, 17), (27, 8)
+    else:
+        facing_right = direction == "right"
+        shoulder_left, shoulder_right = (6, 24) if facing_right else mirrored(6, 24)
+        head_left, head_right = (10, 22) if facing_right else mirrored(10, 22)
+        face_left, face_right = (13, 21) if facing_right else mirrored(13, 21)
+        front_eye = 19 if facing_right else 12
+        weapon_start, weapon_end = ((22, 18), (30, 12)) if facing_right else ((9, 18), (1, 12))
+        rect("body", (10 + stride, 25, 15 + stride, 30), c["ink"])
+        rect("body", (18 - stride, 25, 22 - stride, 30), c["ink"])
+        rect("body", (shoulder_left, 15, shoulder_right, 27), c["ink"])
+        rect("body", (shoulder_left + 1, 16, shoulder_right - 1, 26), c["robe_shadow"])
+        rect("outfit", (shoulder_left + 2, 17, shoulder_right - 2, 26), c["robe"])
+        rect("outfit", (shoulder_left + 3, 18, shoulder_left + 5, 25), c["robe_light"])
+        rect("outfit", (shoulder_left + 1, 22, shoulder_right - 1, 23), c["ink"])
+        rect("outfit", (shoulder_left + 3, 22, shoulder_right - 4, 22), c["vermilion"])
+        rect("face", (head_left, 6, head_right, 15), c["ink"])
+        rect("face", (face_left, 8, face_right, 14), c["skin"])
+        rect("face", (front_eye, 10, front_eye + 1, 10), c["ink"])
+        rect("hair", (head_left, 4, head_right, 10), c["hair"])
+        rect("hair", (13, 2, 18, 5), c["ink"])
+        rect("hair", (14, 1, 17, 4), c["hair"])
+        rect("hair", (head_left + 2, 5, head_right - 2, 6), c["hair_light"])
+        rect("outfit", (14, 15, 18, 17), c["paper"])
+
+    # The sword is deliberately an always-visible diagonal rather than a thin
+    # single-pixel line.  Attack rows extend the same readable cluster outward.
+    line("weapon", weapon_start, weapon_end, c["ink"])
+    inner_start = (weapon_start[0] + (1 if weapon_end[0] >= weapon_start[0] else -1), weapon_start[1])
+    line("weapon", inner_start, weapon_end, c["steel"])
+    rect("weapon", (weapon_start[0] - 1, weapon_start[1] - 1, weapon_start[0] + 1, weapon_start[1] + 1), c["gold"])
+    if is_attack:
+        if direction == "left":
+            attack_end = (-2, 9)
+        elif direction == "right":
+            attack_end = (33, 9)
+        elif direction == "up":
+            attack_end = (18, -2)
+        else:
+            attack_end = (18, 33)
+        line("weapon", (16, 18), attack_end, c["ink"])
+        line("weapon", (17, 18), attack_end, c["steel"])
+    if is_hurt:
+        rect("accessory", (7, 13, 9, 14), c["vermilion"])
+        rect("accessory", (23, 13, 25, 14), c["vermilion"])
 
 
 def _draw_death_pose(draw, center, row_y, outline, primary, highlight, skin, marker):

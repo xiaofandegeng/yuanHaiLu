@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using YuanHaiLu.Art;
 using YuanHaiLu.Character;
+using YuanHaiLu.Core;
 using YuanHaiLu.Map;
 using YuanHaiLu.GameSystem;
 
@@ -16,6 +17,11 @@ namespace YuanHaiLu.Editor
     /// </summary>
     public static class InnSceneGenerator
     {
+        private const float MvpWidth = 30f;
+        private const float MvpHeight = 16.875f;
+        private const string MvpInnBackdrop =
+            "Assets/Art/Environment/MVP/mvp_inn_backdrop.png";
+
         // 玩法内容放在独立 Demo 路径，正式 Interiors/inn.unity 保持纯 Tilemap 基线，
         // 供 EnvironmentArtTests 反复重建（与 Demo_YanLiuTown / Regions/yanliu 同构）。
         private const string ScenePath = "Assets/Scenes/Demo_Inn.unity";
@@ -46,7 +52,9 @@ namespace YuanHaiLu.Editor
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
             CreateGlobalManagers();
+            new GameObject("[MVP Direct Play Fallback]").AddComponent<MvpDirectPlayFallback>();
             CreateMainCamera();
+            CreateMvpVisualStage();
             CreatePlayer();
             CreateInnkeeper();
             CreateExitToTown();
@@ -82,11 +90,41 @@ namespace YuanHaiLu.Editor
         {
             _uiCamera = PlaySceneAssembler.CreateMainCamera(
                 "Inn",
-                new Vector3(11.5f, 8f, -10f),
+                new Vector3(MvpWidth * 0.5f, MvpHeight * 0.5f, -10f),
                 8.4375f,
                 new Color(0.14f, 0.11f, 0.09f));
+            PlaySceneAssembler.ConfigureCameraBounds(
+                _uiCamera, Vector2.zero, new Vector2(MvpWidth, MvpHeight));
             // [ScreenTransition] 画布先于相机创建，此处补绑同一逻辑展示面。
             PlaySceneAssembler.BindScreenTransitionToCamera(_uiCamera);
+        }
+
+        private static void CreateMvpVisualStage()
+        {
+            PlaySceneAssembler.CreateMvpBackdrop(
+                GameObject.Find("inn"),
+                MvpInnBackdrop,
+                new Vector2(MvpWidth * 0.5f, MvpHeight * 0.5f));
+
+            var root = new GameObject("MvpInnCollision");
+            root.layer = LayerMask.NameToLayer("Environment");
+            CreateWall(root, "Wall_West", new Vector2(-0.5f, MvpHeight * 0.5f), new Vector2(1f, MvpHeight + 1f));
+            CreateWall(root, "Wall_East", new Vector2(MvpWidth + 0.5f, MvpHeight * 0.5f), new Vector2(1f, MvpHeight + 1f));
+            CreateWall(root, "Wall_North", new Vector2(MvpWidth * 0.5f, MvpHeight + 0.5f), new Vector2(MvpWidth + 1f, 1f));
+            CreateWall(root, "Counter", new Vector2(15f, 11.2f), new Vector2(11f, 1.1f));
+            CreateWall(root, "Kitchen", new Vector2(3.6f, 12.5f), new Vector2(6.2f, 6.2f));
+            CreateWall(root, "Stair", new Vector2(25.3f, 12.6f), new Vector2(4.4f, 5.2f));
+            CreateWall(root, "Table_Upper", new Vector2(23f, 8.5f), new Vector2(4.4f, 1.7f));
+            CreateWall(root, "Table_Lower", new Vector2(22.5f, 5.1f), new Vector2(4.4f, 1.7f));
+        }
+
+        private static void CreateWall(GameObject root, string name, Vector2 position, Vector2 size)
+        {
+            var wall = new GameObject(name);
+            wall.transform.SetParent(root.transform);
+            wall.transform.position = position;
+            wall.layer = LayerMask.NameToLayer("Environment");
+            wall.AddComponent<BoxCollider2D>().size = size;
         }
 
         // ========== 玩家 ==========
@@ -94,7 +132,7 @@ namespace YuanHaiLu.Editor
         {
             // 固定男主 + 全套组件统一走共享装配器（复审 P1）。
             // 出生点：室内南门入口（AreaTrigger 落地时会覆盖到指定入口坐标）。
-            PlaySceneAssembler.CreatePlayer("Inn", new Vector3(11.5f, 2.5f, 0));
+            PlaySceneAssembler.CreatePlayer("Inn", new Vector3(15f, 2.5f, 0));
 
             // UI
             PlaySceneAssembler.CreateHudCanvas(_uiCamera);
@@ -109,7 +147,9 @@ namespace YuanHaiLu.Editor
         private static void CreateInnkeeper()
         {
             var npc = new GameObject("NPC_掌柜老赵");
-            npc.transform.position = new Vector2(8.5f, 7.2f);
+            // 柜台前沿的迎客位：视觉仍依托主柜台，但玩家可在 y=9 的通道内
+            // 以默认 1.2 范围交互，不能把 MVP_01 的首步放到碰撞体后面。
+            npc.transform.position = new Vector2(15f, 10f);
             npc.tag = "NPC";
             npc.layer = LayerMask.NameToLayer("NPC");
 
@@ -150,7 +190,7 @@ namespace YuanHaiLu.Editor
         private static void CreateExitToTown()
         {
             var exit = new GameObject("AreaTrigger_ExitToTown");
-            exit.transform.position = new Vector3(11.5f, 1.8f, 0);
+            exit.transform.position = new Vector3(15f, 1.8f, 0);
             var col = exit.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
             col.size = new Vector2(3f, 1.2f);

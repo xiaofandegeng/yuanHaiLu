@@ -135,6 +135,82 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
+        public void CameraFollowClampsTheMvpViewAtTheMapEdge()
+        {
+            // docs/16：试玩相机保持 30×16.875 世界视野时，出生点靠近地图西南缘
+            // 仍必须看到完整场景，而非引擎清屏色。移除 ConfigureBounds/SnapToTarget
+            // 或回退为直接按玩家坐标取景时，此测试必须失败。
+            var cameraObject = TestSceneFactory.Create("Main Camera");
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.orthographicSize = 8.4375f;
+            camera.aspect = 16f / 9f;
+            var follow = TestSceneFactory.AddComponentWithAwake<CameraFollow>(cameraObject);
+            var target = TestSceneFactory.Create("Player");
+            target.transform.position = new Vector3(7.5f, 7.6f, 0f);
+
+            follow.SetTarget(target.transform);
+            follow.ConfigureBounds(Vector2.zero, new Vector2(40f, 24f));
+            follow.SnapToTarget();
+
+            Assert.That(cameraObject.transform.position.x, Is.EqualTo(15f).Within(0.001f));
+            Assert.That(cameraObject.transform.position.y, Is.EqualTo(8.4375f).Within(0.001f));
+        }
+
+        [Test]
+        public void MvpHudUsesCompactSafeAreasInsteadOfA_DebugSizedTray()
+        {
+            // docs/16 Gate R1：信息 UI 可见但不得把 480×270 试玩画面压成
+            // 左侧条块+底部大黑槽。若恢复旧宽 40% 的技能栏或高 30% 的状态栏，
+            // 锚点和尺寸都会让本测试失败。
+            var canvasObject = TestSceneFactory.Create("[HUD Canvas]");
+            canvasObject.AddComponent<Canvas>();
+            canvasObject.AddComponent<CanvasScaler>();
+            // AddComponent 在 EditMode 不保证调用 Awake；HUD 的画布节点正是在
+            // Awake 中构建，测试必须按真实生命周期显式触发它。
+            var hud = TestSceneFactory.AddComponentWithAwake<HUD>(canvasObject);
+
+            var bars = hud.transform.Find("Bars").GetComponent<RectTransform>();
+            Assert.That(bars.anchorMin, Is.EqualTo(new Vector2(0f, 1f)));
+            Assert.That(bars.anchorMax, Is.EqualTo(new Vector2(0f, 1f)));
+            Assert.That(bars.sizeDelta.x, Is.LessThanOrEqualTo(116f));
+            Assert.That(bars.sizeDelta.y, Is.LessThanOrEqualTo(42f));
+
+            var skills = hud.transform.Find("SkillBar").GetComponent<RectTransform>();
+            Assert.That(skills.anchorMin, Is.EqualTo(new Vector2(0.5f, 0f)));
+            Assert.That(skills.anchorMax, Is.EqualTo(new Vector2(0.5f, 0f)));
+            Assert.That(skills.sizeDelta.x, Is.LessThanOrEqualTo(104f));
+            Assert.That(skills.sizeDelta.y, Is.LessThanOrEqualTo(28f));
+        }
+
+        [Test]
+        public void DirectPlayFallbackMakesTheInnImmediatelyInteractive()
+        {
+            // 试玩场景可被开发者直接按 Play。此前 GameManager.Start() 固定切到
+            // MainMenu，而客栈没有 SceneDirector 补回 Exploration，导致角色、交互
+            // 与任务全部被锁死。这个显式后备入口只能在 MainMenu 状态下介入，不能
+            // 覆盖正常的读档或跨场景切换。
+            // 其他测试留下的延迟销毁单例不应让本测试的 GameManager 失去 Instance。
+            // 按游戏对象销毁生命周期先清场，随后创建唯一的可用管理器。
+            foreach (var existing in Object.FindObjectsByType<GameManager>(
+                         FindObjectsInactive.Include,
+                         FindObjectsSortMode.None))
+                Object.DestroyImmediate(existing.gameObject);
+            var manager = TestSceneFactory.AddComponentWithAwake<GameManager>(
+                TestSceneFactory.Create("[GameManager]"));
+            manager.SetState(GameManager.GameState.MainMenu);
+            manager.BeginSceneEntry(GameManager.SceneEntryMode.NewGame);
+            var fallback = TestSceneFactory.Create("[MVP Inn Entry]")
+                .AddComponent<MvpDirectPlayFallback>();
+
+            fallback.ActivateIfDirectPlay();
+
+            Assert.That(manager.currentState, Is.EqualTo(GameManager.GameState.Exploration));
+            Assert.That(manager.CurrentSceneEntryMode,
+                Is.EqualTo(GameManager.SceneEntryMode.Active));
+        }
+
+        [Test]
         public void CameraFollowDoesNotJumpOutsideUnconfiguredBounds()
         {
             var cameraObject = TestSceneFactory.Create("Main Camera");

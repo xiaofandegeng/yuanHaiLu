@@ -31,6 +31,36 @@ namespace YuanHaiLu.Core
         public void SetTarget(Transform t) => target = t;
 
         /// <summary>
+        /// 配置玩法地图边界。MVP 的固定 30×16.875 世界视野必须在地图边缘夹紧，
+        /// 不能把镜头中心直接跟到出生点外侧而露出清屏底色。
+        /// </summary>
+        public void ConfigureBounds(Vector2 minimum, Vector2 maximum)
+        {
+            minBounds = minimum;
+            maxBounds = maximum;
+            useBounds = true;
+        }
+
+        /// <summary>
+        /// 立即将镜头对齐目标并应用像素对齐、地图边界。场景进入和离屏审查都用它
+        /// 取得与真实跟随一致的首帧，避免直接移动相机绕过边界规则。
+        /// </summary>
+        public void SnapToTarget()
+        {
+            if (target == null)
+            {
+                var player = GameObject.FindGameObjectWithTag("Player");
+                if (player == null) return;
+                target = player.transform;
+            }
+
+            transform.position = ConstrainPosition(new Vector3(
+                target.position.x,
+                target.position.y,
+                transform.position.z));
+        }
+
+        /// <summary>
         /// 触发摄像机震动
         /// </summary>
         public void Shake(float intensity)
@@ -67,24 +97,30 @@ namespace YuanHaiLu.Core
             UpdateShake();
             smoothed += _shakeOffset;
 
+            transform.position = ConstrainPosition(smoothed);
+        }
+
+        private Vector3 ConstrainPosition(Vector3 position)
+        {
+            if (_camera == null) _camera = GetComponent<Camera>();
+
             // 像素对齐
             if (pixelSnap)
             {
-                smoothed.x = Mathf.Round(smoothed.x * pixelsPerUnit) / pixelsPerUnit;
-                smoothed.y = Mathf.Round(smoothed.y * pixelsPerUnit) / pixelsPerUnit;
+                position.x = Mathf.Round(position.x * pixelsPerUnit) / pixelsPerUnit;
+                position.y = Mathf.Round(position.y * pixelsPerUnit) / pixelsPerUnit;
             }
 
             // 边界限制
-            if (useBounds)
+            if (useBounds && _camera != null)
             {
                 float halfH = _camera.orthographicSize;
                 float halfW = halfH * _camera.aspect;
 
-                smoothed.x = ClampToBounds(smoothed.x, minBounds.x, maxBounds.x, halfW);
-                smoothed.y = ClampToBounds(smoothed.y, minBounds.y, maxBounds.y, halfH);
+                position.x = ClampToBounds(position.x, minBounds.x, maxBounds.x, halfW);
+                position.y = ClampToBounds(position.y, minBounds.y, maxBounds.y, halfH);
             }
-
-            transform.position = smoothed;
+            return position;
         }
 
         private static float ClampToBounds(float value, float min, float max, float halfViewSize)

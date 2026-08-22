@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using YuanHaiLu.Art;
 using YuanHaiLu.Core;
+using YuanHaiLu.GameSystem;
 using YuanHaiLu.UI;
 
 namespace YuanHaiLu.Editor
@@ -171,7 +172,9 @@ namespace YuanHaiLu.Editor
                 Path.Combine(reviewDirectory, "town-riverbank-1x.png"));
             CaptureDemoGameplayFrame(
                 "Assets/Scenes/Demo_Inn.unity",
-                new Vector2(9.5f, 6.6f),
+                // 柜台前一格：同屏可辨男主、掌柜和交互距离，避免把审查角色
+                // 摆在左下角而看不出“进入后去找谁”的主流程。
+                new Vector2(15f, 9f),
                 Path.Combine(reviewDirectory, "inn-counter-1x.png"));
             Debug.Log("[VisualRegressionCapture] wrote MVP gameplay images to " + reviewDirectory);
         }
@@ -181,28 +184,59 @@ namespace YuanHaiLu.Editor
             CaptureMvpGameplay(MvpReviewDirectory);
         }
 
+        [MenuItem("Tools/渊海录/美术/截取MVP试玩复核图")]
+        public static void CaptureMvpGameplayFromEditor()
+        {
+            CaptureMvpGameplay(MvpReviewDirectory);
+        }
+
         private static void CaptureDemoGameplayFrame(
-            string scenePath, Vector2 cameraCenter, string outputPath)
+            string scenePath, Vector2 playerPosition, string outputPath)
         {
             var before = CaptureEditorState.Read();
             Scene captureScene = default;
             var addedScene = false;
-            Vector3 previousCameraPosition = default;
+            Vector3 previousPlayerPosition = default;
+            GameObject player = null;
             Camera gameCamera = null;
+            List<GameObject> hiddenForeignRoots = null;
+            Dictionary<GameObject, bool> reviewQuestTargets = null;
             try
             {
                 captureScene = OpenForCapture(scenePath, out addedScene);
+                // OpenForCapture is additive so it can restore the editor exactly, but
+                // a Camera renders objects from every loaded scene.  Isolate the target
+                // roots or an already-open inn will paint over a town review frame.
+                hiddenForeignRoots = HideForeignSceneRoots(captureScene);
                 var pixelCamera = FindInScene<PixelPerfectCamera>(captureScene);
                 if (pixelCamera == null)
                     throw new InvalidOperationException(
                         "Demo scene requires a PixelPerfectCamera for gameplay captures.");
                 gameCamera = pixelCamera.GetComponent<Camera>();
 
-                previousCameraPosition = gameCamera.transform.position;
-                gameCamera.transform.position =
-                    new Vector3(cameraCenter.x, cameraCenter.y, previousCameraPosition.z);
-                // 离屏 480×270：世界覆盖与视口都按 1× 逻辑画面刷新（docs/16 C.1）。
-                pixelCamera.UpdateCameraForScreen(Width, Height);
+                player = captureScene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                    .Select(value => value.gameObject)
+                    .FirstOrDefault(value => value.CompareTag("Player"));
+                if (player == null)
+                    throw new InvalidOperationException(
+                        "Demo scene requires a Player for gameplay captures.");
+                previousPlayerPosition = player.transform.position;
+                player.transform.position = playerPosition;
+
+                // 河岸截图审查的是“接到任务后的战斗读图”，不是接任务前正确隐藏
+                // 的空场。仅在编辑器截图期间临时展示 Gate 管控的水匪与荷包，finally
+                // 中逐一还原，因此不改变实际任务门控或已保存场景。
+                reviewQuestTargets = RevealRiverbankCombatForReview(captureScene, outputPath);
+
+                // 审查图必须走真实 CameraFollow 规则。旧实现直接改相机位置，绕过
+                // 地图边界，导致出生点附近露出场景外清屏色并误判为画面问题。
+                var follow = gameCamera.GetComponent<CameraFollow>();
+                if (follow == null)
+                    throw new InvalidOperationException(
+                        "Demo scene requires CameraFollow for gameplay captures.");
+                follow.SetTarget(player.transform);
+                follow.SnapToTarget();
                 // 编辑模式不走 Awake/Start；显式构建一次 HUD，保证实拍含 UI（docs/16 E.5）。
                 BuildRuntimeUiForCapture(captureScene);
                 Canvas.ForceUpdateCanvases();
@@ -210,12 +244,69 @@ namespace YuanHaiLu.Editor
             }
             finally
             {
-                if (gameCamera != null)
-                    gameCamera.transform.position = previousCameraPosition;
+                if (player != null)
+                    player.transform.position = previousPlayerPosition;
+                if (reviewQuestTargets != null)
+                {
+                    foreach (var pair in reviewQuestTargets)
+                        if (pair.Key != null)
+                            pair.Key.SetActive(pair.Value);
+                }
+                if (hiddenForeignRoots != null)
+                {
+                    foreach (var root in hiddenForeignRoots)
+                        if (root != null)
+                            root.SetActive(true);
+                }
                 if (addedScene && captureScene.IsValid() && captureScene.isLoaded)
                     EditorSceneManager.CloseScene(captureScene, true);
                 before.Restore();
             }
+        }
+
+        private static List<GameObject> HideForeignSceneRoots(Scene captureScene)
+        {
+            var hidden = new List<GameObject>();
+            for (var sceneIndex = 0; sceneIndex < SceneManager.sceneCount; sceneIndex++)
+            {
+                var scene = SceneManager.GetSceneAt(sceneIndex);
+                if (!scene.isLoaded || scene == captureScene)
+                    continue;
+                foreach (var root in scene.GetRootGameObjects())
+                {
+                    if (!root.activeSelf)
+                        continue;
+                    root.SetActive(false);
+                    hidden.Add(root);
+                }
+            }
+            return hidden;
+        }
+
+        private static Dictionary<GameObject, bool> RevealRiverbankCombatForReview(
+            Scene scene, string outputPath)
+        {
+            var targets = new Dictionary<GameObject, bool>();
+            if (!Path.GetFileName(outputPath).Equals(
+                    "town-riverbank-1x.png", StringComparison.Ordinal))
+                return targets;
+
+            foreach (var gate in scene.GetRootGameObjects()
+                         .SelectMany(root => root.GetComponentsInChildren<QuestStageGate>(true)))
+            {
+                if (gate == null ||
+                    (gate.targetId != "river_bandit" &&
+                     gate.targetId != "quest_lost_pouch"))
+                    continue;
+                foreach (var target in gate.targets)
+                {
+                    if (target == null || targets.ContainsKey(target))
+                        continue;
+                    targets.Add(target, target.activeSelf);
+                    target.SetActive(true);
+                }
+            }
+            return targets;
         }
 
         private static void BuildRuntimeUiForCapture(Scene scene)
@@ -291,11 +382,20 @@ namespace YuanHaiLu.Editor
             };
             var previousActive = RenderTexture.active;
             var previousTarget = camera.targetTexture;
+            var previousPixelRect = camera.pixelRect;
             var previousAntiAliasing = QualitySettings.antiAliasing;
+            var pixelCamera = camera.GetComponent<PixelPerfectCamera>();
             try
             {
                 QualitySettings.antiAliasing = 0;
                 camera.targetTexture = renderTexture;
+                // 必须先绑定 RT 再计算 pixelRect。若反过来，Unity 会用当前编辑器
+                // Game View 的物理尺寸钳制 rect；渲染到 480×270 时便只画出中央
+                // 362px，左右露出清屏色，截图看起来像缩略图。
+                if (pixelCamera != null)
+                    pixelCamera.UpdateCameraForScreen(Width, Height);
+                else
+                    camera.pixelRect = new Rect(0f, 0f, Width, Height);
                 RenderTexture.active = renderTexture;
                 camera.Render();
                 texture.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
@@ -305,6 +405,13 @@ namespace YuanHaiLu.Editor
             finally
             {
                 camera.targetTexture = previousTarget;
+                if (pixelCamera != null)
+                {
+                    pixelCamera.UpdateCameraForScreen(
+                        previousTarget != null ? previousTarget.width : Screen.width,
+                        previousTarget != null ? previousTarget.height : Screen.height);
+                }
+                camera.pixelRect = previousPixelRect;
                 RenderTexture.active = previousActive;
                 QualitySettings.antiAliasing = previousAntiAliasing;
                 UnityEngine.Object.DestroyImmediate(texture);

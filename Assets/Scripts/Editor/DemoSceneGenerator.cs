@@ -16,6 +16,11 @@ namespace YuanHaiLu.Editor
     /// </summary>
     public static class DemoSceneGenerator
     {
+        private const float MvpWidth = 30f;
+        private const float MvpHeight = 16.875f;
+        private const string MvpTownBackdrop =
+            "Assets/Art/Environment/MVP/mvp_yanliu_backdrop.png";
+
         [MenuItem("Tools/渊海录/生成Demo场景")]
         public static void Generate()
         {
@@ -46,6 +51,7 @@ namespace YuanHaiLu.Editor
             // 按顺序构建
             CreateGlobalManagers();
             CreateMainCamera();
+            CreateMvpVisualStage();
             CreateFormalColliders();
             CreatePlayer();
             CreateNPCs();
@@ -99,23 +105,39 @@ namespace YuanHaiLu.Editor
         {
             _uiCamera = PlaySceneAssembler.CreateMainCamera(
                 "Demo",
-                new Vector3(20f, 12f, -10f),
+                new Vector3(MvpWidth * 0.5f, MvpHeight * 0.5f, -10f),
                 8.4375f,
                 new Color(0.18f, 0.22f, 0.16f)); // 暗绿底色
+            PlaySceneAssembler.ConfigureCameraBounds(
+                _uiCamera, Vector2.zero, new Vector2(MvpWidth, MvpHeight));
             // [ScreenTransition] 画布先于相机创建，此处补绑同一逻辑展示面。
             PlaySceneAssembler.BindScreenTransitionToCamera(_uiCamera);
         }
 
+        private static void CreateMvpVisualStage()
+        {
+            PlaySceneAssembler.CreateMvpBackdrop(
+                GameObject.Find("yanliu"),
+                MvpTownBackdrop,
+                new Vector2(MvpWidth * 0.5f, MvpHeight * 0.5f));
+        }
+
         private static void CreateFormalColliders()
         {
-            // 建筑、岸线、柳树与边界的阻挡全部由 yanliu.json 声明并在
-            // RegionSceneBuilder 生成的 Layout Colliders 中落地；这里只补
-            // 场外缓冲，不再覆盖水面（水道可经双桥穿越）。
+            // MVP 背景是单屏构图，旧 formal collider 已随旧 Tile 渲染一起禁用。
+            // 这里的边界、客栈建筑和水面阻挡与新画面保持一致。
             var root = new GameObject("FormalCollision");
             root.layer = LayerMask.NameToLayer("Environment");
-            CreateInvisibleWall(root, "Boundary_West", new Vector2(-0.5f, 12f), new Vector2(1f, 25f));
-            CreateInvisibleWall(root, "Boundary_East", new Vector2(40.5f, 12f), new Vector2(1f, 25f));
-            CreateInvisibleWall(root, "Boundary_North", new Vector2(20f, 24.5f), new Vector2(42f, 1f));
+            CreateInvisibleWall(root, "Boundary_West", new Vector2(-0.5f, MvpHeight * 0.5f), new Vector2(1f, MvpHeight + 1f));
+            CreateInvisibleWall(root, "Boundary_East", new Vector2(MvpWidth + 0.5f, MvpHeight * 0.5f), new Vector2(1f, MvpHeight + 1f));
+            CreateInvisibleWall(root, "Boundary_North", new Vector2(MvpWidth * 0.5f, MvpHeight + 0.5f), new Vector2(MvpWidth + 1f, 1f));
+            CreateInvisibleWall(root, "Boundary_South", new Vector2(MvpWidth * 0.5f, -0.5f), new Vector2(MvpWidth + 1f, 1f));
+            // 客栈正面必须给门保留真实缺口。此前单一 9 单位宽碰撞盒一直压到
+            // 门前，出生点虽在建筑外却无法走到 AreaTrigger，MVP 首步被软锁。
+            // 两段立面保持画面中的大体积建筑，同时为 x=7.5 的门洞留出 2.4 单位通道。
+            CreateInvisibleWall(root, "Inn_Facade_West", new Vector2(3.45f, 13.4f), new Vector2(5.7f, 5.8f));
+            CreateInvisibleWall(root, "Inn_Facade_East", new Vector2(9.15f, 13.4f), new Vector2(1.7f, 5.8f));
+            CreateInvisibleWall(root, "Upper_River", new Vector2(22.7f, 13.3f), new Vector2(14.5f, 7.2f));
         }
 
         private static void CreateInvisibleWall(GameObject parent, string name, Vector2 position, Vector2 size)
@@ -538,7 +560,7 @@ namespace YuanHaiLu.Editor
             innDoorTrigger.areaSubtitle = "掌柜老赵";
             innDoorTrigger.triggersSceneChange = true;
             innDoorTrigger.targetSceneName = "Demo_Inn";
-            innDoorTrigger.spawnPositionInTarget = new Vector2(11.5f, 2.5f);
+            innDoorTrigger.spawnPositionInTarget = new Vector2(15f, 2.5f);
 
             CreateMvpQuestStageGates(pouch);
 
