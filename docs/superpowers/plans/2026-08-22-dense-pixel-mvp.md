@@ -108,13 +108,13 @@ git commit -m "feat(art): allow 48px MVP male hero frames"
 - Modify: Assets/ArtSource/Characters/Generated/player_male_swordsman/outfit.png
 - Modify: Assets/ArtSource/Characters/Generated/player_male_swordsman/weapon.png
 - Modify: Assets/ArtSource/Characters/Generated/player_male_swordsman/accessory.png
-- Create: Assets/Resources/Art/MVP/dense_pixel/weapon_sword.png
-- Create: Assets/Resources/Art/MVP/dense_pixel/weapon_gauntlets.png
-- Create: Assets/Resources/Art/MVP/dense_pixel/weapon_dart.png
+- Modify: Assets/Resources/Art/MVP/weapon_sword.png
+- Modify: Assets/Resources/Art/MVP/weapon_gauntlets.png
+- Modify: Assets/Resources/Art/MVP/weapon_dart.png
 
 **Interfaces:**
 - Consumes: roster animation rows and the Task-1 schema rule.
-- Produces: build_dense_mvp_art(project_root) -> tuple[Path, ...], six aligned 48px source modules, MvpArtCatalog.Load("dense_pixel/weapon_<style>") sprites and CharacterAnimationBuilder.RebuildOnly("player_male_swordsman").
+- Produces: build_dense_mvp_art(project_root) -> tuple[Path, ...], six aligned 48px source modules, the existing MvpArtCatalog.Load("weapon_<style>") sprites and CharacterAnimationBuilder.RebuildOnly("player_male_swordsman").
 
 - [ ] **Step 1: Write the failing source-art test**
 
@@ -136,11 +136,11 @@ Add an EditMode test that the rebuilt male catalog sprite rect is 48×48 while p
 
 Run: python3 -m unittest tools.art_pipeline.tests.test_mvp_dense_art_builder -v
 
-Expected: import failure because the dense builder and new resource paths do not exist.
+Expected: import failure because the dense builder does not exist.
 
 - [ ] **Step 3: Implement the 1× source master**
 
-Implement build_dense_mvp_art with source-scale RGBA Pillow canvases. It writes all six current player module sheets at roster dimensions and the three weapon layers under Assets/Resources/Art/MVP/dense_pixel.
+Implement build_dense_mvp_art with source-scale RGBA Pillow canvases. It writes all six current player module sheets at roster dimensions and redraws the three existing weapon layers under Assets/Resources/Art/MVP, preserving their stable IDs for MainMenu and PlayerCombat.
 
 Every direction contains an 8–10px dark hair knot, 20–24px indigo short cloak, 12–18px paper inner robe, 4–6px vermilion waist band, 18–28px weapon silhouette and 3–5px ground shadow. Draw left/right independently. Preserve existing idle, walk, dash and attack rows/hit frames. Change only the fixed male roster entry to frameSize 48. Call build_dense_mvp_art(PROJECT_ROOT) before manifest bakes in build.py.
 
@@ -157,7 +157,7 @@ Add CharacterAnimationBuilder.RebuildOnly(string stableArtId): it finds the exac
 - [ ] **Step 5: Commit**
 
 ~~~bash
-git add tools/art_pipeline/mvp_dense_art_builder.py tools/art_pipeline/tests/test_mvp_dense_art_builder.py tools/art_pipeline/build.py Assets/Scripts/Editor/Art/CharacterAnimationBuilder.cs Assets/ArtSource/Characters/Manifests/player-roster.json Assets/ArtSource/Characters/Generated/player_male_swordsman Assets/Art/Characters/Player/player_male_swordsman* Assets/Resources/Art/MVP/dense_pixel Assets/AnimatorControllers/Characters/Player Assets/Prefabs/Characters/Player
+git add tools/art_pipeline/mvp_dense_art_builder.py tools/art_pipeline/tests/test_mvp_dense_art_builder.py tools/art_pipeline/build.py Assets/Scripts/Editor/Art/CharacterAnimationBuilder.cs Assets/ArtSource/Characters/Manifests/player-roster.json Assets/ArtSource/Characters/Generated/player_male_swordsman Assets/Art/Characters/Player/player_male_swordsman* Assets/Resources/Art/MVP/weapon_sword.png Assets/Resources/Art/MVP/weapon_gauntlets.png Assets/Resources/Art/MVP/weapon_dart.png Assets/AnimatorControllers/Characters/Player Assets/Prefabs/Characters/Player
 git commit -m "feat(art): author 48px male hero master"
 ~~~
 
