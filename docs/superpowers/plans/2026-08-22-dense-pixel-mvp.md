@@ -64,8 +64,6 @@ def test_only_fixed_male_player_can_use_a_48_pixel_frame(self):
         CharacterRecipe.from_dict(payload)
 ~~~
 
-Add an EditMode test that the rebuilt male catalog sprite rect is 48×48 while player_female_swordsman remains 32×32.
-
 - [ ] **Step 2: Verify red**
 
 Run: python3 -m unittest tools.art_pipeline.tests.test_character_baker -v
@@ -87,7 +85,7 @@ Add public const int MVP_HERO_FRAME_SIZE = 48 next to CHARACTER_FRAME_SIZE; reta
 
 - [ ] **Step 4: Verify green**
 
-Run the Python test and EditMode suite. Confirm all non-default recipes still validate at 32px.
+Run the Python test. Confirm all non-default recipes still validate at 32px.
 
 - [ ] **Step 5: Commit**
 
@@ -132,6 +130,7 @@ def test_dense_hero_has_48_pixel_nonmirrored_directions_and_three_weapon_layers(
 ~~~
 
 Direction helpers hash cropped RGBA frame bytes rather than file names. Add a second test that a second build writes no changed files.
+Add an EditMode test that the rebuilt male catalog sprite rect is 48×48 while player_female_swordsman remains 32×32; this assertion must fail until the player source is rebuilt.
 
 - [ ] **Step 2: Verify red**
 
