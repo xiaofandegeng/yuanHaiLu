@@ -38,12 +38,12 @@ NAMED_IDS = (
 )
 
 ENEMY_ARCHETYPES = {
-    "tianshu": ("black_guard", "market_thug", "rogue_scholar", "palace_spy"),
-    "cangyue": ("mountain_bandit", "traitor_disciple", "cliff_wolf", "sword_puppet"),
-    "yanliu": ("river_bandit", "rebel_scout", "poison_smuggler", "marsh_raider"),
-    "chisha": ("desert_raider", "beidi_scout", "sand_wolf", "fortress_deserter"),
-    "youhuang": ("bamboo_assassin", "poison_cultist", "swamp_beast", "mechanism_puppet"),
-    "hanyuan": ("snow_bandit", "ice_wolf", "frost_cultist", "tomb_guard"),
+    "tianshu": ("market_thug", "shadow_tower_assassin", "corrupt_imperial_guard", "palace_pursuer"),
+    "cangyue": ("mountain_bandit", "traitor_disciple", "stone_array_puppet", "fallen_monk"),
+    "yanliu": ("river_bandit", "water_bandit", "smuggler", "rebel_marine"),
+    "chisha": ("beidi_cavalry", "desert_bandit", "giant_scorpion", "tomb_guard"),
+    "youhuang": ("poison_insect", "gu_controlled_villager", "forbidden_soldier", "bamboo_assassin"),
+    "hanyuan": ("snow_wolf", "hunter_bandit", "ice_tomb_guard", "rebel_pursuer"),
 }
 ENEMY_IDS = tuple(
     "{}_{}".format(region, archetype)

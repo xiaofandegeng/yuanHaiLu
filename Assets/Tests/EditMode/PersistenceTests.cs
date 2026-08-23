@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using YuanHaiLu.Character;
 using YuanHaiLu.Core;
 using YuanHaiLu.GameSystem;
@@ -310,6 +311,22 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(gameManager.PlayerAppearance, Is.EqualTo(PlayerAppearance.Default));
             Assert.That(player.GetComponent<YuanHaiLu.Art.CharacterVisual>().ArtId,
                 Is.EqualTo(PlayerAppearance.Default.ArtId));
+        }
+
+        [Test]
+        public void InvalidVersionFourAppearanceWarnsAndFallsBackToMaleSwordsman()
+        {
+            LogAssert.Expect(
+                LogType.Warning,
+                "[SaveManager] 存档中的玩家外观无效，已回退默认男剑客: missing_player");
+
+            string resolved = SaveManager.ResolvePlayerArtId(new SaveManager.SaveData
+            {
+                saveVersion = 4,
+                playerArtId = "missing_player"
+            });
+
+            Assert.That(resolved, Is.EqualTo("player_male_swordsman"));
         }
     }
 }

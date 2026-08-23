@@ -29,22 +29,30 @@ namespace YuanHaiLu.Art
         [SerializeField] private string kind;
         [SerializeField] private Vector2Int size;
         [SerializeField] private List<SceneAnchorDefinition> anchors = new List<SceneAnchorDefinition>();
+        [SerializeField] private bool supportsDayNight;
+        [SerializeField] private string weatherId;
 
         public string SceneId => sceneId;
         public string Kind => kind;
         public Vector2Int Size => size;
         public IReadOnlyList<SceneAnchorDefinition> Anchors => anchors;
+        public bool SupportsDayNight => supportsDayNight;
+        public string WeatherId => weatherId;
 
         public void ConfigureForEditor(
             string stableSceneId,
             string sceneKind,
             Vector2Int sceneSize,
-            IEnumerable<SceneAnchorDefinition> sceneAnchors)
+            IEnumerable<SceneAnchorDefinition> sceneAnchors,
+            bool hasDayNight = true,
+            string formalWeatherId = "clear")
         {
             sceneId = stableSceneId;
             kind = sceneKind;
             size = sceneSize;
             anchors = new List<SceneAnchorDefinition>(sceneAnchors);
+            supportsDayNight = hasDayNight;
+            weatherId = formalWeatherId;
         }
     }
 }

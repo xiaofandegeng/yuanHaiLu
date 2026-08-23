@@ -27,6 +27,11 @@ namespace YuanHaiLu.Map
 
         private bool _introPlayed = false;
 
+        public void ConfigureForEditor(Vector2 playerSpawnPosition)
+        {
+            spawnPosition = playerSpawnPosition;
+        }
+
         private void Start()
         {
             var player = GameObject.FindGameObjectWithTag("Player");

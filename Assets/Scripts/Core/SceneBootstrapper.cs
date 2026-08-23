@@ -5,6 +5,8 @@ using YuanHaiLu.Character;
 using YuanHaiLu.Dialogue;
 using YuanHaiLu.UI;
 using YuanHaiLu.Art;
+using YuanHaiLu.Map;
+using UnityEngine.SceneManagement;
 
 namespace YuanHaiLu.Core
 {
@@ -37,10 +39,41 @@ namespace YuanHaiLu.Core
             SetupCamera();
             SetupAudio();
 
+            if (GameManager.Instance != null &&
+                GameManager.Instance.currentState == GameManager.GameState.Boot)
+            {
+                GameManager.Instance.SetState(GameManager.GameState.Exploration);
+            }
+
+            // Demo 的 SceneDirector 会在发放新游戏初始内容后结束入口生命周期；
+            // 正式区域没有 Director，必须由自身完成，避免入口模式滞留。
+            if (GameManager.Instance != null &&
+                FindAnyObjectByType<SceneDirector>() == null)
+            {
+                GameManager.Instance.CompleteSceneEntry();
+            }
+
             if (debugMode)
             {
                 SpawnDebugContent();
             }
+        }
+
+        public void ConfigureForEditor(
+            string displayName,
+            string bgmId,
+            Transform defaultSpawn,
+            Vector2 minBounds,
+            Vector2 maxBounds)
+        {
+            sceneName = displayName;
+            sceneBGM = bgmId;
+            playerSpawnPoint = defaultSpawn;
+            cameraMinBounds = minBounds;
+            cameraMaxBounds = maxBounds;
+            debugMode = false;
+            spawnTestNPCs = false;
+            spawnTestEnemies = false;
         }
 
         /// <summary>
@@ -105,10 +138,44 @@ namespace YuanHaiLu.Core
                 Debug.Log("[SceneBootstrapper] 创建玩家对象完成");
             }
 
-            // 设置生成点
-            if (playerSpawnPoint != null)
+            bool isNewGameEntry = GameManager.Instance == null ||
+                                  GameManager.Instance.CurrentSceneEntryMode ==
+                                  GameManager.SceneEntryMode.NewGame;
+            bool hasResolvedSpawn = isNewGameEntry && playerSpawnPoint != null;
+            Vector3 resolvedSpawnPosition = hasResolvedSpawn
+                ? playerSpawnPoint.position
+                : Vector3.zero;
+            Scene activeScene = SceneManager.GetActiveScene();
+            string activeSceneId = activeScene.name;
+            bool arrivedFromFormalTravel = false;
+            if (AreaTrigger.TryConsumePendingSpawn(activeSceneId, out string pendingAnchor))
             {
-                player.transform.position = playerSpawnPoint.position;
+                var definition = FindAnyObjectByType<RegionSceneDefinition>();
+                if (definition != null)
+                {
+                    foreach (var anchor in definition.Anchors)
+                    {
+                        if (anchor.Id != pendingAnchor) continue;
+                        resolvedSpawnPosition = new Vector3(
+                            anchor.Cell.x + 0.5f,
+                            anchor.Cell.y + 0.5f,
+                            0f);
+                        hasResolvedSpawn = true;
+                        arrivedFromFormalTravel = true;
+                        break;
+                    }
+                }
+            }
+            if (hasResolvedSpawn)
+                player.transform.position = resolvedSpawnPosition;
+            if (arrivedFromFormalTravel && player.scene != activeScene)
+                SceneManager.MoveGameObjectToScene(player, activeScene);
+            // AreaTrigger 在淡出前锁定输入。跨场景复用同一玩家时，目标场景
+            // 必须显式解锁，否则控制器会永久停在早退状态。
+            if (arrivedFromFormalTravel &&
+                player.TryGetComponent(out PlayerController controller))
+            {
+                controller.SetInputEnabled(true);
             }
 
             // 确保在正确的层级
@@ -135,6 +202,12 @@ namespace YuanHaiLu.Core
                 camObj.tag = "MainCamera";
                 mainCam = camObj.GetComponent<Camera>();
             }
+
+            // 正式 2D 世界位于 z=0。新建相机默认也在 z=0，会让所有精灵落入
+            // near clip plane；同时 CameraFollow 会永久保留这个错误的 z 值。
+            var cameraPosition = mainCam.transform.position;
+            cameraPosition.z = -10f;
+            mainCam.transform.position = cameraPosition;
 
             // 像素完美摄像机
             var pixelCam = mainCam.GetComponent<PixelPerfectCamera>();

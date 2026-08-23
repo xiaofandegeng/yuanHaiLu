@@ -14,6 +14,8 @@ namespace YuanHaiLu.Art
         [SerializeField] private string sceneConfigurationId;
         [SerializeField] private string kind;
         [SerializeField] private string sceneAssetPath;
+        [SerializeField] private bool supportsDayNight;
+        [SerializeField] private string weatherId;
 
         public string RegionId => regionId;
         public Texture2D Tileset => tileset;
@@ -22,6 +24,8 @@ namespace YuanHaiLu.Art
         public string SceneConfigurationId => sceneConfigurationId;
         public string Kind => kind;
         public string SceneAssetPath => sceneAssetPath;
+        public bool SupportsDayNight => supportsDayNight;
+        public string WeatherId => weatherId;
 
         private EnvironmentArtEntry() { }
 
@@ -32,7 +36,9 @@ namespace YuanHaiLu.Art
             Texture2D previewTexture,
             string configurationId,
             string environmentKind = "region",
-            string scenePath = "Assets/Scenes/Regions/test.unity")
+            string scenePath = "Assets/Scenes/Regions/test.unity",
+            bool hasDayNight = true,
+            string formalWeatherId = "clear")
         {
             return new EnvironmentArtEntry
             {
@@ -42,7 +48,9 @@ namespace YuanHaiLu.Art
                 preview = previewTexture,
                 sceneConfigurationId = configurationId,
                 kind = environmentKind,
-                sceneAssetPath = scenePath
+                sceneAssetPath = scenePath,
+                supportsDayNight = hasDayNight,
+                weatherId = formalWeatherId
             };
         }
 
@@ -74,6 +82,9 @@ namespace YuanHaiLu.Art
                 throw new InvalidOperationException($"Environment art '{regionId}' has invalid kind '{kind}'.");
             if (string.IsNullOrWhiteSpace(sceneAssetPath) || !sceneAssetPath.EndsWith(".unity", StringComparison.Ordinal))
                 throw new InvalidOperationException($"Environment art '{regionId}' has invalid scene path '{sceneAssetPath}'.");
+            if (!ArtAssetId.IsValid(weatherId))
+                throw new InvalidOperationException(
+                    $"Environment art '{regionId}' has invalid weather id '{weatherId}'.");
         }
     }
 

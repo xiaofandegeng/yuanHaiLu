@@ -14,6 +14,8 @@ namespace YuanHaiLu.Editor
         public string name;
         public int[] rect;
         public float[] pivot;
+        public int[] collision;
+        public int foregroundCut;
     }
 
     [Serializable]
@@ -28,6 +30,8 @@ namespace YuanHaiLu.Editor
         public string landmarkSha256;
         public int frameSize;
         public int tileSize;
+        public bool dayNight;
+        public string weather;
         public ArtSpriteMetadata[] sprites;
         public ArtSpriteMetadata[] landmarks;
         public ArtAnimationMetadata[] animations;
@@ -70,12 +74,15 @@ namespace YuanHaiLu.Editor
                 ApplySpriteRects(assetPath, rects);
         }
 
-        public static void ApplyAllFormal()
+        public static void ApplyAllFormal(string requiredKind = null)
         {
             var declaredPaths = new HashSet<string>(StringComparer.Ordinal);
             foreach (var metadataPath in EnumerateMetadataAssetPaths())
             {
                 var metadata = ReadMetadataAtPath(metadataPath);
+                if (!string.IsNullOrEmpty(requiredKind) &&
+                    !string.Equals(metadata.kind, requiredKind, StringComparison.Ordinal))
+                    continue;
                 var directory = Path.GetDirectoryName(metadataPath) ?? string.Empty;
                 declaredPaths.Add(Path.Combine(directory, metadata.image).Replace('\\', '/'));
                 if (!string.IsNullOrEmpty(metadata.landmarkImage))

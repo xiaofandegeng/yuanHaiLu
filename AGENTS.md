@@ -10,11 +10,11 @@
 | 项目 | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
-| 代码规模 | 68 个运行时/编辑器 C# 文件；另有 19 个测试/测试工具文件 |
-| 状态 | 正式美术第一阶段完成：97 角色、10 户外、13 室内、烟柳镇可玩 Demo |
+| 代码规模 | 71 个运行时/编辑器 C# 文件；另有 20 个测试/测试工具文件 |
+| 状态 | 正式美术第一阶段完成：97 角色、23 场景、完整旅行图、烟柳镇可玩 Demo |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置 |
-| 测试 | 81 EditMode + 6 PlayMode + 34 Python 全通过 |
-| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/superpowers/` |
+| 测试 | 92 EditMode + 10 PlayMode + 35 Python 全量基线 |
+| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/HANDOFF-art-production.md`、`docs/03-art-production-handoff.md`、`docs/superpowers/` |
 
 ## 1. 如何运行
 
@@ -78,7 +78,7 @@ YuanHaiLu.Core
 
 YuanHaiLu.Art
   CharacterArtCatalog / EnvironmentArtCatalog / CharacterVisual
-  PlayerAppearanceBinder / RegionSceneDefinition / ArtAssetId
+  PlayerAppearanceBinder / RegionSceneDefinition / RegionEnvironmentController / ArtAssetId
 
 YuanHaiLu.Character
   PlayerController / PlayerCombat / PlayerInteraction / CharacterStats
@@ -89,7 +89,7 @@ YuanHaiLu.Effects
 
 YuanHaiLu.Map
   TileMapManager / AreaTrigger / TeleportPoint / Destructible
-  ItemPickup / EventTrigger / SceneDirector
+  ItemPickup / EventTrigger / SceneDirector / FormalSceneTravelGraph
 
 YuanHaiLu.Dialogue
   DialogueManager（打字机、条件、动作、分支）
@@ -120,11 +120,12 @@ YuanHaiLu.Combat
 - `GlobalSystemsBootstrapper` 是主菜单和游戏场景共用的管理器补全入口，确保 Save/Inventory/Quest/GameTime/Dialogue 各一个。
 - 管理器通过 `Instance` 和 `DontDestroyOnLoad` 跨场景；新增管理器应接入统一 Bootstrapper，不要在入口场景复制一套逻辑。
 - 系统通过 `event System.Action` 解耦，例如 HP、任务、对话、技能等事件。
-- 战斗判定帧由 Animator 事件调用 `PlayerCombat.OnAttackHitFrame()`。
+- 玩家与敌人战斗判定帧分别由 Animator 事件调用 `PlayerCombat.OnAttackHitFrame()` 和 `EnemyAI.OnAttackHitFrame()`；正式 Controller 已接通四方向 idle/walk/dash/三段攻击。
 - `PlayerInteraction` 扫描最近的 `IInteractable`，受 `GameManager.CanPlayerAct()` 控制。
 - `CharacterArtCatalog` 和 `EnvironmentArtCatalog` 以稳定 snake_case ID 作为运行时唯一入口；正式场景不得创建运行时 Texture/Sprite 作为美术回退。
 - `PlayerAppearance` 固定 2 性别 × 6 职业，`PlayerAppearanceBinder` 在场景加载后重新应用持久选择。
 - 正式环境由 `RegionSceneBuilder` 生成 7 层 Tilemap；必须用批量 `SetTiles` 后保存，逐格 `SetTile` 在 Unity 6 批处理路径曾出现未序列化问题。
+- `FormalSceneTravelGraph` 维护 23 个正式场景的稳定旅行关系；`SceneBootstrapper` 根据 `NewGame`/`LoadGame`/`SceneTransition` 决定默认出生、保留存档位置或使用传送锚点。
 
 ### 2.3 典型存档恢复顺序
 
@@ -138,7 +139,7 @@ LoadGame 读取并校验 JSON
   → 恢复武学和装备槽
   → v3 按稳定 ID 恢复活跃任务、目标进度、接取时间和已完成任务
     （v2 只恢复已完成任务，并清空活跃任务）
-  → v4 恢复正式主角外观；v1–v3 缺失外观时迁移为 player_female_swordsman
+  → v4 恢复正式主角外观；v1–v3 缺失外观时迁移为 player_male_swordsman
   → 状态切到 Exploration
   → SceneEntryMode.Active
 ```
@@ -206,6 +207,8 @@ Ground → Environment → Character → Foreground → UI
 - 每个输出带 `.art.json`、稳定帧名、pivot、SHA-256；`ArtImportRules` 精确切片，`ArtAssetValidator` 检查哈希/尺寸/持久资源。
 - 角色分类固定：12 Player、15 Named、36 NPC、24 Enemies、10 Bosses。
 - 环境固定：10 Regions（tianshu/cangyue/yanliu/chisha/youhuang/hanyuan/prologue_village/luoyuan/jueyun/zhenyue）和 13 Interiors（inn/residence/shop/pharmacy/academy/yamen/palace/temple/cave/tomb/dungeon/military_camp/ship_cabin）。
+- 24 个普通敌人必须与 `tools/art_pipeline/character_roster.py` 和 `Assets/ArtSource/Characters/Manifests/enemy-roster.json` 的确认名单完全一致；Python 与 Unity validator 都会拒绝缺失、多余或错位 ID。
+- 每个正式场景必须消费布局 JSON 的 `layers/collisions/foregroundSpans`，保留 Buildings 真实碰撞形状、Foreground 遮挡、昼夜标记、动态 weather ID 和 entry/exit/interior 锚点。
 - `CharacterVisual.Apply` 中 UnityEngine.Object 的组件检查必须用显式两段 `== null`；禁止 `GetComponent<T>() ?? AddComponent<T>()`，Unity “fake null” 曾导致 `MissingComponentException`。
 - 主菜单与烟柳镇实际渲染基线见 `Assets/Art/Characters/Player/previews/main-menu-character-selection.png`、`Assets/Art/Environment/previews/demo-yanliu-gameplay.png`。
 
@@ -230,7 +233,7 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前全量基线为 EditMode 81/81、PlayMode 6/6、Python 34/34。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。当前全量基线为 EditMode 92/92、PlayMode 10/10、Python 35/35。
 
 美术确定性验证：
 
@@ -239,6 +242,8 @@ python3 -m unittest discover -s tools/art_pipeline/tests -v
 python3 -m tools.art_pipeline.build --all   # 当前应 built=0 skipped=120
 python3 -m tools.art_pipeline.validate --all
 ```
+
+视觉回归位于 `Assets/Tests/VisualBaselines/`；有意接受画面变化时运行 `Tools → 渊海录 → 美术 → 重建全部视觉基线`。macOS 捕获依赖 Metal，不要传 `-nographics`。
 
 若批处理日志出现 `Unsupported protocol version '1.18.1'` 或许可证连接挂起，先退出 Unity Hub，再运行批处理；测试结束后可重新打开 Hub。不要同时保留陈旧的 Unity 批处理进程。
 
@@ -253,12 +258,12 @@ python3 -m tools.art_pipeline.validate --all
 - v4 已保存主角外观与活跃任务，但尚未保存敌人状态、唯一拾取物、一次性事件、区域标志和其他世界状态。
 - `M01_01`–`M01_05` 运行时模板已完成，但烟柳镇现有场景尚未配置对应 `QuestGiver`、区域目标、敌人目标和任务物品；这是阶段二内容接入任务。
 - 正式 97 角色和 23 环境已完成确定性第一版，但仍需要人工精修表情、攻击动作节奏、地标细节和区域独特构图。
-- 角色 Controller/动画资源已生成；当前基础状态切换仅完整覆盖 down 向 idle/walk，四方向 BlendTree 和所有动作的运行时过渡仍可继续深化。
+- 角色 Controller/动画资源已生成并接通四方向移动、冲刺与三段攻击；受击/倒地表现和动作节奏仍可继续深化。
 - 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
 
 ### P2 — 增强
 
-- 10 个户外区域和 13 个室内场景资源/骨架均已生成，但烟柳镇之外仍需填入玩法内容、传送关系和剧情对象。
+- 10 个户外区域和 13 个室内场景已生成并接通基础旅行、碰撞、昼夜/天气与玩家引导，但烟柳镇之外仍需填入玩法内容和剧情对象。
 - 商店 UI、武学技能树、小地图、BOSS 战待实现。
 - BGM/SFX 仍为空或占位；同一缺失资源只警告一次，避免脚步音刷屏。
 
@@ -267,9 +272,9 @@ python3 -m tools.art_pipeline.validate --all
 ```text
 yuanHaiLu/
 ├── Assets/
-│   ├── Scripts/                 68 个运行时/编辑器 .cs
-│   ├── Tests/EditMode/          81 个测试用例
-│   ├── Tests/PlayMode/          6 个测试用例
+│   ├── Scripts/                 71 个运行时/编辑器 .cs
+│   ├── Tests/EditMode/          92 个测试用例
+│   ├── Tests/PlayMode/          10 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
 │   ├── Art/                     97 角色 + 23 环境输出和验收图
 │   ├── Prefabs/Characters/      97 个正式 Prefab
@@ -280,9 +285,10 @@ yuanHaiLu/
 ├── docs/
 │   ├── 01-art-style-guide.md
 │   ├── 02-story-design.md
+│   ├── HANDOFF-art-production.md
 │   ├── 03-art-production-handoff.md
 │   └── superpowers/specs|plans/ 本次规格与实施计划
-├── tools/art_pipeline/          确定性美术 baker/validator（34 测试）
+├── tools/art_pipeline/          确定性美术 baker/validator（35 测试）
 ├── ProjectSettings/             修改后需重启 Unity
 ├── Packages/manifest.json
 ├── README.md
@@ -349,12 +355,35 @@ yuanHaiLu/
 38. 完成 10 户外 + 13 室内配方、布局、地标、持久 Tile 与 23 个 7 层 Tilemap 场景；Build Settings 自动包含 25 个可构建场景。
 39. 烟柳镇 Demo 改为从正式 `Assets/Scenes/Regions/yanliu.unity` 克隆，叠加玩家、剧情 NPC、敌人、事件、碰撞与 UI；删除生成器中的地面/角色色块回退。
 40. 主菜单新增 2 性别 × 6 职业选择、正式 idle 预览和选中态；`PlayerAppearanceBinder` 保证菜单→Demo 与后续切场景不丢外观。
-41. 存档升级 v4，保存 `playerArtId`；v1–v3 和非法外观 ID 安全迁移为 `player_female_swordsman`。
+41. 存档升级 v4，保存 `playerArtId`；该批最初使用女剑客回退，后由第 52 项按确认规格统一为 `player_male_swordsman`。
 42. 修复 Unity 6 批处理场景中逐格 `Tilemap.SetTile` 未序列化：改用批量 `SetTiles`，增加地面数量和 Buildings 结构层回归断言。
 43. 修复 `CharacterVisual` 使用 `??` 遇到 Unity fake-null 时无法创建 Animator 的 `MissingComponentException`。
 44. 修复 `PlayerCombat.Update()` 在 GameManager 引导前/销毁期空引用；无管理器时安全等待。
 45. 增加主菜单与烟柳镇离屏实际渲染验收图，并由截图发现/修复动画整表拉花、RectTransform 偏移、AspectRatioFitter 覆盖尺寸、菜单文字裁剪等视觉问题。
 46. 最终验证：81/81 EditMode、6/6 PlayMode、34/34 Python；`build --all` 为 `built=0 skipped=120`，全资产校验通过。
+
+### 第七批：规格补齐、可玩旅行与视觉回归（2026-08-13）
+
+47. 修复正式 Controller 只有 down idle/walk 可达：补齐四方向 idle/walk/dash/attack_1/2/3 过渡，并新增真实攻击命中 PlayMode 回归。
+48. EnemyAI 改为由 `OnAttackHitFrame()` 动画事件结算伤害，不再在动画开始前立即扣血。
+49. 普通敌人重建为规格确认的精确 24 人名单；Python/Unity validator 强制 97/23 全目录范围，测试改为只读，不再用重建自愈失败。
+50. 23 个正式场景补齐 Buildings/边界碰撞、Foreground 遮挡、昼夜色调、区域天气和运行时玩家/相机引导。
+51. 新增 `FormalSceneTravelGraph` 与稳定锚点传送；全部正式场景均有可解析后继，真实烟柳镇→客栈 PlayMode 通过。
+52. 修复菜单选择立即污染外观：新游戏先显示选择器，确认才提交，取消恢复；默认和 v1–v3 迁移统一为 `player_male_swordsman`。
+53. 修复 LoadGame 位置被 `SceneBootstrapper` 默认出生点覆盖；只有 NewGame 使用默认出生，SceneTransition 优先使用待处理锚点。
+54. 新增主菜单与 10 户外区域 480×270 Metal 视觉基线，以及颜色/尺寸/确定性/像素差异回归。
+55. 新增主菜单→选角→移动→攻击→NPC 对话→暂停→存读档→传送的完整 PlayMode E2E。
+56. 删除 Demo 生成器遗留几何占位地图路径，更新美术规范、记忆文档和 `docs/HANDOFF-art-production.md`。
+57. 本批最终验证结果见 §4；完整交接与不可破坏契约见 `docs/HANDOFF-art-production.md`。
+58. 修复默认 08:00 被错误初始化为 Dawn，以及环境控制器先于 `GameTimeManager` 启动时永不订阅昼夜事件；补初始化顺序回归。
+59. 修复正式场景运行时新建相机停在 z=0、整张像素世界被 near clip 裁空；统一放置到 z=-10 并补真实场景回归。
+60. 移除 `GameManager.Start()` 无条件回到 MainMenu 的状态竞争；入口状态现由 `MainMenu` 或 `SceneBootstrapper` 明确决定，正式场景直开保持可操作。
+61. 正式传送在加载窗口临时保留 Player，并于目标锚点落位后重新归属目标场景，避免 HP、等级、武学等运行时组件状态被重建清空。
+62. 正式场景无 `SceneDirector` 时由 `SceneBootstrapper` 完成入口生命周期；SceneTransition 在消费锚点后恢复同一 Player 的输入。
+63. 环境生成器开始实际消费布局 JSON 的层标记、碰撞格和前景跨度；wall/roof/window Tile 使用 Grid collider，布局碰撞按连续格合并为 BoxCollider。
+64. 户外 Effects 图层按 rain/snow/sand/ember/fog 等 weather ID 动态循环，室内环境光保持静态；默认 08:00 昼夜状态和延迟订阅均有回归覆盖。
+65. 选角面板显式切换 EventSystem 焦点，Build Settings 改从环境 Catalog 生成，全 97 角色强制验证 Controller/Prefab，主菜单加入真实捕获像素差异测试。
+66. Demo 开场出生点修正到正式烟柳镇内部 `(20.5, 7.5)`，主流程 E2E 等待 SceneDirector 完成真实新游戏初始化，不再关闭协程掩盖问题。
 
 ## 8. 当前人工 QA 清单
 

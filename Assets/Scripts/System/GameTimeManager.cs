@@ -79,6 +79,13 @@ namespace YuanHaiLu.GameSystem
                 return;
             }
             Instance = this;
+            InitializePeriod();
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
         }
 
         private void Update()
@@ -150,18 +157,29 @@ namespace YuanHaiLu.GameSystem
                 OnPeriodChanged?.Invoke(_currentPeriod);
 
                 // 更新目标颜色
-                _targetColor = newPeriod switch
-                {
-                    TimePeriod.Dawn => dawnColor,
-                    TimePeriod.Morning => dayColor,
-                    TimePeriod.Afternoon => dayColor,
-                    TimePeriod.Dusk => sunsetColor,
-                    TimePeriod.Night => nightColor,
-                    _ => dayColor
-                };
+                _targetColor = ColorForPeriod(newPeriod);
 
                 Debug.Log($"[GameTime] 时段变化: {_currentPeriod} ({TimeString})");
             }
+        }
+
+        private void InitializePeriod()
+        {
+            _currentPeriod = GetPeriod(hour);
+            _targetColor = ColorForPeriod(_currentPeriod);
+        }
+
+        private Color ColorForPeriod(TimePeriod period)
+        {
+            return period switch
+            {
+                TimePeriod.Dawn => dawnColor,
+                TimePeriod.Morning => dayColor,
+                TimePeriod.Afternoon => dayColor,
+                TimePeriod.Dusk => sunsetColor,
+                TimePeriod.Night => nightColor,
+                _ => dayColor
+            };
         }
 
         public static TimePeriod GetPeriod(int h)

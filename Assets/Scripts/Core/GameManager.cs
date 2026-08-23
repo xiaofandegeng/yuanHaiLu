@@ -66,11 +66,6 @@ namespace YuanHaiLu.Core
             }
         }
 
-        private void Start()
-        {
-            SetState(GameState.MainMenu);
-        }
-
         private void OnDestroy()
         {
             if (Instance == this)

@@ -9,7 +9,7 @@ from tools.art_pipeline.build import build_manifest
 from tools.art_pipeline.canvas import PixelBoundsError, PixelCanvas
 from tools.art_pipeline.character_baker import bake_character
 from tools.art_pipeline.schema import AnimationRow, CharacterRecipe
-from tools.art_pipeline.validate import validate_outputs
+from tools.art_pipeline.validate import validate_output_scope, validate_outputs
 
 
 class PixelCanvasTests(unittest.TestCase):
@@ -111,6 +111,22 @@ class CharacterBakerTests(unittest.TestCase):
 
         self.assertEqual(len(errors), 1)
         self.assertIn("hash mismatch", errors[0])
+
+    def test_validation_detects_missing_and_unexpected_formal_metadata(self):
+        output = self.root / "scope"
+        output.mkdir()
+        (output / "unexpected.art.json").write_text(
+            '{"id":"unexpected"}',
+            encoding="utf-8",
+        )
+
+        errors = validate_output_scope(
+            output,
+            {"expected.art.json": "expected"},
+        )
+
+        self.assertIn("missing formal metadata: expected.art.json", errors)
+        self.assertIn("unexpected formal metadata: unexpected.art.json", errors)
 
 
 if __name__ == "__main__":

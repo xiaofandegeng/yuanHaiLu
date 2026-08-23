@@ -12,7 +12,6 @@ namespace YuanHaiLu.Tests.EditMode
         [Test]
         public void FormalCharacterCatalogContainsExactlyNinetySevenEntries()
         {
-            CharacterAnimationBuilder.RebuildAll();
             var catalog = CharacterArtCatalog.LoadDefault();
 
             Assert.That(catalog.Entries.Count, Is.EqualTo(97));
@@ -24,24 +23,20 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(catalog.Entries.Count(entry => entry.Category == "boss"), Is.EqualTo(10));
         }
 
-        [TestCase("player_male_swordsman")]
-        [TestCase("player_female_mystic")]
-        [TestCase("shen_ruolan")]
-        [TestCase("yanliu_merchant_01")]
-        [TestCase("cangyue_cliff_wolf")]
-        [TestCase("hanyuan_snow_beast")]
-        public void FormalCharacterHasSheetControllerAndPrefab(string id)
+        [Test]
+        public void EveryFormalCharacterHasSheetControllerAndPrefab()
         {
-            CharacterAnimationBuilder.RebuildAll();
             var catalog = CharacterArtCatalog.LoadDefault();
 
-            Assert.That(catalog.TryGet(id, out var entry), Is.True);
-            Assert.That(entry.Sheet, Is.Not.Null);
-            Assert.That(entry.Controller, Is.Not.Null);
-            Assert.That(entry.Prefab, Is.Not.Null);
-            Assert.That(AssetDatabase.Contains(entry.Sheet), Is.True);
-            Assert.That(AssetDatabase.Contains(entry.Controller), Is.True);
-            Assert.That(AssetDatabase.Contains(entry.Prefab), Is.True);
+            foreach (var entry in catalog.Entries)
+            {
+                Assert.That(entry.Sheet, Is.Not.Null, entry.Id);
+                Assert.That(entry.Controller, Is.Not.Null, entry.Id);
+                Assert.That(entry.Prefab, Is.Not.Null, entry.Id);
+                Assert.That(AssetDatabase.Contains(entry.Sheet), Is.True, entry.Id);
+                Assert.That(AssetDatabase.Contains(entry.Controller), Is.True, entry.Id);
+                Assert.That(AssetDatabase.Contains(entry.Prefab), Is.True, entry.Id);
+            }
         }
 
         [Test]
