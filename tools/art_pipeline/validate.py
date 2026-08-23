@@ -35,7 +35,9 @@ def validate_outputs(root):
                 errors.append("{}: image has no opaque pixels".format(image_path))
                 continue
             unit = metadata.get("frameSize", metadata.get("tileSize"))
-            if unit not in (16, 32) or image.width % unit != 0 or image.height % unit != 0:
+            is_fixed_mvp_hero = metadata.get("id") == "player_male_swordsman"
+            valid_unit = unit in (16, 32) or (is_fixed_mvp_hero and unit == 48)
+            if not valid_unit or image.width % unit != 0 or image.height % unit != 0:
                 errors.append("{}: dimensions violate {}px unit".format(image_path, unit))
             landmark_name = metadata.get("landmarkImage")
             if landmark_name:

@@ -130,6 +130,27 @@ class CharacterBakerTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("hash mismatch", errors[0])
 
+    def test_validation_accepts_the_fixed_male_48_pixel_hero_output(self):
+        module_path = self.root / "hero_48.png"
+        module = Image.new("RGBA", (96, 96), (0, 0, 0, 0))
+        for row in range(2):
+            for frame in range(2):
+                module.putpixel((frame * 48 + 24, row * 48 + 43), (30, 40, 50, 255))
+        module.save(module_path)
+        hero = CharacterRecipe(
+            id="player_male_swordsman",
+            frame_size=48,
+            modules=(str(module_path),),
+            animations=(
+                AnimationRow("idle", "down", 2, 4, True),
+                AnimationRow("walk", "down", 2, 8, True),
+            ),
+        )
+
+        bake_character(hero, self.root / "output_48")
+
+        self.assertEqual(validate_outputs(self.root / "output_48"), [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,7 +7,6 @@ from PIL import Image
 from tools.art_pipeline.character_roster import build_roster
 from tools.art_pipeline.character_source_builder import (
     CharacterDesign,
-    MVP_HERO_COLORS,
     build_character_sources,
     load_character_designs,
 )
@@ -90,28 +89,15 @@ class CharacterSourceBuilderTests(unittest.TestCase):
         self.assertGreater(broad_body[2] - broad_body[0], slender_body[2] - slender_body[0])
         self.assertGreater(broad_weapon[3] - broad_weapon[1], slender_weapon[3] - slender_weapon[1])
 
-    def test_fixed_mvp_hero_uses_a_full_readable_four_direction_silhouette(self):
+    def test_legacy_32px_source_builder_refuses_the_48px_mvp_hero(self):
         recipe = next(
             value for value in build_roster()
             if value.id == "player_male_swordsman"
         )
         design = load_character_designs(DESIGN_PATH)[recipe.id]
         with TemporaryDirectory() as temporary:
-            paths = build_character_sources(recipe, design, Path(temporary))
-            with Image.open(paths["body"]) as source:
-                body = source.convert("RGBA")
-            with Image.open(paths["hair"]) as source:
-                hair = source.convert("RGBA")
-            with Image.open(paths["weapon"]) as source:
-                weapon = source.convert("RGBA")
-
-        # The fixed male hero is the MVP focus: a 32px frame must occupy a real
-        # silhouette and retain the ink hair, blue robe and sword in all facings.
-        for row in range(4):
-            frame = (0, row * 32, 32, row * 32 + 32)
-            self.assertGreaterEqual(body.crop(frame).getbbox()[2] - body.crop(frame).getbbox()[0], 18)
-            self.assertIn(MVP_HERO_COLORS["ink"], hair.crop(frame).getdata())
-            self.assertIn(MVP_HERO_COLORS["steel"], weapon.crop(frame).getdata())
+            with self.assertRaisesRegex(ValueError, "mvp_dense_art_builder"):
+                build_character_sources(recipe, design, Path(temporary))
 
     @staticmethod
     def _bbox(path):

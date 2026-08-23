@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
@@ -47,6 +48,28 @@ namespace YuanHaiLu.Tests.EditMode
             Assert.That(AssetDatabase.Contains(entry.Sheet), Is.True);
             Assert.That(AssetDatabase.Contains(entry.Controller), Is.True);
             Assert.That(AssetDatabase.Contains(entry.Prefab), Is.True);
+        }
+
+        [Test]
+        public void FixedMaleHeroCanBeRebuiltIndependentlyAtFortyEightPixels()
+        {
+            var rebuildOnly = typeof(CharacterAnimationBuilder).GetMethod(
+                "RebuildOnly",
+                BindingFlags.Public | BindingFlags.Static);
+            Assert.That(rebuildOnly, Is.Not.Null,
+                "The MVP hero must rebuild without regenerating the full character roster.");
+
+            rebuildOnly.Invoke(null, new object[] { "player_male_swordsman" });
+            var sprites = AssetDatabase.LoadAllAssetsAtPath(
+                    "Assets/Art/Characters/Player/player_male_swordsman.png")
+                .OfType<Sprite>()
+                .ToArray();
+
+            Assert.That(sprites.Length, Is.GreaterThan(0));
+            Assert.That(sprites.All(sprite => sprite.rect.width == 48f && sprite.rect.height == 48f), Is.True);
+            Assert.That(CharacterArtCatalog.LoadDefault().TryGet("player_male_swordsman", out var entry), Is.True);
+            Assert.That(entry.Prefab, Is.Not.Null);
+            Assert.That(entry.Controller, Is.Not.Null);
         }
 
         [Test]

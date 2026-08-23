@@ -95,7 +95,8 @@ class CharacterRosterTests(unittest.TestCase):
             self.assertTrue(metadata_path.exists(), str(metadata_path))
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
             self.assertEqual(metadata["id"], recipe.id)
-            self.assertEqual(metadata["frameSize"], 32)
+            expected_frame_size = 48 if recipe.id == "player_male_swordsman" else 32
+            self.assertEqual(metadata["frameSize"], expected_frame_size)
             self.assertTrue(metadata["sha256"])
             with Image.open(image_path) as source:
                 sheet = source.convert("RGBA")

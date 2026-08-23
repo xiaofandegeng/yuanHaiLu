@@ -70,6 +70,52 @@ namespace YuanHaiLu.Editor
             RebuildAll(true);
         }
 
+        /// <summary>
+        /// Rebuild one character's import slices, controller and prefab without
+        /// deleting or serializing the remaining formal-character artifacts.
+        /// This is used by the single-hero MVP, whose larger 48px sheet must
+        /// not trigger a 97-character production rebuild during iteration.
+        /// </summary>
+        public static void RebuildOnly(string stableArtId)
+        {
+            if (string.IsNullOrWhiteSpace(stableArtId))
+                throw new ArgumentException("A stable character art ID is required.", nameof(stableArtId));
+
+            var matches = ArtImportRules.EnumerateMetadataAssetPaths()
+                .Select(path => new { Path = path, Metadata = ArtImportRules.ReadMetadataAtPath(path) })
+                .Where(item => string.Equals(item.Metadata.kind, "character", StringComparison.Ordinal) &&
+                               string.Equals(item.Metadata.id, stableArtId, StringComparison.Ordinal))
+                .ToArray();
+            if (matches.Length != 1)
+                throw new InvalidOperationException(
+                    $"Expected exactly one formal character with ID '{stableArtId}', found {matches.Length}.");
+
+            var match = matches[0];
+            var directory = Path.GetDirectoryName(match.Path) ?? string.Empty;
+            var sheetPath = Path.Combine(directory, match.Metadata.image).Replace('\\', '/');
+            ArtImportRules.Apply(sheetPath);
+
+            var report = ArtAssetValidator.ValidateAll();
+            if (!report.IsValid)
+                throw new InvalidOperationException(report.ToString());
+
+            EnsureFolder("Assets/AnimatorControllers");
+            EnsureFolder(ControllerRoot);
+            EnsureFolder("Assets/Prefabs");
+            EnsureFolder(PrefabRoot);
+            EnsureFolder("Assets/Animations");
+            EnsureFolder(AnimationRoot);
+            BuildCharacter(match.Path, match.Metadata);
+            AssetDatabase.SaveAssets();
+            ArtCatalogBuilder.RebuildAll();
+            Debug.Log($"[CharacterAnimationBuilder] generated=1 id={stableArtId}");
+        }
+
+        public static void RebuildMvpHeroFromCommandLine()
+        {
+            RebuildOnly("player_male_swordsman");
+        }
+
         private static void BuildCharacter(string metadataPath, ArtMetadata metadata)
         {
             var directory = Path.GetDirectoryName(metadataPath) ?? string.Empty;
