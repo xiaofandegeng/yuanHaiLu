@@ -1,7 +1,7 @@
 # AGENTS.md — 渊海录项目交接与记忆
 
 > 本文件是接手本项目（开发者或 AI 助手）的首选入口。长期事实以本文件为准。
-> 最后更新：2026-08-22
+> 最后更新：2026-08-23
 
 ## 0. 30 秒速览
 
@@ -10,11 +10,11 @@
 | 项目 | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
-| 代码规模 | 76 个运行时/编辑器 C# 文件；另有 26 个测试/测试工具文件 |
-| 状态 | 单主角 MVP 垂直切片（docs/15/17）：固定男主 + 三武器流派 + 原生像素烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
+| 代码规模 | 78 个运行时/编辑器 C# 文件；另有 28 个测试 .cs |
+| 状态 | 单主角 MVP 垂直切片（docs/15/17，实施方向 docs/18）：固定男主 + 三武器流派 + 原生像素烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/mvp-presentation-flow-rework`（基于单主角 MVP 复审基线） |
-| 测试 | 138 EditMode + 14 PlayMode + 48 Python 全通过（最终提交后须重跑并以 XML 为准） |
-| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md`、`docs/15-single-hero-mvp-design.md` |
+| 测试 | 138 EditMode + 14 PlayMode + 48 Python 全通过（最终提交后须重跑并以 XML 为准；2026-08-23 起 Unity 批处理被本机许可证阻塞，恢复前 C# 侧无法重新验证） |
+| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md`、`docs/15-single-hero-mvp-design.md`、`docs/16-mvp-presentation-flow-rework-handoff.md`（A–C 已实施）、`docs/17-mvp-art-integration-rework.md`（历史）、`docs/18-dense-pixel-mvp-implementation-handoff.md`（现行） |
 
 ## 1. 如何运行
 
@@ -245,7 +245,7 @@ Ground → Environment → Character → Foreground → UI
   -logFile /tmp/yuanHaiLu-editmode.log
 ```
 
-PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。`-executeMethod` 场景重建则必须带 `-quit`，否则批处理编辑器会常驻。当前全量基线为 EditMode 137/137、PlayMode 14/14、Python 47/47；证据 XML 必须晚于其证明的提交时间。
+PlayMode 测试把 `-testPlatform` 改为 `PlayMode` 并使用独立结果文件。`-runTests` 时不要传 `-quit`，否则可能在结果写出前退出。`-executeMethod` 场景重建则必须带 `-quit`，否则批处理编辑器会常驻。当前全量基线为 EditMode 138/138、PlayMode 14/14、Python 48/48（v1 冗余清理后的提交态基线，2026-08-23 在独立 worktree 复核）；证据 XML 必须晚于其证明的提交时间。
 
 美术确定性验证：
 
@@ -283,8 +283,8 @@ python3 -m tools.art_pipeline.validate --all
 ```text
 yuanHaiLu/
 ├── Assets/
-│   ├── Scripts/                 76 个运行时/编辑器 .cs
-│   ├── Tests/EditMode/          137 个测试用例
+│   ├── Scripts/                 78 个运行时/编辑器 .cs
+│   ├── Tests/EditMode/          138 个测试用例
 │   ├── Tests/PlayMode/          14 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
 │   ├── Art/                     97 角色 + 23 环境输出和验收图
@@ -299,7 +299,7 @@ yuanHaiLu/
 │   ├── 03-art-production-handoff.md
 │   ├── 04-external-ai-development-handoff.md
 │   └── 05-post-development-review-plan.md
-├── tools/art_pipeline/          确定性美术 baker/validator（47 测试）
+├── tools/art_pipeline/          确定性美术 baker/validator（48 测试）
 ├── ProjectSettings/             修改后需重启 Unity
 ├── Packages/manifest.json
 ├── README.md
@@ -414,6 +414,14 @@ yuanHaiLu/
 71. 淘汰 Demo 中“高密度整图概念背景 + 旧角色贴片”的混搭，烟柳镇与客栈改为 `Ground → Environment → Character → Foreground` 原生 480×270 像素层；玩家重画为靛蓝短披、米白内衫、朱砂腰绦与钢剑，掌柜/水匪/荷包切换为同调色板 32×32 持久精灵。
 72. 两个 Demo 的碰撞、任务锚点与可走路线保持原坐标；视口外旧镇 NPC 和冻结角色不再混入试玩画面。`build --all` 纳入 MVP 层与静态精灵的确定性构建。
 73. 验证：Python 48/48、EditMode 138/138、PlayMode 14/14；三张 480×270 实拍写入 `/private/tmp/yuanhailu-mvp-rework-review/`，仍需用户按 1× 画面做最终视觉验收。
+
+### 第十二批：冗余与历史产物清理（2026-08-23）
+
+74. 全项目引用盘点后删除已被双重取代（docs/17 三层 → docs/18 模块化）的 v1 整屏背景 `Assets/Art/Environment/MVP/mvp_{yanliu,inn}_backdrop.png` 与 AI 概念图源 `Assets/ArtSource/Environment/MVP/*_concept_v1.png`（含 `.meta`，共约 4.9MB）；删除前逐一核实：两个 Demo 场景无 GUID 引用、Scripts/Tests 无路径引用、`build.py` 已在 181fd79 移除其构建注册。
+75. 删除孤立的 `tools/art_pipeline/mvp_backdrop_builder.py` 与 `test_mvp_backdrop_builder.py`（除自身测试外零引用）；删除 `docs/16-thumbnails/` 全目录（缩样审批流已被实际实施取代，且脚本依赖被删除的 v1 背景图；历史记录保留在 22ce274/057c7c8 两个提交）。
+76. docs/18 §3 保护清单全部保留不动：v2 三层资产、`mvp_scene_layer_builder.py`、`PlaySceneAssembler.CreateMvpSceneLayers` 与整屏层测试仍是 `MvpWorldModule` 转绿前的过渡回滚点；`source_audit.py` 有活跃引用同样保留；C# 侧零改动（Unity 许可证阻塞期间不引入无法编译验证的变更）。
+77. 验证（独立 worktree 于提交态 `1e14b52` 复核）：Python 48/48、`build --all` built=0 skipped=131、`validate --all` 通过；在途未提交的 48px 男主/dense 模块脏文件不受影响（其 Python 侧实跑 52/52）。
+78. 同步修正 AGENTS.md 内部不一致：速览与 §4 测试基线统一为 138/14/48、代码规模 78+28、文件地图与设计文档清单补 docs/16–18 现状。
 
 ## 8. 当前人工 QA 清单
 

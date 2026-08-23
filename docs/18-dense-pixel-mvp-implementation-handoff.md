@@ -54,6 +54,8 @@ Assets/Resources/Art/MVP/dense_pixel/actors/*.png
 
 仍待下一阶段清理的内容：
 
+> 2026-08-23 补记：上一代 v1 产物已先行删除——`mvp_backdrop_builder.py`（含测试）、`Assets/Art/Environment/MVP/mvp_*_backdrop.png`、`Assets/ArtSource/Environment/MVP/*_concept_v1.png` 与 `docs/16-thumbnails/` 全目录（提交 `1e14b52`）。它们不在下方保护清单内：构建注册已在 `181fd79` 移除、场景/代码零引用。下列 v2 过渡回滚点仍按原约束保留。
+
 - `tools/art_pipeline/mvp_scene_layer_builder.py`；
 - `Assets/ArtSource/Environment/MVP/v2/` 与 `Assets/Art/Environment/MVP/v2/` 的三张整屏层；
 - `PlaySceneAssembler.CreateMvpSceneLayers` 及两个生成器中的三层常量；
