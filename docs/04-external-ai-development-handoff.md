@@ -45,7 +45,7 @@
 | 角色运行时 | `Assets/Scripts/Character/PlayerCombat.cs`、`EnemyAI.cs`、`PlayerController.cs` | 动画参数、攻击命中帧、输入状态 |
 | 角色生成 | `Assets/Scripts/Editor/Art/CharacterAnimationBuilder.cs`、`CharacterShowcaseGenerator.cs` | 97 个 Controller/Prefab 动画状态与总览验收 |
 | 场景生成 | `Assets/Scripts/Editor/Art/RegionSceneBuilder.cs`、`EnvironmentTileBuilder.cs` | 消费布局、生成 23 个正式场景、碰撞与前景 |
-| 场景运行时 | `Assets/Scripts/Core/SceneBootstrapper.cs`、`Assets/Scripts/Map/AreaTrigger.cs`、`FormalSceneTravelGraph.cs` | 直开场景、跨场景落点、玩家状态与输入保持 |
+| 场景运行时 | `Assets/Scripts/System/GlobalSystemsBootstrapper.cs`、`Assets/Scripts/Map/AreaTrigger.cs`、`FormalSceneTravelGraph.cs` | 直开场景、跨场景落点、玩家状态与输入保持 |
 | 环境状态 | `Assets/Scripts/Art/RegionEnvironmentController.cs`、环境 manifest/layout | 昼夜、天气、序章村庄状态 |
 | 菜单与存档 | `Assets/Scripts/UI/MainMenu.cs`、`PlayerAppearance.cs`、`SaveManager.cs` | 选角确认/取消、默认外观、旧档迁移 |
 | 回归验收 | `Assets/Scripts/Editor/Art/VisualRegressionCapture.cs`、`Assets/Tests/VisualBaselines/` | 固定机位捕获与像素差异比较 |

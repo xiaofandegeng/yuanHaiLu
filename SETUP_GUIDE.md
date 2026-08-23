@@ -136,7 +136,7 @@ PlayerAppearanceBinder
 MartialArtsSystem（武学功能需要）
 ```
 
-`PlayerInteraction.EnsureOn` 是幂等入口；场景生成器、`SceneBootstrapper` 和 `SceneDirector` 都会调用它，因此既有 Demo 场景无需重新生成即可获得 K/E 交互。
+`PlayerInteraction.EnsureOn` 是幂等入口；场景生成器、`PlaySceneAssembler` 和 `SceneDirector` 都会调用它，因此既有 Demo 场景无需重新生成即可获得 K/E 交互。
 
 ### 5.1 任务组件约定
 

@@ -10,7 +10,7 @@
 | 项目 | 渊海录（YuanHaiLu）— Unity 6 像素武侠 RPG（俯视角 2D） |
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
-| 代码规模 | 78 个运行时/编辑器 C# 文件；另有 28 个测试 .cs |
+| 代码规模 | 75 个运行时/编辑器 C# 文件；另有 28 个测试 .cs |
 | 状态 | 单主角 MVP 垂直切片（docs/15/17，实施方向 docs/18）：固定男主 + 三武器流派 + 原生像素烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
 | 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/mvp-presentation-flow-rework`（基于单主角 MVP 复审基线） |
 | 测试 | 138 EditMode + 14 PlayMode + 48 Python 全通过（最终提交后须重跑并以 XML 为准；2026-08-23 起 Unity 批处理被本机许可证阻塞，恢复前 C# 侧无法重新验证） |
@@ -81,11 +81,12 @@ Legacy Input Manager 中 `Interact` 只有一个轴：K 主键、E 备用键。
 ```text
 YuanHaiLu.Core
   GameConfig / GameManager / PlayerAppearance / WeaponStyle
-  SceneBootstrapper / CameraFollow / PixelPerfectCamera
+  CameraFollow / PixelPerfectCamera / MvpDirectPlayFallback
 
 YuanHaiLu.Art
-  CharacterArtCatalog / EnvironmentArtCatalog / CharacterVisual
-  PlayerAppearanceBinder / RegionSceneDefinition / ArtAssetId
+  CharacterArtCatalog / EnvironmentArtCatalog / CharacterVisual / MvpArtCatalog
+  MvpStaticVisual / PlayerAppearanceBinder / RegionSceneDefinition / ArtAssetId
+  RegionEnvironmentController
 
 YuanHaiLu.Character
   PlayerController / PlayerCombat / PlayerInteraction / CharacterStats
@@ -103,8 +104,8 @@ YuanHaiLu.Dialogue
 
 YuanHaiLu.GameSystem
   GlobalSystemsBootstrapper / SaveManager / InventoryManager / ItemDatabase
-  QuestDatabase / QuestManager / QuestGiver / QuestTarget
-  MartialSkillDatabase / ShopManager / LootTable
+  QuestDatabase / QuestManager / QuestGiver / QuestTarget / QuestStageGate
+  MartialSkillDatabase / LootTable
   AudioManager / GameTimeManager / ScreenTransition / PlayerDeathHandler
 
 YuanHaiLu.UI
@@ -115,9 +116,7 @@ YuanHaiLu.Editor
   PixelArtImporter / ProjectInitializer / SetupBuildSettings / ArtImportRules / ArtAssetValidator
   CharacterAnimationBuilder / RegionSceneBuilder / EnvironmentTileBuilder
   CharacterShowcaseGenerator / EnvironmentShowcaseGenerator / FormalSceneCapture
-
-YuanHaiLu.Combat
-  DamageCalculator（预留）
+  VisualRegressionCapture
 ```
 
 ### 2.2 核心模式
@@ -283,7 +282,7 @@ python3 -m tools.art_pipeline.validate --all
 ```text
 yuanHaiLu/
 ├── Assets/
-│   ├── Scripts/                 78 个运行时/编辑器 .cs
+│   ├── Scripts/                 75 个运行时/编辑器 .cs
 │   ├── Tests/EditMode/          138 个测试用例
 │   ├── Tests/PlayMode/          14 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
@@ -422,6 +421,15 @@ yuanHaiLu/
 76. docs/18 §3 保护清单全部保留不动：v2 三层资产、`mvp_scene_layer_builder.py`、`PlaySceneAssembler.CreateMvpSceneLayers` 与整屏层测试仍是 `MvpWorldModule` 转绿前的过渡回滚点；`source_audit.py` 有活跃引用同样保留；C# 侧零改动（Unity 许可证阻塞期间不引入无法编译验证的变更）。
 77. 验证（独立 worktree 于提交态 `1e14b52` 复核）：Python 48/48、`build --all` built=0 skipped=131、`validate --all` 通过；在途未提交的 48px 男主/dense 模块脏文件不受影响（其 Python 侧实跑 52/52）。
 78. 同步修正 AGENTS.md 内部不一致：速览与 §4 测试基线统一为 138/14/48、代码规模 78+28、文件地图与设计文档清单补 docs/16–18 现状。
+
+### 第十三批：历史代码与冗余脚手架清理（2026-08-23）
+
+79. 全工程交叉引用盘点后删除 3 个孤立/未接入的历史脚本（含 .meta）：
+    - `Assets/Scripts/Core/SceneBootstrapper.cs`：已被 `GlobalSystemsBootstrapper` 和 `PlaySceneAssembler` 取代，场景和测试中零引用；
+    - `Assets/Scripts/Combat/DamageCalculator.cs`：早期预留的伤害公式计算器，实际战斗由 `PlayerCombat` 与 `CharacterStats` 直接结算，从未接入；同步清理空目录 `Assets/Scripts/Combat/`；
+    - `Assets/Scripts/System/ShopManager.cs`：早期商店管理器脚手架与空预设数据，当前阶段无 UI 或场景接入。
+80. 删除历史设计过程临时目录 `docs/superpowers/`（草稿已由 docs/18 等正式文档收敛覆盖）。
+81. 同步更新 `AGENTS.md`、`SETUP_GUIDE.md`、`docs/04`、`docs/05` 中的引用描述与代码总数（78 → 75）。
 
 ## 8. 当前人工 QA 清单
 

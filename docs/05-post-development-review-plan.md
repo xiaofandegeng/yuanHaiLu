@@ -62,7 +62,7 @@ rtk git ls-files | rtk rg '(^|/)(Library|Temp|\.zcode|\.vscode|docs/superpowers)
 - v1–v3 外观迁移返回相同默认值；v4 非法 ID 告警后回退。
 - `SaveData.saveVersion` 仍为 4，既有字段语义不变。
 - `QuestTarget` 只有 `UpdateObjective` 返回 true 后才设置 `_reported=true`。
-- `AreaTrigger` 跨场景后保留玩家运行时状态，并由目标 `SceneBootstrapper` 恢复输入。
+- `AreaTrigger` 跨场景后保留玩家运行时状态，并由目标场景引导系统恢复输入。
 - 正式 2D 摄像机 z 为 `-10` 或严格小于 `-nearClipPlane`。
 
 任一不满足均为 P1，退回开发 AI 修复。
@@ -73,7 +73,7 @@ rtk git ls-files | rtk rg '(^|/)(Library|Temp|\.zcode|\.vscode|docs/superpowers)
 
 固定点使用 `main` merge-base；检查项目约定、Unity 生命周期、空引用、重复单例、序列化、`.meta`、命名空间和文档真实性。重点文件：
 
-- `Assets/Scripts/Core/SceneBootstrapper.cs`
+- `Assets/Scripts/System/GlobalSystemsBootstrapper.cs`
 - `Assets/Scripts/Map/AreaTrigger.cs`
 - `Assets/Scripts/UI/MainMenu.cs`
 - `Assets/Scripts/System/SaveManager.cs`
