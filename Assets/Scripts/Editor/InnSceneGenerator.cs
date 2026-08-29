@@ -19,12 +19,6 @@ namespace YuanHaiLu.Editor
     {
         private const float MvpWidth = 30f;
         private const float MvpHeight = 16.875f;
-        private const string MvpInnGround =
-            "Assets/Art/Environment/MVP/v2/mvp_inn_ground_v2.png";
-        private const string MvpInnEnvironment =
-            "Assets/Art/Environment/MVP/v2/mvp_inn_environment_v2.png";
-        private const string MvpInnForeground =
-            "Assets/Art/Environment/MVP/v2/mvp_inn_foreground_v2.png";
 
         // 玩法内容放在独立 Demo 路径，正式 Interiors/inn.unity 保持纯 Tilemap 基线，
         // 供 EnvironmentArtTests 反复重建（与 Demo_YanLiuTown / Regions/yanliu 同构）。
@@ -105,13 +99,9 @@ namespace YuanHaiLu.Editor
 
         private static void CreateMvpVisualStage()
         {
-            PlaySceneAssembler.CreateMvpSceneLayers(
-                GameObject.Find("inn"),
-                MvpInnGround,
-                MvpInnEnvironment,
-                MvpInnForeground,
-                new Vector2(MvpWidth * 0.5f, MvpHeight * 0.5f));
-            PlaySceneAssembler.ConfigureMvpActorSprite("mvp_innkeeper");
+            // docs/18 §6.B：密集小模块按 inn.json 装配，替代三张 480×270 整屏层。
+            MvpSceneModuleAssembler.Assemble(GameObject.Find("inn"), "inn");
+            PlaySceneAssembler.ConfigureDenseActorSprite("mvp_innkeeper");
 
             var root = new GameObject("MvpInnCollision");
             root.layer = LayerMask.NameToLayer("Environment");

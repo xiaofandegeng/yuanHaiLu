@@ -299,44 +299,74 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void DemoScenesHavePersistentLayeredMvpArtWithCharacterDepth()
+        public void DemoScenesAssembleDensePixelModulesThroughMvpWorldModule()
         {
-            // docs/17：MVP 必须是原生 480×270 像素层，不允许把整张高密度概念
-            // 图置于所有游戏物体下面。角色在 Environment 与 Foreground 之间，
-            // 所以门帘、屋檐、柜台等前景可形成真实遮挡。
-            foreach (var scenePath in new[]
+            // docs/18 §6.B：MVP 场景必须由 MvpWorldModule 按 town.json / inn.json
+            // 以 ≤64×64 的持久小模块装配；三张 480×270 整屏层与概念背景不得再出现。
+            var sortingMap = new Dictionary<string, string>
+            {
+                // 正式场景的最底层瓦片沿用 Default 层（docs/16/17 既定约定）。
+                { "Ground", "Default" },
+                { "Environment", GameConfig.SORTING_ENVIRONMENT },
+                { "Foreground", GameConfig.SORTING_FOREGROUND },
+            };
+
+            foreach (var (scenePath, layoutId) in new[]
                      {
-                         "Assets/Scenes/Demo_YanLiuTown.unity",
-                         "Assets/Scenes/Demo_Inn.unity",
+                         ("Assets/Scenes/Demo_YanLiuTown.unity", "town"),
+                         ("Assets/Scenes/Demo_Inn.unity", "inn"),
                      })
             {
                 EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-                Assert.That(GameObject.Find("[MVP Backdrop]"), Is.Null,
-                    $"{scenePath} 不能保留整张概念背景");
 
-                var expectedLayers = new[]
+                foreach (var staleName in new[]
+                         {
+                             "[MVP Backdrop]", "[MVP Ground]", "[MVP Environment]", "[MVP Foreground]",
+                         })
+                    Assert.That(GameObject.Find(staleName), Is.Null,
+                        $"{scenePath} 不得保留整屏层 {staleName}");
+
+                var modules = Object.FindObjectsByType<MvpWorldModule>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+                Assert.That(modules, Has.Length.EqualTo(1),
+                    $"{scenePath} 必须恰好一个 MvpWorldModule");
+                var module = modules[0];
+                Assert.That(module.LayoutId, Is.EqualTo(layoutId));
+
+                var layout = MvpDenseSceneLayouts.Load(layoutId);
+                var renderers = module.GetComponentsInChildren<SpriteRenderer>(true);
+                Assert.That(renderers, Has.Length.EqualTo(layout.Placements.Count),
+                    $"{scenePath} 模块子物体数量必须与 {layoutId}.json 一致");
+                Assert.That(module.ModuleAssets.Count,
+                    Is.EqualTo(layout.Placements.Count));
+
+                foreach (var placement in layout.Placements)
                 {
-                    // Existing formal scenes use Unity's Default layer for their
-                    // bottom tilemap.  The MVP keeps that convention instead of
-                    // rewriting every frozen asset merely to rename Ground.
-                    ("[MVP Ground]", "Default"),
-                    ("[MVP Environment]", GameConfig.SORTING_ENVIRONMENT),
-                    ("[MVP Foreground]", GameConfig.SORTING_FOREGROUND),
-                };
-                foreach (var (layerName, sortingLayer) in expectedLayers)
-                {
-                    var layer = GameObject.Find(layerName);
-                    Assert.That(layer, Is.Not.Null, $"{scenePath} 缺少 {layerName}");
-                    var renderer = layer.GetComponent<SpriteRenderer>();
-                    Assert.That(renderer, Is.Not.Null);
-                    Assert.That(renderer.sprite, Is.Not.Null);
-                    Assert.That(AssetDatabase.Contains(renderer.sprite), Is.True,
-                        $"{scenePath} 的 {layerName} 必须是持久资源");
-                    Assert.That(renderer.sortingLayerName, Is.EqualTo(sortingLayer));
-                    Assert.That(renderer.bounds.size.x, Is.EqualTo(30f).Within(0.01f));
-                    Assert.That(renderer.bounds.size.y, Is.EqualTo(16.875f).Within(0.01f));
+                    var spriteName = Path.GetFileNameWithoutExtension(placement.asset);
+                    var position = new Vector2(placement.x, placement.y);
+                    var match = System.Array.Find(renderers, renderer =>
+                        renderer.sprite != null &&
+                        renderer.sprite.name == spriteName &&
+                        Vector2.Distance(renderer.transform.position, position) < 0.01f);
+                    Assert.That(match, Is.Not.Null,
+                        $"{scenePath} 缺少放置 {placement.asset} @ {placement.x},{placement.y}");
+                    Assert.That(match.sortingLayerName,
+                        Is.EqualTo(sortingMap[placement.layer]),
+                        $"{scenePath} 的 {placement.asset} 排序层映射错误");
+                    Assert.That(match.sortingOrder, Is.EqualTo(placement.sortingOrder));
                 }
 
+                foreach (var renderer in renderers)
+                {
+                    Assert.That(renderer.sprite, Is.Not.Null);
+                    Assert.That(AssetDatabase.Contains(renderer.sprite), Is.True,
+                        $"{scenePath} 模块精灵必须是持久资源，禁止运行时生成");
+                    Assert.That(Mathf.Max(renderer.sprite.rect.width, renderer.sprite.rect.height),
+                        Is.LessThanOrEqualTo(64f),
+                        $"{scenePath} 模块 {renderer.sprite.name} 不得大于 64×64");
+                }
+
+                // 角色仍处于 Environment 与 Foreground 之间，模块前景可形成真实遮挡。
                 var player = GameObject.Find("Player");
                 Assert.That(player, Is.Not.Null);
                 var playerRenderer = player.GetComponent<SpriteRenderer>();
@@ -349,16 +379,22 @@ namespace YuanHaiLu.Tests.EditMode
         [Test]
         public void MvpOnlyActorsUsePersistentSpritesFromTheSharedPixelPalette()
         {
-            foreach (var spriteId in new[]
-                     {
-                         "mvp_innkeeper", "mvp_bandit_a", "mvp_bandit_b", "mvp_lost_pouch",
-                     })
+            // docs/18：密集调色板演员为 48px 人物（与男主同比例）与 16px 荷包。
+            var expectedSizes = new Dictionary<string, Vector2>
             {
-                var sprite = MvpArtCatalog.Load(spriteId);
-                Assert.That(sprite, Is.Not.Null, $"MVP actor sprite '{spriteId}' is required");
+                { "mvp_innkeeper", new Vector2(48f, 48f) },
+                { "mvp_bandit_a", new Vector2(48f, 48f) },
+                { "mvp_bandit_b", new Vector2(48f, 48f) },
+                { "mvp_lost_pouch", new Vector2(16f, 16f) },
+            };
+            foreach (var pair in expectedSizes)
+            {
+                var sprite = MvpArtCatalog.Load(pair.Key);
+                Assert.That(sprite, Is.Not.Null, $"MVP actor sprite '{pair.Key}' is required");
                 Assert.That(AssetDatabase.Contains(sprite), Is.True,
-                    $"MVP actor sprite '{spriteId}' cannot be generated at runtime");
-                Assert.That(sprite.rect.size, Is.EqualTo(new Vector2(32f, 32f)));
+                    $"MVP actor sprite '{pair.Key}' cannot be generated at runtime");
+                Assert.That(sprite.rect.size, Is.EqualTo(pair.Value),
+                    $"MVP actor '{pair.Key}' 必须使用 dense_pixel/actors 下的密集尺寸");
             }
 
             EditorSceneManager.OpenScene("Assets/Scenes/Demo_YanLiuTown.unity", OpenSceneMode.Single);
@@ -406,11 +442,14 @@ namespace YuanHaiLu.Tests.EditMode
         }
 
         [Test]
-        public void GameplayCaptureUsesTheFullLogicalFrameWithoutSideClearBands()
+        public void GameplayCaptureFillsTheFullLogicalFrameWithHudAndWorldContent()
         {
-            // 截图必须与真实 480×270 逻辑画面同宽。此前先设置 pixelRect、后绑定
-            // RenderTexture，Unity 会把 rect 按当前编辑器 Game View 钳制为 362px，
-            // 两侧留下大块清屏色，正是用户看到“画面很小”的根因。
+            // 截图必须精确等于 480×270 逻辑画面，且 HUD 顶带横贯整个逻辑宽度。
+            // 此前先设置 pixelRect、后绑定 RenderTexture，Unity 会把画面按编辑器
+            // Game View 钳制为 362px、两侧留下大块清屏色；钳制发生时连 HUD 也会
+            // 缩进中段，所以 HUD 顶带是否触及左右边缘就是视口钳制的回归哨兵。
+            // docs/18 起世界改为稀疏小模块构图，允许在清屏底色上自然留白，旧
+            // “中轴行内容贴边”的前提作废；稀疏密度本身由 1× 人工验收（R1）把关。
             var directory = Path.Combine(Path.GetTempPath(), "yuanhailu-capture-full-frame-test");
             if (Directory.Exists(directory))
                 Directory.Delete(directory, true);
@@ -426,10 +465,10 @@ namespace YuanHaiLu.Tests.EditMode
                 var banditWasActive = reviewBandit.activeSelf;
                 var pouchWasActive = reviewPouch.activeSelf;
                 VisualRegressionCapture.CaptureMvpGameplay(directory);
-                AssertCaptureReachesBothEdges(
+                AssertCaptureFillsTheLogicalFrame(
                     Path.Combine(directory, "town-spawn-1x.png"),
                     new Color32(46, 56, 41, 255));
-                AssertCaptureReachesBothEdges(
+                AssertCaptureFillsTheLogicalFrame(
                     Path.Combine(directory, "inn-counter-1x.png"),
                     new Color32(36, 28, 23, 255));
                 Assert.That(reviewBandit.activeSelf, Is.EqualTo(banditWasActive),
@@ -444,26 +483,49 @@ namespace YuanHaiLu.Tests.EditMode
             }
         }
 
-        private static void AssertCaptureReachesBothEdges(string imagePath, Color32 clearColor)
+        private static void AssertCaptureFillsTheLogicalFrame(string imagePath, Color32 clearColor)
         {
             var image = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             try
             {
                 Assert.That(ImageConversion.LoadImage(image, File.ReadAllBytes(imagePath)), Is.True);
-                const int sampleY = 135;
-                var firstContent = 0;
-                while (firstContent < image.width &&
-                       image.GetPixel(firstContent, sampleY) == (Color)clearColor)
-                    firstContent++;
-                var lastContent = image.width - 1;
-                while (lastContent >= 0 &&
-                       image.GetPixel(lastContent, sampleY) == (Color)clearColor)
-                    lastContent--;
+                Assert.That(image.width, Is.EqualTo(480),
+                    $"{Path.GetFileName(imagePath)} 宽度必须精确等于 480");
+                Assert.That(image.height, Is.EqualTo(270),
+                    $"{Path.GetFileName(imagePath)} 高度必须精确等于 270");
 
-                Assert.That(firstContent, Is.LessThanOrEqualTo(2),
-                    $"{Path.GetFileName(imagePath)} 左侧出现清屏色边带");
-                Assert.That(lastContent, Is.GreaterThanOrEqualTo(image.width - 3),
-                    $"{Path.GetFileName(imagePath)} 右侧出现清屏色边带");
+                var clear = (Color)clearColor;
+                long painted = 0;
+                var hudLeft = image.width;
+                var hudRight = -1;
+                // Texture2D.GetPixel 以左下为原点，顶部 HUD 带（左上状态条 +
+                // 右上金币）是稀疏构图下唯一必定横贯 480 逻辑宽度的元素，
+                // 用它守望视口钳制回归。
+                var topBandStart = image.height - 40;
+                for (var y = 0; y < image.height; y++)
+                {
+                    for (var x = 0; x < image.width; x++)
+                    {
+                        if (image.GetPixel(x, y) == clear)
+                            continue;
+                        painted++;
+                        if (y >= topBandStart)
+                        {
+                            if (x < hudLeft)
+                                hudLeft = x;
+                            if (x > hudRight)
+                                hudRight = x;
+                        }
+                    }
+                }
+
+                Assert.That((float)painted / (image.width * image.height),
+                    Is.GreaterThan(0.15f),
+                    $"{Path.GetFileName(imagePath)} 实际绘制内容占比过低");
+                Assert.That(hudLeft, Is.LessThanOrEqualTo(8),
+                    $"{Path.GetFileName(imagePath)} 顶部 HUD 带未触及逻辑画面左缘（视口钳制回归）");
+                Assert.That(hudRight, Is.GreaterThanOrEqualTo(image.width - 11),
+                    $"{Path.GetFileName(imagePath)} 顶部 HUD 带未触及逻辑画面右缘（视口钳制回归）");
             }
             finally
             {

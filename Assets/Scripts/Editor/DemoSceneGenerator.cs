@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Tilemaps;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using YuanHaiLu.Character;
@@ -19,12 +18,6 @@ namespace YuanHaiLu.Editor
     {
         private const float MvpWidth = 30f;
         private const float MvpHeight = 16.875f;
-        private const string MvpTownGround =
-            "Assets/Art/Environment/MVP/v2/mvp_yanliu_ground_v2.png";
-        private const string MvpTownEnvironment =
-            "Assets/Art/Environment/MVP/v2/mvp_yanliu_environment_v2.png";
-        private const string MvpTownForeground =
-            "Assets/Art/Environment/MVP/v2/mvp_yanliu_foreground_v2.png";
 
         [MenuItem("Tools/渊海录/生成Demo场景")]
         public static void Generate()
@@ -121,15 +114,11 @@ namespace YuanHaiLu.Editor
 
         private static void CreateMvpVisualStage()
         {
-            PlaySceneAssembler.CreateMvpSceneLayers(
-                GameObject.Find("yanliu"),
-                MvpTownGround,
-                MvpTownEnvironment,
-                MvpTownForeground,
-                new Vector2(MvpWidth * 0.5f, MvpHeight * 0.5f));
-            PlaySceneAssembler.ConfigureMvpActorSprite("mvp_bandit_a");
-            PlaySceneAssembler.ConfigureMvpActorSprite("mvp_bandit_b");
-            PlaySceneAssembler.ConfigureMvpActorSprite("mvp_lost_pouch");
+            // docs/18 §6.B：密集小模块按 town.json 装配，替代三张 480×270 整屏层。
+            MvpSceneModuleAssembler.Assemble(GameObject.Find("yanliu"), "town");
+            PlaySceneAssembler.ConfigureDenseActorSprite("mvp_bandit_a");
+            PlaySceneAssembler.ConfigureDenseActorSprite("mvp_bandit_b");
+            PlaySceneAssembler.ConfigureDenseActorSprite("mvp_lost_pouch");
         }
 
         private static void CreateFormalColliders()
@@ -159,218 +148,6 @@ namespace YuanHaiLu.Editor
             wall.AddComponent<BoxCollider2D>().size = size;
         }
 
-        // ========== 地面 ==========
-        private static void CreateMapGround()
-        {
-            var gridObj = new GameObject("Grid");
-            gridObj.AddComponent<Grid>();
-
-            // 地面瓦片地图
-            var groundObj = new GameObject("Ground");
-            groundObj.transform.SetParent(gridObj.transform);
-            var groundTm = groundObj.AddComponent<Tilemap>();
-            var groundTr = groundObj.AddComponent<TilemapRenderer>();
-            groundTr.sortingLayerName = "Ground";
-            groundTr.sortingOrder = 0;
-
-            // 碰撞层
-            var collisionObj = new GameObject("Collision");
-            collisionObj.transform.SetParent(gridObj.transform);
-            collisionObj.AddComponent<Tilemap>();
-            collisionObj.AddComponent<TilemapCollider2D>();
-
-            // 环境（墙壁等）
-            var envObj = new GameObject("Environment");
-            envObj.transform.SetParent(gridObj.transform);
-            var envTm = envObj.AddComponent<Tilemap>();
-            var envTr = envObj.AddComponent<TilemapRenderer>();
-            envTr.sortingLayerName = "Environment";
-            envTr.sortingOrder = 1;
-
-            // 前景
-            var fgObj = new GameObject("Foreground");
-            fgObj.transform.SetParent(gridObj.transform);
-            var fgTr = fgObj.AddComponent<TilemapRenderer>();
-            fgTr.sortingLayerName = "Foreground";
-            fgTr.sortingOrder = 10;
-
-            // TileMapManager
-            gridObj.AddComponent<TileMapManager>();
-
-            // 用代码绘制彩色地面方块（临时占位）
-            DrawGroundTiles(groundTm);
-
-            Debug.Log("[Demo] 地面创建完成");
-        }
-
-        private static void DrawGroundTiles(Tilemap tm)
-        {
-            // 创建临时瓦片
-            var tile = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-            var tex = new Texture2D(16, 16);
-            Color32[] colors = new Color32[16 * 16];
-            // 草地绿色
-            Color32 grassColor = new Color32(120, 160, 80, 255);
-            for (int i = 0; i < colors.Length; i++) colors[i] = grassColor;
-            tex.SetPixels32(colors);
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            tile.sprite = Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
-
-            // 铺设 30x20 的地面
-            for (int x = -15; x < 15; x++)
-            {
-                for (int y = -10; y < 10; y++)
-                {
-                    tm.SetTile(new Vector3Int(x, y, 0), tile);
-                }
-            }
-        }
-
-        // ========== 墙壁 ==========
-        private static void CreateMapWalls()
-        {
-            // 用简单的 BoxCollider2D 充当墙壁
-            var wallsObj = new GameObject("Walls");
-            wallsObj.layer = LayerMask.NameToLayer("Environment");
-
-            // 创建四面墙
-            CreateWall(wallsObj, "Wall_North", new Vector2(0, 10.5f), new Vector2(30f, 1f));
-            CreateWall(wallsObj, "Wall_South", new Vector2(0, -10.5f), new Vector2(30f, 1f));
-            CreateWall(wallsObj, "Wall_West", new Vector2(-15.5f, 0), new Vector2(1f, 22f));
-            CreateWall(wallsObj, "Wall_East", new Vector2(15.5f, 0), new Vector2(1f, 22f));
-
-            // 内部障碍物（模拟房屋）
-            CreateWall(wallsObj, "House_Inn", new Vector2(-8f, 4f), new Vector2(4f, 3f));
-            CreateWall(wallsObj, "House_Shop", new Vector2(8f, 4f), new Vector2(4f, 3f));
-            CreateWall(wallsObj, "House_Pharmacy", new Vector2(-8f, -6f), new Vector2(4f, 3f));
-
-            // 装饰墙壁为棕色
-            foreach (Transform wall in wallsObj.transform)
-            {
-                var sr = wall.GetComponent<SpriteRenderer>();
-                if (sr != null) sr.color = new Color(0.6f, 0.4f, 0.2f, 0.8f);
-            }
-
-            Debug.Log("[Demo] 墙壁创建完成");
-        }
-
-        private static void CreateWall(GameObject parent, string name, Vector2 pos, Vector2 size)
-        {
-            var wall = new GameObject(name);
-            wall.transform.SetParent(parent.transform);
-            wall.transform.position = pos;
-            wall.layer = LayerMask.NameToLayer("Environment");
-
-            var sr = wall.AddComponent<SpriteRenderer>();
-            sr.sortingLayerName = "Environment";
-            sr.drawMode = SpriteDrawMode.Sliced;
-
-            // 创建方块Sprite
-            var tex = new Texture2D(1, 1);
-            tex.SetPixel(0, 0, Color.white);
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 16);
-            sr.size = size;
-
-            var col = wall.AddComponent<BoxCollider2D>();
-            col.size = size;
-        }
-
-        // ========== 装饰 ==========
-        private static void CreateMapDecorations()
-        {
-            var decoObj = new GameObject("Decorations");
-
-            // 树木（绿色圆圈）
-            CreateTree(decoObj, new Vector2(-5f, 7f));
-            CreateTree(decoObj, new Vector2(-3f, 8f));
-            CreateTree(decoObj, new Vector2(5f, 7f));
-            CreateTree(decoObj, new Vector2(12f, 2f));
-            CreateTree(decoObj, new Vector2(-12f, -3f));
-
-            // 水井
-            CreateWell(decoObj, new Vector2(2f, -2f));
-
-            // 指示牌
-            CreateSign(decoObj, new Vector2(-2f, 0f), "烟柳镇中心");
-
-            Debug.Log("[Demo] 装饰物创建完成");
-        }
-
-        private static void CreateTree(GameObject parent, Vector2 pos)
-        {
-            var tree = new GameObject("Tree");
-            tree.transform.SetParent(parent.transform);
-            tree.transform.position = pos;
-            tree.layer = LayerMask.NameToLayer("Environment");
-
-            var sr = tree.AddComponent<SpriteRenderer>();
-            sr.sortingLayerName = "Environment";
-            sr.sortingOrder = 5;
-
-            // 临时绿色圆形
-            var tex = new Texture2D(32, 32);
-            for (int x = 0; x < 32; x++)
-                for (int y = 0; y < 32; y++)
-                {
-                    float dist = Vector2.Distance(new Vector2(x, y), new Vector2(16, 16));
-                    if (dist < 14)
-                    {
-                        float shade = Random.Range(0.7f, 1f);
-                        tex.SetPixel(x, y, new Color(0.2f * shade, 0.6f * shade, 0.15f * shade));
-                    }
-                    else
-                        tex.SetPixel(x, y, Color.clear);
-                }
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.3f), 16);
-
-            var col = tree.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(0.6f, 0.4f);
-            col.offset = new Vector2(0, -0.5f);
-        }
-
-        private static void CreateWell(GameObject parent, Vector2 pos)
-        {
-            var well = new GameObject("Well");
-            well.transform.SetParent(parent.transform);
-            well.transform.position = pos;
-
-            var sr = well.AddComponent<SpriteRenderer>();
-            sr.sortingLayerName = "Environment";
-            sr.color = new Color(0.5f, 0.5f, 0.5f);
-
-            var tex = new Texture2D(16, 16);
-            Color32[] px = new Color32[256];
-            for (int i = 0; i < 256; i++) px[i] = new Color32(100, 100, 100, 255);
-            tex.SetPixels32(px);
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
-        }
-
-        private static void CreateSign(GameObject parent, Vector2 pos, string text)
-        {
-            var sign = new GameObject("Sign");
-            sign.transform.SetParent(parent.transform);
-            sign.transform.position = pos;
-
-            var sr = sign.AddComponent<SpriteRenderer>();
-            sr.sortingLayerName = "Environment";
-            sr.color = new Color(0.8f, 0.6f, 0.3f);
-
-            var tex = new Texture2D(16, 16);
-            Color32[] px = new Color32[256];
-            for (int i = 0; i < 256; i++) px[i] = new Color32(200, 150, 80, 255);
-            tex.SetPixels32(px);
-            tex.filterMode = FilterMode.Point;
-            tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
-        }
-
         // ========== 玩家 ==========
         private static void CreatePlayer()
         {
@@ -384,27 +161,6 @@ namespace YuanHaiLu.Editor
             // MVP 镇场景只承载客栈入口和河岸战斗；掌柜在室内，其他剧情 NPC
             // 属冻结内容。去掉视口外的旧正式角色，避免它们与新单主角画面混搭。
             Debug.Log("[Demo] MVP 镇不创建额外 NPC");
-        }
-
-        private static void CreateNPC(string name, string artId, Vector2 pos, string[] dialogue)
-        {
-            var npc = new GameObject($"NPC_{name}");
-            npc.transform.position = pos;
-            npc.tag = "NPC";
-            npc.layer = LayerMask.NameToLayer("NPC");
-
-            var sr = npc.AddComponent<SpriteRenderer>();
-            sr.sortingLayerName = "Character";
-            CharacterVisual.ApplyTo(npc, artId);
-
-            var col = npc.AddComponent<BoxCollider2D>();
-            col.isTrigger = true;
-            col.size = new Vector2(1f, 1.5f);
-            col.offset = new Vector2(0f, 0.5f);
-
-            var npcBase = npc.AddComponent<NPCBase>();
-            npcBase.npcName = name;
-            npcBase.defaultDialogue = dialogue;
         }
 
         // ========== 敌人 ==========
@@ -474,29 +230,6 @@ namespace YuanHaiLu.Editor
             Debug.Log("[Demo] MVP 不创建额外可破坏物");
         }
 
-        private static void CreateCrate(Vector2 pos, string[] drops)
-        {
-            var crate = new GameObject("Crate");
-            crate.transform.position = pos;
-            crate.layer = LayerMask.NameToLayer("Environment");
-
-            var sr = crate.AddComponent<SpriteRenderer>();
-            sr.sortingLayerName = "Environment";
-            sr.sortingOrder = 2;
-            var tiles = EnvironmentTileBuilder.LoadTiles("yanliu");
-            sr.sprite = tiles["yanliu__decor__0"].sprite;
-
-            var col = crate.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(0.9f, 0.9f);
-
-            var dest = crate.AddComponent<Destructible>();
-            dest.objectName = "木箱";
-            dest.hp = 2;
-            dest.dropItemIds = drops;
-            dest.dropChance = 0.7f;
-            dest.goldDropRange = new Vector2Int(1, 8);
-        }
-
         // ========== 事件触发器 ==========
         private static void CreateEventTriggers()
         {
@@ -529,7 +262,8 @@ namespace YuanHaiLu.Editor
             // environment-side pickup and must remain below the player instead.
             pouchSr.sortingLayerName = GameConfig.SORTING_ENVIRONMENT;
             pouchSr.sortingOrder = 5;
-            pouch.transform.localScale = Vector3.one * 0.5f;
+            // 密集荷包精灵为 16×16，1× 缩放即等于旧 32×32 半缩放的占地。
+            pouch.transform.localScale = Vector3.one;
             var pouchCol = pouch.AddComponent<BoxCollider2D>();
             pouchCol.isTrigger = true;
             pouchCol.size = new Vector2(0.8f, 0.8f);

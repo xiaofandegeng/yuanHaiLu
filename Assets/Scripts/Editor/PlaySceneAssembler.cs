@@ -167,6 +167,16 @@ namespace YuanHaiLu.Editor
             ConfigureMvpSpriteImporter("Assets/Resources/Art/MVP/" + spriteId + ".png");
         }
 
+        /// <summary>
+        /// docs/18 密集像素演员（48px 人物 / 16px 荷包）的导入契约配置；
+        /// 旧 32px 演员精灵与 ConfigureMvpActorSprite 在 §6.C 清理前保留为过渡回滚点。
+        /// </summary>
+        public static void ConfigureDenseActorSprite(string spriteId)
+        {
+            MvpSceneModuleAssembler.ConfigureDenseSpriteImporter(
+                "Assets/Resources/Art/MVP/dense_pixel/actors/" + spriteId + ".png");
+        }
+
         // ========== 玩家（固定男主 + 全套战斗/交互组件，docs/15） ==========
         public static GameObject CreatePlayer(string logPrefix, Vector3 spawnPosition)
         {

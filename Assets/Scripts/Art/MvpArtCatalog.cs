@@ -10,7 +10,13 @@ namespace YuanHaiLu.Art
     /// </summary>
     public static class MvpArtCatalog
     {
-        private const string ResourceRoot = "Art/MVP/";
+        // docs/18：掌柜/水匪/荷包优先使用 dense_pixel/actors 下的 48px/16px
+        // 密集调色板演员；掉落物、武器与弹体小图仍在旧根目录，回退加载。
+        private static readonly string[] ResourceRoots =
+        {
+            "Art/MVP/dense_pixel/actors/",
+            "Art/MVP/",
+        };
 
         private static readonly Dictionary<string, Sprite> Cache =
             new Dictionary<string, Sprite>();
@@ -21,9 +27,14 @@ namespace YuanHaiLu.Art
             if (string.IsNullOrEmpty(spriteId)) return null;
             if (Cache.TryGetValue(spriteId, out var cached)) return cached;
 
-            var sprite = Resources.Load<Sprite>(ResourceRoot + spriteId);
+            Sprite sprite = null;
+            foreach (var root in ResourceRoots)
+            {
+                sprite = Resources.Load<Sprite>(root + spriteId);
+                if (sprite != null) break;
+            }
             if (sprite == null)
-                Debug.LogError($"[MvpArt] 缺少持久精灵 {ResourceRoot}{spriteId}");
+                Debug.LogError($"[MvpArt] 缺少持久精灵（已查找 dense_pixel/actors 与根目录）: {spriteId}");
             Cache[spriteId] = sprite;
             return sprite;
         }

@@ -65,47 +65,48 @@ Assets/Resources/Art/MVP/dense_pixel/actors/*.png
 
 ## 4. 当前验证记录
 
-本轮资源构建后的最新离线结果：
+2026-08-29，§6.A 与 §6.B 已全部执行完毕，最新一轮全量结果（证据 XML/日志在最终提交后重跑确认）：
 
 ```text
-python3 -m unittest tools.art_pipeline.tests.test_mvp_dense_art_builder -v
-  3 / 3 通过
+python3 -m unittest discover -s tools/art_pipeline/tests
+  52 / 52 通过
 
 python3 -m tools.art_pipeline.build --all
   built=0 skipped=219
 
 python3 -m tools.art_pipeline.validate --all
   通过
+
+Unity EditMode   139 / 139 通过
+Unity PlayMode   14 / 14 通过
 ```
+
+三张 480×270、1×、无标注复核图已重新生成于
+`/private/tmp/yuanhailu-mvp-rework-review/`（`town-spawn-1x.png`、`town-riverbank-1x.png`、`inn-counter-1x.png`），
+等待 Gate R1 人工审批。
 
 Python 全量回归和 Unity 回归必须在最终代码提交后重新运行，不能以本节代替最终证据。
 
-## 5. 当前阻塞：Unity 本机许可证
+## 5. ~~当前阻塞：Unity 本机许可证~~（已于 2026-08-29 解除）
 
-Unity 本机目前弹出“没有有效许可证”的系统提示；针对 `6000.4.10f1` 的批处理测试停在许可证阶段，尚未开始 NUnit 测试。因此以下 C# 改动处于“已写测试、等待编译验证”状态，不能宣称通过：
-
-- `CharacterAnimationBuilder.RebuildOnly`；
-- `FixedMaleHeroCanBeRebuiltIndependentlyAtFortyEightPixels` EditMode 测试；
-- 后续 `MvpWorldModule` 场景装配器与 Demo/Inn 场景重建。
-
-需要项目拥有者在 Unity Hub 中恢复该版本的有效许可证并完成编辑器要求的条款确认。该操作涉及软件条款，必须由用户本人完成。恢复后首先运行第 6 节的「恢复后第一轮验证」，不要直接删除旧图层。
+用户已在 Unity Hub 恢复 `6000.4.10f1` 的有效许可证。批处理探针（`-batchmode -quit`）退出码 0，随后 §6.A/§6.B 的全部 EditMode/PlayMode 验证均已在批处理下完成。本节仅作历史记录保留。
 
 ## 6. 下一位开发者的严格执行顺序
 
-### A. 恢复后第一轮验证
+### A. 恢复后第一轮验证（已完成，2026-08-29）
 
 1. 在 Unity `6000.4.10f1` 重新导入当前分支。
-2. 运行 `FixedMaleHeroCanBeRebuiltIndependentlyAtFortyEightPixels`，确认它会调用局部重建，并确认男主切片为 `48×48`、女剑客保持 `32×32`。
-3. 运行全量 EditMode；按 `AGENTS.md` 还原测试引入的正式场景/角色重序列化噪声。
+2. 运行 `FixedMaleHeroCanBeRebuiltIndependentlyAtFortyEightPixels`，确认它会调用局部重建，并确认男主切片为 `48×48`、女剑客保持 `32×32`。✅ 全量 EditMode 139/139（含该测试）。
+3. 运行全量 EditMode；按 `AGENTS.md` 还原测试引入的正式场景/角色重序列化噪声。✅ 噪声已还原；48px 男主重建产物（`.png.meta`、`.controller`、`formal-character-build.txt`）已随 f7c1ba5 入库。
 
-### B. 用模块装配器替代整屏图层
+### B. 用模块装配器替代整屏图层（已完成，2026-08-29）
 
-1. 先增加失败的 EditMode 结构测试：两个 Demo 场景必须存在 `MvpWorldModule`，不得再有 `[MVP Ground]`、`[MVP Environment]`、`[MVP Foreground]` 三个整屏对象；每个精灵都必须是持久资产且不大于 `64×64`。
-2. 新建 `MvpWorldModule`、`MvpSceneModuleAssembler`、`MvpDenseSceneLayouts`。装配器按 `town.json` / `inn.json` 放置精灵，并明确映射 `Ground → Default/-100`、`Environment → Environment`、`Foreground → Foreground`。
-3. 只在模块结构测试通过后修改 `DemoSceneGenerator`、`InnSceneGenerator` 和 `PlaySceneAssembler`。
-4. 重建两个 Demo，运行路径 BFS、任务门控和场景往返测试，再看三张 480×270、1×、无标注截图。
+1. 先增加失败的 EditMode 结构测试：两个 Demo 场景必须存在 `MvpWorldModule`，不得再有 `[MVP Ground]`、`[MVP Environment]`、`[MVP Foreground]` 三个整屏对象；每个精灵都必须是持久资产且不大于 `64×64`。✅ `DemoScenesAssembleDensePixelModulesThroughMvpWorldModule`（红→绿走完）。
+2. 新建 `MvpWorldModule`、`MvpSceneModuleAssembler`、`MvpDenseSceneLayouts`。装配器按 `town.json` / `inn.json` 放置精灵，并明确映射 `Ground → Default/-100`、`Environment → Environment`、`Foreground → Foreground`。✅
+3. 只在模块结构测试通过后修改 `DemoSceneGenerator`、`InnSceneGenerator` 和 `PlaySceneAssembler`。✅ 两个生成器改走装配器；`PlaySceneAssembler` 新增 `ConfigureDenseActorSprite`；`MvpArtCatalog` 改为 dense_pixel 优先、旧 `Art/MVP/` 兜底；顺带删除 `DemoSceneGenerator` 中约 170 行使用运行时 `Sprite.Create` 的占位时代死代码。
+4. 重建两个 Demo，运行路径 BFS、任务门控和场景往返测试，再看三张 480×270、1×、无标注截图。✅ EditMode 139/139、PlayMode 14/14；截图测试前提已按稀疏构图重写（`GameplayCaptureFillsTheFullLogicalFrameWithHudAndWorldContent`：精确 480×270 + 顶部 HUD 带横贯逻辑宽度守视口钳制回归 + 内容占比下限，稀疏密度本身交由 R1 人工把关）。截图待 Gate R1。
 
-### C. 删除过渡层并收口
+### C. 删除过渡层并收口（待 Gate R1 批准后执行）
 
 只有 B 的全绿证据和用户对 1× 截图的批准都存在时，才删除第 3 节列出的整屏资产/构建器/测试，并从 `build.py` 移除旧 `mvp_scene_layer_builder` 调用。删除后必须再次运行全量 Python、EditMode、PlayMode 和三流派人工试玩。
 
