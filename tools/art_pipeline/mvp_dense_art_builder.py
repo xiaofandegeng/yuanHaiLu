@@ -18,103 +18,105 @@ WEAPON_IDS = ("weapon_sword", "weapon_gauntlets", "weapon_dart")
 
 P = {
     "clear": (0, 0, 0, 0),
-    # 墨线勾边与深影（带冷紫/冷蓝调）
-    "ink_black": (10, 11, 18, 255),
-    "ink_deep": (18, 20, 32, 255),
-    "ink": (28, 30, 48, 255),
-    "ink_light": (48, 52, 76, 255),
-    "shadow": (14, 16, 28, 130),
-    # 儒侠发丝（玄墨发色 + 雅致紫灰高光）
-    "hair_shine": (128, 118, 142, 255),
-    "hair_light": (82, 72, 94, 255),
-    "hair": (42, 36, 50, 255),
-    "hair_dark": (24, 20, 30, 255),
-    # 东方武侠肤色（细腻 5 阶色相偏移）
-    "skin_shine": (255, 235, 210, 255),
-    "skin_light": (248, 205, 168, 255),
-    "skin": (220, 165, 125, 255),
-    "skin_shadow": (168, 105, 78, 255),
-    "skin_deep": (120, 68, 52, 255),
-    # 儒侠青灰外袍（月白高光 -> 青灰 -> 黛蓝深影）
-    "cloak_shine": (160, 200, 245, 255),
-    "cloak_light": (105, 150, 208, 255),
-    "cloak": (55, 95, 158, 255),
-    "cloak_dark": (32, 58, 108, 255),
-    "cloak_deep": (18, 34, 68, 255),
-    "cloak_trim": (135, 175, 230, 255),
-    # 白绫中单与内衬素绢
-    "paper_shine": (255, 252, 240, 255),
-    "paper_light": (245, 238, 220, 255),
-    "paper": (225, 215, 195, 255),
-    "paper_shadow": (165, 155, 140, 255),
-    "paper_dark": (115, 105, 95, 255),
-    # 朱红发带与腰封流苏（鲜活武侠点缀）
-    "vermilion_shine": (255, 150, 120, 255),
-    "vermilion_bright": (245, 85, 65, 255),
-    "vermilion": (195, 50, 48, 255),
-    "vermilion_dark": (125, 28, 32, 255),
-    "vermilion_deep": (75, 16, 20, 255),
-    # 佩玉与青苔翡翠（温润碧玉）
-    "jade_shine": (145, 215, 165, 255),
-    "jade_light": (95, 165, 115, 255),
-    "jade": (55, 115, 78, 255),
-    "jade_dark": (32, 72, 50, 255),
-    "jade_moss": (24, 52, 38, 255),
-    # 冷钢与神兵刃芒
+    # 鲜明清晰的暗色卡通描边
+    "ink_black": (14, 12, 22, 255),
+    "ink_deep": (24, 20, 36, 255),
+    "ink": (38, 32, 54, 255),
+    "ink_light": (58, 50, 78, 255),
+    "shadow": (16, 14, 28, 120),
+    # 萌系肤色与粉嫩腮红
+    "skin_shine": (255, 245, 230, 255),
+    "skin_light": (255, 220, 185, 255),
+    "skin": (240, 180, 140, 255),
+    "skin_shadow": (195, 125, 95, 255),
+    "skin_deep": (140, 80, 60, 255),
+    "blush": (255, 125, 145, 230),
+    "blush_light": (255, 175, 185, 180),
+    # 水汪汪大眼
+    "eye_dark": (16, 14, 24, 255),
+    "eye_pupil": (35, 45, 75, 255),
+    "eye_blue": (85, 155, 235, 255),
+    "eye_shine": (255, 255, 255, 255),
+    # 蓬松Q版黑发与高光
+    "hair_shine": (155, 145, 175, 255),
+    "hair_light": (95, 85, 110, 255),
+    "hair": (48, 40, 58, 255),
+    "hair_dark": (26, 20, 32, 255),
+    # 明快清爽青灰儒侠小袍
+    "cloak_shine": (185, 225, 255, 255),
+    "cloak_light": (120, 175, 235, 255),
+    "cloak": (65, 118, 188, 255),
+    "cloak_dark": (38, 72, 128, 255),
+    "cloak_deep": (20, 42, 80, 255),
+    "cloak_trim": (155, 205, 255, 255),
+    # 白绫素绢
+    "paper_shine": (255, 255, 250, 255),
+    "paper_light": (250, 245, 230, 255),
+    "paper": (235, 225, 205, 255),
+    "paper_shadow": (175, 165, 150, 255),
+    # 鲜亮朱红飘带与腰封
+    "vermilion_shine": (255, 165, 135, 255),
+    "vermilion_bright": (255, 75, 65, 255),
+    "vermilion": (215, 45, 45, 255),
+    "vermilion_dark": (145, 25, 30, 255),
+    "vermilion_deep": (85, 15, 20, 255),
+    # 碧绿翡翠与水润玉佩
+    "jade_shine": (165, 245, 185, 255),
+    "jade_light": (105, 205, 135, 255),
+    "jade": (58, 148, 92, 255),
+    "jade_dark": (32, 88, 58, 255),
+    "jade_moss": (28, 68, 46, 255),
+    # 闪耀神兵冷钢
     "steel_shine": (255, 255, 255, 255),
-    "steel_light": (225, 242, 255, 255),
-    "steel": (165, 192, 215, 255),
-    "steel_dark": (85, 110, 138, 255),
-    "steel_deep": (42, 58, 80, 255),
-    # 青铜与赤金（吞口、门环、铜钱）
-    "gold_shine": (255, 242, 160, 255),
-    "gold_light": (245, 195, 80, 255),
-    "gold": (198, 142, 45, 255),
-    "gold_dark": (138, 92, 28, 255),
-    "gold_deep": (80, 52, 16, 255),
-    # 皮革与长靴
-    "leather_light": (165, 115, 75, 255),
-    "leather": (110, 70, 48, 255),
-    "leather_dark": (68, 40, 28, 255),
-    "leather_deep": (40, 22, 16, 255),
-    # 江南水波（清澈碧水与深水倒影）
-    "water_shine": (165, 230, 235, 255),
-    "water_ripple": (115, 195, 205, 255),
-    "water_light": (68, 145, 155, 255),
-    "water": (32, 92, 105, 255),
-    "water_deep": (16, 52, 68, 255),
-    "water_abyss": (10, 32, 45, 255),
-    # 青石与石板路
-    "stone_shine": (215, 218, 205, 255),
-    "stone_highlight": (185, 188, 172, 255),
-    "stone_light": (148, 152, 138, 255),
-    "stone": (105, 112, 102, 255),
-    "stone_dark": (68, 74, 66, 255),
-    "stone_deep": (40, 44, 38, 255),
-    # 温润实木与红木家具
-    "wood_shine": (225, 178, 125, 255),
-    "wood_highlight": (195, 142, 92, 255),
-    "wood_light": (155, 102, 60, 255),
-    "wood": (110, 68, 40, 255),
-    "wood_dark": (68, 38, 22, 255),
-    "wood_deep": (38, 20, 12, 255),
+    "steel_light": (230, 245, 255, 255),
+    "steel": (175, 205, 228, 255),
+    "steel_dark": (95, 125, 155, 255),
+    # 卡通黄金与铜饰
+    "gold_shine": (255, 248, 175, 255),
+    "gold_light": (255, 210, 85, 255),
+    "gold": (225, 160, 45, 255),
+    "gold_dark": (155, 105, 28, 255),
+    # 软皮短靴
+    "leather_light": (185, 130, 85, 255),
+    "leather": (125, 80, 52, 255),
+    "leather_dark": (78, 45, 30, 255),
+    "leather_deep": (45, 25, 18, 255),
+    # 明澈水波
+    "water_shine": (185, 245, 250, 255),
+    "water_ripple": (125, 215, 225, 255),
+    "water_light": (75, 165, 178, 255),
+    "water": (38, 108, 125, 255),
+    "water_deep": (20, 65, 82, 255),
+    "water_abyss": (12, 40, 55, 255),
+    # 明亮青石
+    "stone_shine": (230, 235, 225, 255),
+    "stone_highlight": (205, 210, 195, 255),
+    "stone_light": (168, 172, 158, 255),
+    "stone": (120, 128, 118, 255),
+    "stone_dark": (78, 85, 76, 255),
+    # 温暖实木
+    "wood_shine": (240, 195, 140, 255),
+    "wood_highlight": (210, 155, 105, 255),
+    "wood_light": (170, 115, 72, 255),
+    "wood": (125, 78, 48, 255),
+    "wood_dark": (78, 45, 26, 255),
+    "wood_deep": (45, 24, 14, 255),
     # 黛瓦屋顶
-    "roof_shine": (135, 165, 185, 255),
-    "roof_highlight": (95, 122, 140, 255),
-    "roof_light": (62, 82, 98, 255),
-    "roof": (34, 48, 62, 255),
-    "roof_dark": (20, 28, 38, 255),
-    # 暖阳烛火与灯笼光晕
-    "warm_glow": (255, 250, 210, 255),
-    "warm_light": (255, 225, 135, 255),
-    "warm": (238, 165, 60, 255),
-    "warm_dark": (175, 102, 32, 255),
-    "warm_deep": (105, 55, 18, 255),
-    # 景德镇青花瓷
-    "porcelain_white": (248, 252, 255, 255),
-    "porcelain_shadow": (205, 218, 230, 255),
-    "porcelain_blue": (38, 80, 155, 255),
-    "porcelain_dark": (20, 45, 95, 255),
+    "roof_shine": (155, 185, 205, 255),
+    "roof_highlight": (110, 138, 158, 255),
+    "roof_light": (72, 95, 112, 255),
+    "roof": (42, 58, 74, 255),
+    "roof_dark": (24, 34, 46, 255),
+    # 暖心灯笼光芒
+    "warm_glow": (255, 255, 220, 255),
+    "warm_light": (255, 235, 150, 255),
+    "warm": (248, 180, 65, 255),
+    "warm_dark": (195, 115, 35, 255),
+    # 青花瓷
+    "porcelain_white": (250, 254, 255, 255),
+    "porcelain_shadow": (215, 228, 240, 255),
+    "porcelain_blue": (42, 95, 185, 255),
+    "porcelain_dark": (24, 52, 110, 255),
 }
 
 TOWN_ROLES = (
@@ -145,21 +147,24 @@ def _plot(draw, ox, oy, x, y, color):
 
 
 def _motion(animation, frame_index, frame_count):
+    # Q 版萌系弹跳与晃头晃脑
     if animation == "walk":
-        stride = (-3, -1, 1, 3, 1, -1)[frame_index % 6]
-        bob = (0, 1, 0, -1, 0, 1)[frame_index % 6]
-        sway = (-1, 0, 1, 0, -1, 0)[frame_index % 6]
-        return stride, bob, sway, 0
+        stride = (-4, -2, 2, 4, 2, -2)[frame_index % 6]
+        bob = (-1, 1, -1, 1, -1, 1)[frame_index % 6]
+        sway = (-2, 0, 2, 0, -2, 0)[frame_index % 6]
+        bounce = (0, 1, 0, 1, 0, 1)[frame_index % 6]
+        return stride, bob, sway, bounce, 0
     if animation == "dash":
-        return (0, 3, 5, 2)[frame_index % 4], (0, -1, 0, 0)[frame_index % 4], 0, 1
+        return (0, 4, 7, 3)[frame_index % 4], (0, -2, 0, 0)[frame_index % 4], 0, 0, 1
     if animation.startswith("attack_") or animation.startswith("skill_"):
         progress = frame_index / max(1, frame_count - 1)
-        lean = -2 if progress < 0.34 else 4 if progress < 0.72 else 1
-        return lean, 0, 0, 2
-    # idle: 4 帧柔和呼吸与微风吹拂
+        lean = -3 if progress < 0.34 else 5 if progress < 0.72 else 1
+        return lean, 0, 0, 0, 2
+    # idle: Q 弹果冻呼吸（DuangDuang 的上下弹跳与发带飘摆）
     bob = (0, 1, 0, -1)[frame_index % 4]
     sway = (0, 1, 0, -1)[frame_index % 4]
-    return 0, bob, sway, 0
+    bounce = (0, 1, 0, 0)[frame_index % 4]
+    return 0, bob, sway, bounce, 0
 
 
 def _direction_layout(direction):
@@ -177,7 +182,7 @@ def _direction_layout(direction):
 def _draw_frame(layers, ox, oy, direction, animation, frame_index, frame_count):
     draws = {name: ImageDraw.Draw(image) for name, image in layers.items()}
     layout = _direction_layout(direction)
-    stride, bob, sway, attack = _motion(animation, frame_index, frame_count)
+    stride, bob, sway, bounce, attack = _motion(animation, frame_index, frame_count)
     cx = layout["center"] + (attack if direction == "right" else -attack if direction == "left" else 0)
     cy = bob
     body = draws["body"]
@@ -187,227 +192,210 @@ def _draw_frame(layers, ox, oy, direction, animation, frame_index, frame_count):
     weapon = draws["weapon"]
     accessory = draws["accessory"]
 
-    # 1. 角色脚下软影（随呼吸微缩）
-    shadow_w = 11 + (1 if bob == 0 else 0)
+    # 1. 脚底 Q 弹小阴影（随弹跳微缩放）
+    shadow_rx = 10 + (1 if bob < 0 else 0)
     _polygon(accessory, ox, oy, (
-        (cx - shadow_w, 44), (cx + shadow_w, 44),
-        (cx + shadow_w - 3, 46), (cx - shadow_w + 3, 46)
+        (cx - shadow_rx, 44), (cx + shadow_rx, 44),
+        (cx + shadow_rx - 2, 46), (cx - shadow_rx + 2, 46)
     ), P["shadow"])
 
     left_step = -stride // 2
     right_step = stride // 2
 
-    # 2. 下身修长行裤与乌皮皂靴（靴头微翘 + 金属扣件）
-    for leg_idx, (lx, step) in enumerate(((-6, left_step), (4, right_step))):
-        # 裤管深浅层次
-        _rect(body, ox, oy, (cx + lx + step, 30 + cy, cx + lx + step + 3, 38 + cy), P["cloak_deep"])
-        _rect(body, ox, oy, (cx + lx + step + 1, 31 + cy, cx + lx + step + 2, 37 + cy), P["cloak_dark"])
-        # 绑腿素绫衬垫
-        _rect(body, ox, oy, (cx + lx + step, 37 + cy, cx + lx + step + 3, 39 + cy), P["paper_shadow"])
-        _line(body, ox, oy, ((cx + lx + step, 38 + cy), (cx + lx + step + 3, 38 + cy)), P["paper_light"], 1)
-        # 乌皮皂靴：靴筒折皱 + 靴头起翘弧线
+    # 2. Q版短短小腿与萌萌乌皮小黑靴
+    for leg_idx, (lx, step) in enumerate(((-5, left_step), (2, right_step))):
+        # 胖乎乎小裤腿
+        _rect(body, ox, oy, (cx + lx + step, 35 + cy, cx + lx + step + 3, 40 + cy), P["ink_black"])
+        _rect(body, ox, oy, (cx + lx + step + 1, 35 + cy, cx + lx + step + 2, 39 + cy), P["cloak_dark"])
+        # 圆头乌皮短靴
         _rect(body, ox, oy, (cx + lx + step - 1, 39 + cy, cx + lx + step + 4, 43), P["ink_black"])
         _rect(body, ox, oy, (cx + lx + step, 40 + cy, cx + lx + step + 3, 42), P["leather_dark"])
-        _rect(body, ox, oy, (cx + lx + step + 1, 40 + cy, cx + lx + step + 2, 41), P["leather"])
-        # 铜扣与靴底
         _plot(body, ox, oy, cx + lx + step + (2 if leg_idx == 0 else 1), 40 + cy, P["gold_light"])
-        _line(body, ox, oy, ((cx + lx + step - 1, 43), (cx + lx + step + 4, 43)), P["ink_deep"], 1)
 
-    # 3. 儒侠青灰外袍（三层交领 + 飘逸外袍开衩 + 随身法摆动）
-    cloak_shift = layout["cloak"] * (3 + attack) + sway
-    # 外袍底衬墨线与背光暗色
+    # 3. Q版胖乎乎小长袍（三层交领 + 大袖子 + 短小袍摆）
+    cloak_sway = layout["cloak"] * (2 + attack) + sway
+    # 小袍摆轮廓
     _polygon(outfit, ox, oy, (
-        (cx - 10, 18 + cy), (cx + 9, 18 + cy),
-        (cx + 14 + cloak_shift, 32 + cy), (cx + 7, 37 + cy),
-        (cx, 34 + cy), (cx - 9, 37 + cy), (cx - 14 + cloak_shift, 30 + cy)
+        (cx - 9, 23 + cy), (cx + 8, 23 + cy),
+        (cx + 12 + cloak_sway, 35 + cy), (cx + 6, 37 + cy),
+        (cx, 36 + cy), (cx - 6, 37 + cy), (cx - 12 + cloak_sway, 35 + cy)
     ), P["ink_black"])
     _polygon(outfit, ox, oy, (
-        (cx - 9, 19 + cy), (cx + 8, 19 + cy),
-        (cx + 12 + cloak_shift, 31 + cy), (cx + 6, 35 + cy),
-        (cx, 33 + cy), (cx - 7, 35 + cy), (cx - 12 + cloak_shift, 29 + cy)
-    ), P["cloak_deep"])
-    _polygon(outfit, ox, oy, (
-        (cx - 8, 20 + cy), (cx + 7, 20 + cy),
-        (cx + 9 + cloak_shift, 29 + cy), (cx + 4, 33 + cy),
-        (cx - 4, 31 + cy), (cx - 8 + cloak_shift, 28 + cy)
+        (cx - 8, 24 + cy), (cx + 7, 24 + cy),
+        (cx + 10 + cloak_sway, 34 + cy), (cx + 5, 36 + cy),
+        (cx, 35 + cy), (cx - 5, 36 + cy), (cx - 10 + cloak_sway, 34 + cy)
     ), P["cloak_dark"])
     _polygon(outfit, ox, oy, (
-        (cx - 7, 21 + cy), (cx + 5, 21 + cy),
-        (cx + 6 + cloak_shift, 28 + cy), (cx + 2, 31 + cy),
-        (cx - 3, 29 + cy), (cx - 6 + cloak_shift, 27 + cy)
+        (cx - 7, 25 + cy), (cx + 6, 25 + cy),
+        (cx + 8 + cloak_sway, 33 + cy), (cx + 3, 35 + cy),
+        (cx - 3, 35 + cy), (cx - 8 + cloak_sway, 33 + cy)
     ), P["cloak"])
-    # 外袍向光面高光与折边线条
-    _line(outfit, ox, oy, ((cx - 7, 22 + cy), (cx - 4, 27 + cy), (cx - 1, 31 + cy)), P["cloak_light"], 1)
-    _line(outfit, ox, oy, ((cx - 6, 23 + cy), (cx - 3, 28 + cy)), P["cloak_shine"], 1)
+    _line(outfit, ox, oy, ((cx - 6, 26 + cy), (cx - 3, 32 + cy)), P["cloak_light"], 1)
+    _line(outfit, ox, oy, ((cx - 5, 27 + cy), (cx - 2, 31 + cy)), P["cloak_shine"], 1)
 
-    # 交领右衽：雪白中单内衬与黛蓝折边
+    # 交领右衽（雪白内衬）
     _polygon(outfit, ox, oy, (
-        (cx - 5, 20 + cy), (cx + 5, 20 + cy),
-        (cx + 7, 32 + cy), (cx, 35 + cy), (cx - 7, 32 + cy)
-    ), P["paper_dark"])
+        (cx - 4, 23 + cy), (cx + 4, 23 + cy),
+        (cx + 3, 31 + cy), (cx, 33 + cy), (cx - 3, 31 + cy)
+    ), P["ink_black"])
     _polygon(outfit, ox, oy, (
-        (cx - 4, 21 + cy), (cx + 4, 21 + cy),
-        (cx + 5, 31 + cy), (cx, 33 + cy), (cx - 5, 31 + cy)
-    ), P["paper_shadow"])
-    _polygon(outfit, ox, oy, (
-        (cx - 3, 21 + cy), (cx + 3, 21 + cy),
-        (cx + 3, 30 + cy), (cx, 32 + cy), (cx - 3, 30 + cy)
+        (cx - 3, 24 + cy), (cx + 3, 24 + cy),
+        (cx + 2, 30 + cy), (cx, 32 + cy), (cx - 2, 30 + cy)
     ), P["paper"])
-    _line(outfit, ox, oy, ((cx - 2, 21 + cy), (cx + 1, 28 + cy)), P["paper_shine"], 1)
-    _line(outfit, ox, oy, ((cx + 2, 21 + cy), (cx - 1, 28 + cy)), P["cloak_trim"], 1)
+    _line(outfit, ox, oy, ((cx - 2, 24 + cy), (cx + 1, 29 + cy)), P["paper_shine"], 1)
 
-    # 4. 宽袍大袖、护腕与手掌
+    # 4. Q版圆滚滚小手臂与肉乎乎小手
     arm_shift = attack * (2 if direction in ("right", "down") else -2)
-    for arm_idx, (sx, shift) in enumerate(((-13, 0), (7 + arm_shift, arm_shift))):
-        # 宽袖大摆
-        _rect(outfit, ox, oy, (cx + sx, 20 + cy, cx + sx + 6, 29 + cy), P["ink_black"])
-        _rect(outfit, ox, oy, (cx + sx + 1, 21 + cy, cx + sx + 5, 28 + cy), P["cloak_dark"])
-        _rect(outfit, ox, oy, (cx + sx + 2, 22 + cy, cx + sx + 4, 27 + cy), P["cloak"])
-        _line(outfit, ox, oy, ((cx + sx + 2, 23 + cy), (cx + sx + 4, 23 + cy)), P["cloak_light"], 1)
-        # 熟牛皮护腕（带赤金搭扣）
-        _rect(body, ox, oy, (cx + sx + 1, 27 + cy, cx + sx + 5, 30 + cy), P["leather_deep"])
-        _rect(body, ox, oy, (cx + sx + 2, 28 + cy, cx + sx + 4, 29 + cy), P["leather"])
-        _plot(body, ox, oy, cx + sx + 3, 28 + cy, P["gold_light"])
-        # 紧握手掌
-        _rect(body, ox, oy, (cx + sx + 1, 30 + cy, cx + sx + 4, 33 + cy), P["skin_shadow"])
-        _rect(body, ox, oy, (cx + sx + 2, 30 + cy, cx + sx + 3, 32 + cy), P["skin"])
+    for arm_idx, (sx, shift) in enumerate(((-12, 0), (6 + arm_shift, arm_shift))):
+        # 胖袖筒
+        _rect(outfit, ox, oy, (cx + sx, 24 + cy, cx + sx + 6, 31 + cy), P["ink_black"])
+        _rect(outfit, ox, oy, (cx + sx + 1, 25 + cy, cx + sx + 5, 30 + cy), P["cloak_dark"])
+        _rect(outfit, ox, oy, (cx + sx + 2, 26 + cy, cx + sx + 4, 29 + cy), P["cloak"])
+        # 圆圆小肉手（小拳头）
+        _ellipse_box = (cx + sx + 1, 30 + cy, cx + sx + 5, 34 + cy)
+        outfit.ellipse(_translated(((cx + sx + 1, 30 + cy), (cx + sx + 5, 34 + cy)), ox, oy), fill=P["ink_black"])
+        body.ellipse(_translated(((cx + sx + 2, 31 + cy), (cx + sx + 4, 33 + cy)), ox, oy), fill=P["skin"])
+        _plot(body, ox, oy, cx + sx + 3, 31 + cy, P["skin_light"])
 
-    # 5. 面容五官、坚毅剑眉星目与束发发髻
-    # 头部轮廓与肤色渐变
+    # 5. Q版超萌大头（y=3~23）与灵动水汪汪大眼睛
+    # 大大圆圆的头脸轮廓（Q版精髓）
+    face_rect = (cx - 10, 4 + cy, cx + 9, 23 + cy)
     _polygon(face, ox, oy, (
-        (cx - 6, 7 + cy), (cx + 5, 7 + cy),
-        (cx + 6, 14 + cy), (cx + 3, 19 + cy),
-        (cx - 4, 19 + cy), (cx - 7, 14 + cy)
+        (cx - 8, 4 + cy), (cx + 7, 4 + cy),
+        (cx + 10, 8 + cy), (cx + 10, 18 + cy),
+        (cx + 7, 23 + cy), (cx - 8, 23 + cy),
+        (cx - 11, 18 + cy), (cx - 11, 8 + cy)
     ), P["ink_black"])
     _polygon(face, ox, oy, (
-        (cx - 5, 8 + cy), (cx + 4, 8 + cy),
-        (cx + 5, 14 + cy), (cx + 2, 18 + cy),
-        (cx - 3, 18 + cy), (cx - 6, 14 + cy)
+        (cx - 7, 5 + cy), (cx + 6, 5 + cy),
+        (cx + 9, 9 + cy), (cx + 9, 17 + cy),
+        (cx + 6, 22 + cy), (cx - 7, 22 + cy),
+        (cx - 10, 17 + cy), (cx - 10, 9 + cy)
     ), P["skin_shadow"])
     _polygon(face, ox, oy, (
-        (cx - 4, 9 + cy), (cx + 3, 9 + cy),
-        (cx + 4, 13 + cy), (cx + 1, 16 + cy),
-        (cx - 2, 16 + cy), (cx - 5, 13 + cy)
+        (cx - 6, 6 + cy), (cx + 5, 6 + cy),
+        (cx + 8, 9 + cy), (cx + 8, 16 + cy),
+        (cx + 5, 21 + cy), (cx - 6, 21 + cy),
+        (cx - 9, 16 + cy), (cx - 9, 9 + cy)
     ), P["skin"])
-    _rect(face, ox, oy, (cx - 3, 9 + cy, cx + 2, 13 + cy), P["skin_light"])
-    _plot(face, ox, oy, cx - 1, 10 + cy, P["skin_shine"])
+    _rect(face, ox, oy, (cx - 6, 7 + cy, cx + 5, 17 + cy), P["skin_light"])
 
-    # 五官（前向/侧向精细绘制）
+    # 粉嫩 Q 萌小腮红（两团圆圆红晕）
+    _rect(face, ox, oy, (cx - 9, 16 + cy, cx - 7, 18 + cy), P["blush"])
+    _rect(face, ox, oy, (cx + 6, 16 + cy, cx + 8, 18 + cy), P["blush"])
+    _plot(face, ox, oy, cx - 8, 17 + cy, P["blush_light"])
+    _plot(face, ox, oy, cx + 7, 17 + cy, P["blush_light"])
+
+    # 五官（超大水汪汪萌眼 + 灵动眉眼）
     if layout["face"] == "front":
-        # 剑眉星目（黑瞳 + 亮白反光）
-        _line(face, ox, oy, ((cx - 4, 11 + cy), (cx - 1, 11 + cy)), P["hair_dark"], 1)
-        _line(face, ox, oy, ((cx + 1, 11 + cy), (cx + 4, 11 + cy)), P["hair_dark"], 1)
-        _plot(face, ox, oy, cx - 3, 13 + cy, P["ink_black"])
-        _plot(face, ox, oy, cx - 2, 13 + cy, P["ink_black"])
-        _plot(face, ox, oy, cx - 3, 13 + cy, P["steel_shine"])
-        _plot(face, ox, oy, cx + 2, 13 + cy, P["ink_black"])
-        _plot(face, ox, oy, cx + 3, 13 + cy, P["ink_black"])
-        _plot(face, ox, oy, cx + 2, 13 + cy, P["steel_shine"])
-        # 挺拔鼻梁与微抿薄唇
-        _plot(face, ox, oy, cx, 14 + cy, P["skin_shadow"])
-        _plot(face, ox, oy, cx, 15 + cy, P["skin_shadow"])
-        _line(face, ox, oy, ((cx - 1, 17 + cy), (cx + 1, 17 + cy)), P["skin_deep"], 1)
+        # 双眼：大大的深色大眼眶 (宽4 x 高6 像素)
+        # 左眼
+        _rect(face, ox, oy, (cx - 7, 11 + cy, cx - 3, 17 + cy), P["ink_black"])
+        _rect(face, ox, oy, (cx - 6, 12 + cy, cx - 4, 16 + cy), P["eye_pupil"])
+        _line(face, ox, oy, ((cx - 6, 15 + cy), (cx - 4, 15 + cy)), P["eye_blue"], 1)
+        # 亮白双星高光（超有神！）
+        _rect(face, ox, oy, (cx - 6, 12 + cy, cx - 5, 13 + cy), P["eye_shine"])
+        _plot(face, ox, oy, cx - 4, 15 + cy, P["eye_shine"])
+        # 右眼
+        _rect(face, ox, oy, (cx + 2, 11 + cy, cx + 6, 17 + cy), P["ink_black"])
+        _rect(face, ox, oy, (cx + 3, 12 + cy, cx + 5, 16 + cy), P["eye_pupil"])
+        _line(face, ox, oy, ((cx + 3, 15 + cy), (cx + 5, 15 + cy)), P["eye_blue"], 1)
+        _rect(face, ox, oy, (cx + 3, 12 + cy, cx + 4, 13 + cy), P["eye_shine"])
+        _plot(face, ox, oy, cx + 5, 15 + cy, P["eye_shine"])
+        # 灵动小剑眉与俏皮小嘴
+        _line(face, ox, oy, ((cx - 6, 9 + cy), (cx - 3, 9 + cy)), P["hair_dark"], 1)
+        _line(face, ox, oy, ((cx + 2, 9 + cy), (cx + 5, 9 + cy)), P["hair_dark"], 1)
+        _plot(face, ox, oy, cx, 19 + cy, P["skin_deep"])
+        _line(face, ox, oy, ((cx - 1, 20 + cy), (cx + 1, 20 + cy)), P["skin_deep"], 1)
     elif layout["face"] == "left":
-        _line(face, ox, oy, ((cx - 5, 11 + cy), (cx - 2, 11 + cy)), P["hair_dark"], 1)
-        _plot(face, ox, oy, cx - 4, 13 + cy, P["ink_black"])
-        _plot(face, ox, oy, cx - 4, 13 + cy, P["steel_shine"])
-        _plot(face, ox, oy, cx - 5, 15 + cy, P["skin_shadow"])
-        _plot(face, ox, oy, cx - 3, 17 + cy, P["skin_deep"])
+        # 侧向大萌眼
+        _rect(face, ox, oy, (cx - 8, 11 + cy, cx - 4, 17 + cy), P["ink_black"])
+        _rect(face, ox, oy, (cx - 7, 12 + cy, cx - 5, 16 + cy), P["eye_pupil"])
+        _plot(face, ox, oy, cx - 6, 15 + cy, P["eye_blue"])
+        _rect(face, ox, oy, (cx - 7, 12 + cy, cx - 6, 13 + cy), P["eye_shine"])
+        _plot(face, ox, oy, cx - 5, 15 + cy, P["eye_shine"])
+        _line(face, ox, oy, ((cx - 7, 9 + cy), (cx - 4, 9 + cy)), P["hair_dark"], 1)
+        _plot(face, ox, oy, cx - 8, 19 + cy, P["skin_deep"])
     elif layout["face"] == "right":
-        _line(face, ox, oy, ((cx + 2, 11 + cy), (cx + 5, 11 + cy)), P["hair_dark"], 1)
-        _plot(face, ox, oy, cx + 4, 13 + cy, P["ink_black"])
-        _plot(face, ox, oy, cx + 4, 13 + cy, P["steel_shine"])
-        _plot(face, ox, oy, cx + 5, 15 + cy, P["skin_shadow"])
-        _plot(face, ox, oy, cx + 3, 17 + cy, P["skin_deep"])
+        _rect(face, ox, oy, (cx + 3, 11 + cy, cx + 7, 17 + cy), P["ink_black"])
+        _rect(face, ox, oy, (cx + 4, 12 + cy, cx + 6, 16 + cy), P["eye_pupil"])
+        _plot(face, ox, oy, cx + 5, 15 + cy, P["eye_blue"])
+        _rect(face, ox, oy, (cx + 4, 12 + cy, cx + 5, 13 + cy), P["eye_shine"])
+        _plot(face, ox, oy, cx + 6, 15 + cy, P["eye_shine"])
+        _line(face, ox, oy, ((cx + 3, 9 + cy), (cx + 6, 9 + cy)), P["hair_dark"], 1)
+        _plot(face, ox, oy, cx + 7, 19 + cy, P["skin_deep"])
 
-    # 束发发髻、金簪与前额刘海
+    # 6. Q版蓬松发型与萌态呆毛
+    # 顶部刘海与两鬓圆发
     _polygon(hair, ox, oy, (
-        (cx - 7, 8 + cy), (cx - 4, 2 + cy), (cx + 3, 2 + cy),
-        (cx + 6, 8 + cy), (cx + 5, 13 + cy), (cx - 6, 13 + cy)
+        (cx - 10, 8 + cy), (cx - 6, 2 + cy), (cx + 5, 2 + cy),
+        (cx + 9, 8 + cy), (cx + 9, 13 + cy), (cx - 10, 13 + cy)
     ), P["ink_black"])
     _polygon(hair, ox, oy, (
-        (cx - 6, 7 + cy), (cx - 3, 3 + cy), (cx + 2, 3 + cy),
-        (cx + 5, 7 + cy), (cx + 4, 11 + cy), (cx - 5, 11 + cy)
+        (cx - 9, 7 + cy), (cx - 5, 3 + cy), (cx + 4, 3 + cy),
+        (cx + 8, 7 + cy), (cx + 8, 11 + cy), (cx - 9, 11 + cy)
     ), P["hair_dark"])
     _polygon(hair, ox, oy, (
-        (cx - 4, 5 + cy), (cx - 2, 3 + cy), (cx + 2, 3 + cy),
-        (cx + 3, 6 + cy), (cx + 1, 8 + cy), (cx - 3, 8 + cy)
+        (cx - 7, 5 + cy), (cx - 3, 3 + cy), (cx + 3, 3 + cy),
+        (cx + 6, 6 + cy), (cx + 3, 8 + cy), (cx - 5, 8 + cy)
     ), P["hair"])
-    _line(hair, ox, oy, ((cx - 2, 4 + cy), (cx + 2, 4 + cy)), P["hair_shine"], 1)
-    # 头顶发冠与插簪
-    _rect(hair, ox, oy, (cx - 3, 0 + cy, cx + 2, 4 + cy), P["ink_black"])
-    _rect(hair, ox, oy, (cx - 2, 1 + cy, cx + 1, 3 + cy), P["hair_light"])
-    _line(hair, ox, oy, ((cx - 4, 2 + cy), (cx + 3, 2 + cy)), P["gold_light"], 1)
-    if layout["face"] == "back":
-        _rect(hair, ox, oy, (cx - 6, 8 + cy, cx + 5, 18 + cy), P["hair_dark"])
-        _rect(hair, ox, oy, (cx - 4, 9 + cy, cx + 3, 16 + cy), P["hair"])
-        _line(hair, ox, oy, ((cx - 1, 9 + cy), (cx - 1, 15 + cy)), P["hair_shine"], 1)
-    # 两缕前胸垂鬓发丝
-    _line(hair, ox, oy, ((cx - 6, 12 + cy), (cx - 6, 19 + cy)), P["hair_dark"], 1)
-    _line(hair, ox, oy, ((cx + 5, 12 + cy), (cx + 5, 19 + cy)), P["hair_dark"], 1)
-    _plot(hair, ox, oy, cx - 6, 15 + cy, P["hair_shine"])
-    _plot(hair, ox, oy, cx + 5, 15 + cy, P["hair_shine"])
+    _line(hair, ox, oy, ((cx - 4, 4 + cy), (cx + 3, 4 + cy)), P["hair_shine"], 1)
 
-    # 6. 朱红飘逸发带（随步履自然摆动）
+    # 萌系呆毛（Ahoge）！自头顶俏皮挑起
+    _line(hair, ox, oy, ((cx - 1, 2 + cy), (cx - 3, -1 + cy), (cx - 2, -2 + cy)), P["ink_black"], 2)
+    _plot(hair, ox, oy, cx - 2, -2 + cy, P["hair_shine"])
+
+    # 头顶圆圆发髻与金发簪
+    _rect(hair, ox, oy, (cx - 3, -1 + cy, cx + 2, 3 + cy), P["ink_black"])
+    _rect(hair, ox, oy, (cx - 2, 0 + cy, cx + 1, 2 + cy), P["hair_light"])
+    _line(hair, ox, oy, ((cx - 4, 1 + cy), (cx + 3, 1 + cy)), P["gold_light"], 1)
+
+    # 背向发型
+    if layout["face"] == "back":
+        _rect(hair, ox, oy, (cx - 10, 8 + cy, cx + 9, 21 + cy), P["hair_dark"])
+        _rect(hair, ox, oy, (cx - 8, 9 + cy, cx + 7, 19 + cy), P["hair"])
+        _line(hair, ox, oy, ((cx - 2, 10 + cy), (cx - 2, 18 + cy)), P["hair_shine"], 1)
+
+    # 7. Q版大大的朱红飘带（随风弹跳晃动）
     ribbon = layout["ribbon"]
-    ribbon_sway = sway + (1 if frame_index % 2 == 1 else 0)
-    _rect(accessory, ox, oy, (cx - 2, 2 + cy, cx + 2, 5 + cy), P["vermilion_deep"])
+    ribbon_sway = sway * 2 + (1 if frame_index % 2 == 1 else 0)
+    _rect(accessory, ox, oy, (cx - 3, 1 + cy, cx + 2, 4 + cy), P["vermilion_deep"])
     _polygon(accessory, ox, oy, (
-        (cx + ribbon * 2, 3 + cy),
-        (cx + ribbon * (9 + ribbon_sway), 6 + cy),
-        (cx + ribbon * (12 + ribbon_sway), 12 + cy),
-        (cx + ribbon * (6 + ribbon_sway), 11 + cy)
-    ), P["vermilion_dark"])
+        (cx + ribbon * 2, 2 + cy),
+        (cx + ribbon * (11 + ribbon_sway), 5 + cy),
+        (cx + ribbon * (15 + ribbon_sway), 12 + cy),
+        (cx + ribbon * (7 + ribbon_sway), 11 + cy)
+    ), P["ink_black"])
     _polygon(accessory, ox, oy, (
-        (cx + ribbon * 3, 4 + cy),
-        (cx + ribbon * (8 + ribbon_sway), 7 + cy),
-        (cx + ribbon * (10 + ribbon_sway), 11 + cy),
-        (cx + ribbon * (6 + ribbon_sway), 10 + cy)
+        (cx + ribbon * 3, 3 + cy),
+        (cx + ribbon * (10 + ribbon_sway), 6 + cy),
+        (cx + ribbon * (13 + ribbon_sway), 11 + cy),
+        (cx + ribbon * (7 + ribbon_sway), 10 + cy)
     ), P["vermilion"])
     _line(accessory, ox, oy, (
-        (cx + ribbon * 3, 5 + cy), (cx + ribbon * (9 + ribbon_sway), 8 + cy)
+        (cx + ribbon * 4, 4 + cy), (cx + ribbon * (11 + ribbon_sway), 7 + cy)
     ), P["vermilion_shine"], 1)
 
-    # 7. 朱红回纹双层腰封 + 悬挂青玉环佩与朱红长流苏
-    _rect(accessory, ox, oy, (cx - 8, 25 + cy, cx + 7, 29 + cy), P["ink_black"])
-    _rect(accessory, ox, oy, (cx - 7, 26 + cy, cx + 6, 28 + cy), P["vermilion_deep"])
-    _rect(accessory, ox, oy, (cx - 6, 26 + cy, cx + 5, 27 + cy), P["vermilion"])
-    _line(accessory, ox, oy, ((cx - 5, 26 + cy), (cx + 4, 26 + cy)), P["vermilion_shine"], 1)
-    # 中心赤金云纹带扣
-    _rect(accessory, ox, oy, (cx - 1, 25 + cy, cx + 1, 28 + cy), P["gold_dark"])
-    _plot(accessory, ox, oy, cx, 26 + cy, P["gold_shine"])
-    # 斜挂温润青玉佩（镂空玉环）
-    _polygon(accessory, ox, oy, (
-        (cx + 3, 28 + cy), (cx + 7, 31 + cy),
-        (cx + 5, 34 + cy), (cx + 1, 31 + cy)
-    ), P["jade_dark"])
-    _polygon(accessory, ox, oy, (
-        (cx + 4, 29 + cy), (cx + 6, 31 + cy),
-        (cx + 4, 33 + cy), (cx + 2, 31 + cy)
-    ), P["jade"])
-    _plot(accessory, ox, oy, cx + 4, 30 + cy, P["jade_shine"])
-    # 悬垂鲜红长流苏（随动作向侧后方飘逸）
-    tassel_sway = sway // 2
-    _line(accessory, ox, oy, (
-        (cx + 4, 34 + cy), (cx + 5 + tassel_sway, 39 + cy), (cx + 6 + tassel_sway, 42 + cy)
-    ), P["vermilion_bright"], 1)
-    _plot(accessory, ox, oy, cx + 5 + tassel_sway, 40 + cy, P["vermilion_shine"])
+    # 8. Q版朱红大腰带与圆滚滚大青玉佩
+    _rect(accessory, ox, oy, (cx - 7, 28 + cy, cx + 6, 32 + cy), P["ink_black"])
+    _rect(accessory, ox, oy, (cx - 6, 29 + cy, cx + 5, 31 + cy), P["vermilion"])
+    _line(accessory, ox, oy, ((cx - 5, 29 + cy), (cx + 4, 29 + cy)), P["vermilion_shine"], 1)
+    # 中心金扣
+    _rect(accessory, ox, oy, (cx - 1, 28 + cy, cx + 1, 31 + cy), P["gold_light"])
+    # 圆圆的青玉佩（大青绿宝石）
+    _ellipse_box_jade = (cx + 2, 31 + cy, cx + 7, 36 + cy)
+    accessory.ellipse(_translated(((cx + 2, 31 + cy), (cx + 7, 36 + cy)), ox, oy), fill=P["ink_black"])
+    accessory.ellipse(_translated(((cx + 3, 32 + cy), (cx + 6, 35 + cy)), ox, oy), fill=P["jade"])
+    _plot(accessory, ox, oy, cx + 4, 33 + cy, P["jade_shine"])
+    # 晃动的小流苏
+    _line(accessory, ox, oy, ((cx + 4, 36 + cy), (cx + 5 + sway, 41 + cy)), P["vermilion_bright"], 2)
 
-    # 8. 背负剑鞘与青铜兽首吞口
+    # 9. Q版小宝剑/剑鞘斜跨身后
     scabbard = layout["sword"]
-    _line(weapon, ox, oy, (
-        (cx + scabbard * 8, 14 + cy), (cx + scabbard * 16, 37 + cy)
-    ), P["ink_black"], 4)
-    _line(weapon, ox, oy, (
-        (cx + scabbard * 8, 14 + cy), (cx + scabbard * 15, 36 + cy)
-    ), P["leather_deep"], 2)
-    _line(weapon, ox, oy, (
-        (cx + scabbard * 7, 15 + cy), (cx + scabbard * 10, 22 + cy)
-    ), P["steel_light"], 1)
-    # 兽首青铜吞口
-    _rect(weapon, ox, oy, (cx + scabbard * 6 - 1, 12 + cy, cx + scabbard * 6 + 3, 17 + cy), P["gold_dark"])
-    _rect(weapon, ox, oy, (cx + scabbard * 6, 13 + cy, cx + scabbard * 6 + 2, 16 + cy), P["gold"])
-    _plot(weapon, ox, oy, cx + scabbard * 6 + 1, 14 + cy, P["gold_shine"])
+    _line(weapon, ox, oy, ((cx + scabbard * 7, 16 + cy), (cx + scabbard * 14, 38 + cy)), P["ink_black"], 4)
+    _line(weapon, ox, oy, ((cx + scabbard * 7, 16 + cy), (cx + scabbard * 13, 37 + cy)), P["leather_deep"], 2)
+    _line(weapon, ox, oy, ((cx + scabbard * 6, 17 + cy), (cx + scabbard * 9, 24 + cy)), P["steel_light"], 1)
+    _rect(weapon, ox, oy, (cx + scabbard * 5 - 1, 14 + cy, cx + scabbard * 5 + 3, 19 + cy), P["gold_light"])
 
 
 def _new_sheet(size):
@@ -433,57 +421,57 @@ def _write_text_if_changed(path, text):
 
 
 def _draw_weapon_layer(weapon_id):
+    # Q 版卡通神兵武器：夸张饱满比例 + 鲜明轮廓与光芒
     image = Image.new("RGBA", (FRAME_SIZE, FRAME_SIZE), P["clear"])
     draw = ImageDraw.Draw(image)
     if weapon_id == "weapon_sword":
-        # 龙泉冷钢宝剑：神兵刃芒 + 兽首吞口 + 编织防滑剑柄
-        # 剑刃暗面与锋芒
-        draw.line(((17, 36), (36, 9)), fill=P["ink_black"], width=5)
-        draw.line(((17, 36), (36, 9)), fill=P["steel_dark"], width=3)
-        draw.line(((18, 34), (35, 10)), fill=P["steel"], width=2)
-        draw.line(((19, 32), (36, 9)), fill=P["steel_light"], width=1)
-        draw.line(((21, 29), (36, 9)), fill=P["steel_shine"], width=1)
-        # 青铜兽首剑格与吞口
-        draw.rectangle((13, 29, 23, 34), fill=P["gold_deep"])
-        draw.rectangle((14, 30, 22, 33), fill=P["gold"])
-        draw.rectangle((16, 31, 20, 32), fill=P["gold_shine"])
-        # 剑柄与红丝缠绳
-        draw.rectangle((15, 34, 20, 42), fill=P["leather_deep"])
-        for y in range(35, 42, 2):
-            draw.line(((15, y), (20, y)), fill=P["vermilion_bright"], width=1)
-        # 剑首赤金圆环与朱红剑穗
-        draw.rectangle((16, 42, 19, 44), fill=P["gold"])
-        draw.line(((18, 44), (22, 47)), fill=P["vermilion_bright"], width=1)
+        # Q 版宝剑：短阔锐利的冷钢剑刃 + 超大青铜兽首金格 + 飘扬朱红长剑穗
+        # 宽短锐利大剑身
+        draw.line(((16, 35), (37, 10)), fill=P["ink_black"], width=7)
+        draw.line(((16, 35), (37, 10)), fill=P["steel_dark"], width=5)
+        draw.line(((17, 33), (36, 11)), fill=P["steel"], width=3)
+        draw.line(((18, 31), (37, 10)), fill=P["steel_light"], width=2)
+        draw.line(((20, 28), (37, 10)), fill=P["steel_shine"], width=1)
+        # 超大赤金兽首剑格
+        draw.rectangle((11, 27, 24, 35), fill=P["ink_black"])
+        draw.rectangle((12, 28, 23, 34), fill=P["gold"])
+        draw.rectangle((14, 29, 21, 33), fill=P["gold_light"])
+        draw.point((17, 31), fill=P["gold_shine"])
+        # 剑柄与大剑穗
+        draw.rectangle((13, 35, 19, 43), fill=P["ink_black"])
+        draw.rectangle((14, 36, 18, 42), fill=P["vermilion_deep"])
+        draw.line((14, 38, 18, 38), fill=P["gold_light"], width=1)
+        draw.line((14, 41, 18, 41), fill=P["gold_light"], width=1)
+        # 飘扬大红剑穗
+        draw.polygon(((16, 43), (23, 47), (20, 44)), fill=P["vermilion_bright"])
     elif weapon_id == "weapon_gauntlets":
-        # 玄铁破阵指虎：精钢甲片 + 虎口金铆钉 + 暗纹皮质缠腕
-        draw.rectangle((17, 21, 34, 37), fill=P["ink_black"])
-        draw.rectangle((19, 22, 32, 35), fill=P["leather_deep"])
-        draw.rectangle((20, 23, 31, 34), fill=P["leather"])
-        draw.line((21, 25, 30, 25), fill=P["leather_light"], width=1)
-        # 四指玄铁合金拳锋
-        for x in (19, 22, 25, 28):
-            draw.rectangle((x, 17, x + 2, 24), fill=P["steel_dark"])
-            draw.line((x + 1, 18, x + 1, 23), fill=P["steel_light"])
-            draw.point((x + 1, 18), fill=P["steel_shine"])
-            # 拳背赤金铆钉
-            draw.rectangle((x, 27, x + 1, 28), fill=P["gold_light"])
-            draw.point((x, 27), fill=P["gold_shine"])
-        # 腕口血色锁边
-        draw.line((19, 36, 32, 36), fill=P["vermilion_dark"], width=1)
+        # Q 版玄铁猫爪拳套：超大浑圆拳锋 + 锋利精钢爪刃 + 赤金猫爪肉垫
+        draw.rectangle((15, 18, 35, 38), fill=P["ink_black"])
+        draw.rectangle((17, 20, 33, 36), fill=P["steel_dark"])
+        draw.rectangle((18, 21, 32, 35), fill=P["steel"])
+        draw.line((19, 22, 31, 22), fill=P["steel_light"], width=2)
+        # 三道锐利合金爪刃
+        for x in (19, 24, 29):
+            draw.polygon(((x, 15), (x + 2, 19), (x - 1, 19)), fill=P["ink_black"])
+            draw.polygon(((x, 16), (x + 1, 19), (x, 19)), fill=P["steel_shine"])
+        # 正面金色肉垫/虎头浮雕
+        draw.ellipse((22, 26, 28, 32), fill=P["gold_light"])
+        draw.point((25, 29), fill=P["gold_shine"])
     elif weapon_id == "weapon_dart":
-        # 追魂透甲流光镖：三棱飞刃 + 镂空血槽 + 赤羽尾带
-        draw.rectangle((15, 24, 30, 39), fill=P["ink_black"])
-        draw.rectangle((17, 26, 28, 37), fill=P["leather_deep"])
-        for y_offset, y in enumerate((15, 21, 27)):
-            # 锋刃三棱形
-            draw.polygon(((25, y), (42, y + 3), (25, y + 6)), fill=P["ink_black"])
-            draw.polygon(((26, y + 1), (40, y + 3), (26, y + 5)), fill=P["steel_dark"])
-            draw.polygon(((28, y + 1), (39, y + 3), (28, y + 4)), fill=P["steel_light"])
-            draw.line(((29, y + 2), (41, y + 3)), fill=P["steel_shine"], width=1)
-            # 镂空血槽与赤羽尾带
-            draw.line(((26, y + 3), (32, y + 3)), fill=P["vermilion_deep"], width=1)
-            draw.line(((21, y + 3), (25, y + 3)), fill=P["vermilion_bright"], width=1)
-            draw.point((20, y + 3), fill=P["vermilion_shine"])
+        # Q 版超级四芒手里剑：大大的旋转四角星镖 + 中心红宝石
+        cx, cy = 26, 26
+        # 四角飞刃
+        draw.polygon(((cx, cy - 14), (cx + 5, cy - 4), (cx + 14, cy), (cx + 4, cy + 5),
+                      (cx, cy + 14), (cx - 5, cy + 4), (cx - 14, cy), (cx - 4, cy - 5)), fill=P["ink_black"])
+        draw.polygon(((cx, cy - 12), (cx + 4, cy - 3), (cx + 12, cy), (cx + 3, cy + 4),
+                      (cx, cy + 12), (cx - 4, cy + 3), (cx - 12, cy), (cx - 3, cy - 4)), fill=P["steel_dark"])
+        draw.polygon(((cx, cy - 10), (cx + 3, cy - 2), (cx + 10, cy), (cx + 2, cy + 3),
+                      (cx, cy + 10), (cx - 3, cy + 2), (cx - 10, cy), (cx - 2, cy - 3)), fill=P["steel_light"])
+        draw.line(((cx, cy - 10), (cx, cy + 10)), fill=P["steel_shine"], width=1)
+        draw.line(((cx - 10, cy), (cx + 10, cy)), fill=P["steel_shine"], width=1)
+        # 中心红宝石
+        draw.ellipse((cx - 3, cy - 3, cx + 3, cy + 3), fill=P["vermilion_bright"])
+        draw.point((cx - 1, cy - 1), fill=P["paper_shine"])
     else:
         raise ValueError("unknown weapon ID: " + weapon_id)
     return image
@@ -494,137 +482,115 @@ def _draw_dense_actor(actor_id):
     image = Image.new("RGBA", (size, size), P["clear"])
     draw = ImageDraw.Draw(image)
     if actor_id == "mvp_lost_pouch":
-        # 16x16 极精细金丝云纹锦囊：朱红绸缎 + 抽绳金结 + 翡翠玉珠流苏
-        # 锦囊外轮廓
-        draw.ellipse((2, 5, 13, 15), fill=P["ink_black"])
-        draw.ellipse((3, 6, 12, 14), fill=P["vermilion_deep"])
-        draw.ellipse((4, 7, 11, 13), fill=P["vermilion"])
-        draw.arc((4, 7, 11, 13), 180, 360, fill=P["vermilion_shine"])
-        # 抽绳与金丝如意绣纹
-        draw.line((3, 6, 12, 6), fill=P["gold_dark"], width=2)
-        draw.line((4, 6, 11, 6), fill=P["gold_shine"], width=1)
-        draw.line((6, 2, 9, 6), fill=P["gold_light"], width=1)
-        draw.point((7, 3), fill=P["gold_shine"])
-        # 锦囊中央金线云纹
-        draw.point((7, 9), fill=P["gold_shine"])
-        draw.point((8, 9), fill=P["gold_light"])
-        draw.point((7, 10), fill=P["gold_light"])
-        # 下方悬挂翡翠珠与赤红丝穗
-        draw.rectangle((7, 13, 8, 14), fill=P["jade"])
-        draw.point((7, 13), fill=P["jade_shine"])
-        draw.line((7, 15, 8, 16), fill=P["vermilion_bright"], width=1)
+        # 16x16 Q 版圆滚滚胖锦囊：像果冻布丁一样可爱的大红小福袋
+        draw.ellipse((1, 4, 14, 15), fill=P["ink_black"])
+        draw.ellipse((2, 5, 13, 14), fill=P["vermilion"])
+        draw.ellipse((3, 6, 12, 13), fill=P["vermilion_bright"])
+        draw.point((4, 7), fill=P["vermilion_shine"])
+        # 大大金色蝴蝶结抽绳
+        draw.rectangle((4, 3, 11, 6), fill=P["gold_light"])
+        draw.point((5, 4), fill=P["gold_shine"])
+        draw.point((10, 4), fill=P["gold_shine"])
+        # 挂着圆圆的大绿翡翠宝石珠
+        draw.ellipse((6, 12, 9, 15), fill=P["jade_shine"])
         return image
     if actor_id == "mvp_innkeeper":
-        # 48x48 掌柜老赵：文生圆顶软帽 + 酱色福字锦袍 + 青灰算账围裙 + 青花提梁茶壶 + 铜钥匙
-        # 地面阴影
-        draw.ellipse((8, 39, 40, 47), fill=P["shadow"])
-        # 裤腿与长靴
-        draw.rectangle((13, 28, 21, 42), fill=P["ink_black"])
-        draw.rectangle((27, 28, 35, 42), fill=P["ink_black"])
-        draw.rectangle((14, 38, 20, 42), fill=P["leather_deep"])
-        draw.rectangle((28, 38, 34, 42), fill=P["leather_deep"])
-        # 酱色员外长袍与青灰围裙
-        draw.rectangle((6, 18, 41, 36), fill=P["ink_black"])
-        draw.rectangle((8, 19, 39, 35), fill=P["wood_deep"])
-        draw.rectangle((10, 20, 37, 34), fill=P["wood_dark"])
-        # 青灰细布围裙（带折痕与侧口袋）
-        draw.rectangle((12, 21, 35, 33), fill=P["paper_dark"])
-        draw.rectangle((14, 22, 33, 31), fill=P["paper_shadow"])
-        draw.rectangle((16, 23, 31, 30), fill=P["paper"])
-        draw.line((14, 25, 33, 25), fill=P["paper_light"], width=1)
-        # 腰封与掌柜铜钥匙圈
-        draw.rectangle((9, 22, 38, 24), fill=P["leather_deep"])
-        draw.ellipse((10, 25, 16, 31), fill=P["gold_dark"])
-        draw.ellipse((11, 26, 15, 30), fill=P["gold_shine"])
-        draw.point((13, 28), fill=P["ink_black"])
-        # 头面部与文生软帽（带帽正碧玉）
-        draw.rectangle((11, 7, 36, 22), fill=P["ink_black"])
-        draw.rectangle((13, 9, 34, 20), fill=P["skin_shadow"])
-        draw.rectangle((15, 10, 32, 17), fill=P["skin"])
-        draw.rectangle((17, 10, 30, 14), fill=P["skin_light"])
-        # 软帽弧度与帽正翠玉
-        draw.polygon(((10, 9), (13, 4), (34, 4), (37, 9)), fill=P["ink_black"])
-        draw.polygon(((12, 8), (14, 5), (33, 5), (35, 8)), fill=P["roof_dark"])
-        draw.line((15, 6, 32, 6), fill=P["roof_light"], width=1)
-        draw.rectangle((23, 6, 25, 8), fill=P["jade_shine"])
-        # 慈眉善目：弯弯笑眼与八字胡须
-        draw.line(((17, 12), (20, 13)), fill=P["ink_black"], width=1)
-        draw.line(((27, 13), (30, 12)), fill=P["ink_black"], width=1)
-        draw.point((19, 13), fill=P["steel_shine"])
-        draw.point((28, 13), fill=P["steel_shine"])
-        draw.point((24, 15), fill=P["skin_shadow"])
-        # 和善八字胡
-        draw.line(((20, 17), (23, 16)), fill=P["hair_dark"], width=1)
-        draw.line(((25, 16), (28, 17)), fill=P["hair_dark"], width=1)
-        draw.line(((22, 18), (26, 18)), fill=P["skin_deep"], width=1)
-        # 右手托着的景德镇青花瓷提梁茶壶
-        draw.ellipse((32, 22, 40, 29), fill=P["ink_black"])
-        draw.ellipse((33, 23, 39, 28), fill=P["porcelain_white"])
-        draw.arc((33, 23, 39, 28), 0, 180, fill=P["porcelain_shadow"])
-        draw.line((35, 25, 37, 25), fill=P["porcelain_blue"], width=1)
-        draw.arc((34, 19, 38, 24), 180, 360, fill=P["wood_dark"], width=1)
+        # 48x48 Q 版福态老赵掌柜：圆滚滚大笑脸 + 弯弯眯眯眼(^^) + 胖嘟嘟青花大茶壶
+        # 脚底软影
+        draw.ellipse((10, 40, 38, 47), fill=P["shadow"])
+        # 胖乎乎小短腿
+        draw.rectangle((15, 36, 21, 42), fill=P["ink_black"])
+        draw.rectangle((27, 36, 33, 42), fill=P["ink_black"])
+        draw.rectangle((16, 39, 20, 42), fill=P["leather_deep"])
+        draw.rectangle((28, 39, 32, 42), fill=P["leather_deep"])
+        # 圆滚滚酱色员外肚皮与小围裙
+        draw.ellipse((8, 20, 40, 38), fill=P["ink_black"])
+        draw.ellipse((9, 21, 39, 37), fill=P["wood_dark"])
+        # 白净小围裙
+        draw.ellipse((14, 23, 34, 36), fill=P["paper"])
+        draw.line((15, 27, 33, 27), fill=P["paper_shadow"], width=1)
+        # 腰间一串金色大铜钱钥匙
+        draw.ellipse((10, 27, 16, 33), fill=P["gold_light"])
+        draw.point((13, 30), fill=P["ink_black"])
+        # 胖乎乎大圆脸（超级和蔼生动！）
+        draw.ellipse((10, 5, 38, 24), fill=P["ink_black"])
+        draw.ellipse((11, 6, 37, 23), fill=P["skin"])
+        draw.ellipse((12, 7, 36, 21), fill=P["skin_light"])
+        # 圆圆员外软帽 + 亮绿大翡翠帽正
+        draw.polygon(((11, 9), (16, 2), (32, 2), (37, 9)), fill=P["ink_black"])
+        draw.polygon(((13, 8), (17, 3), (31, 3), (35, 8)), fill=P["roof_dark"])
+        draw.line((18, 4, 30, 4), fill=P["roof_shine"], width=1)
+        draw.ellipse((22, 4, 26, 8), fill=P["jade_shine"])
+        # 弯弯的月牙眯眯笑眼 (^^)
+        draw.arc((15, 11, 21, 16), 180, 360, fill=P["ink_black"], width=2)
+        draw.arc((27, 11, 33, 16), 180, 360, fill=P["ink_black"], width=2)
+        # 大大红苹果脸蛋（两团可爱腮红）
+        draw.ellipse((12, 15, 17, 19), fill=P["blush"])
+        draw.ellipse((31, 15, 36, 19), fill=P["blush"])
+        # 喜气洋洋的八字胡与笑开怀的小嘴
+        draw.line(((19, 17), (22, 16)), fill=P["hair_dark"], width=2)
+        draw.line(((26, 16), (29, 17)), fill=P["hair_dark"], width=2)
+        draw.arc((21, 17, 27, 21), 0, 180, fill=P["vermilion_dark"], width=2)
+        # 手捧圆滚滚景德镇青花大茶壶
+        draw.ellipse((30, 21, 42, 31), fill=P["ink_black"])
+        draw.ellipse((31, 22, 41, 30), fill=P["porcelain_white"])
+        draw.line((33, 26, 39, 26), fill=P["porcelain_blue"], width=2)
+        draw.arc((33, 17, 39, 23), 180, 360, fill=P["wood_dark"], width=2)
         return image
     if actor_id not in ("mvp_bandit_a", "mvp_bandit_b"):
         raise ValueError("unknown dense actor: " + actor_id)
-    # 48x48 河岸水匪：粗犷肌肉劲装 + 煞气头巾 + 环首九环大刀 (A) / 开山双刃阔斧 (B)
-    headband = P["vermilion_bright"] if actor_id == "mvp_bandit_a" else P["jade_light"]
-    headband_dark = P["vermilion_deep"] if actor_id == "mvp_bandit_a" else P["jade_dark"]
-    # 地面阴影
-    draw.ellipse((9, 39, 39, 47), fill=P["shadow"])
-    # 麻绳绑腿与粗麻草鞋
-    draw.rectangle((12, 29, 21, 42), fill=P["ink_black"])
-    draw.rectangle((27, 29, 36, 42), fill=P["ink_black"])
-    draw.rectangle((13, 30, 20, 38), fill=P["leather_deep"])
-    draw.rectangle((28, 30, 35, 38), fill=P["leather_deep"])
-    for y in (32, 35):
-        draw.line((13, y, 20, y), fill=P["paper_shadow"], width=1)
-        draw.line((28, y, 35, y), fill=P["paper_shadow"], width=1)
-    # 敞襟短打与古铜健硕肌肉
-    draw.rectangle((7, 18, 41, 36), fill=P["ink_black"])
-    draw.polygon(((10, 19), (37, 19), (42, 33), (25, 39), (6, 33)), fill=headband_dark)
-    draw.polygon(((12, 20), (35, 20), (39, 31), (25, 36), (9, 31)), fill=P["leather_deep"])
-    # 袒胸肌肉线条阴影
-    draw.polygon(((18, 19), (30, 19), (24, 30)), fill=P["skin_deep"])
-    draw.polygon(((19, 20), (29, 20), (24, 28)), fill=P["skin_shadow"])
-    draw.polygon(((20, 20), (28, 20), (24, 26)), fill=P["skin"])
-    draw.line((24, 21, 24, 27), fill=P["skin_shadow"], width=1)
-    # 头面部与煞气头巾
-    draw.rectangle((12, 7, 36, 22), fill=P["ink_black"])
-    draw.rectangle((14, 9, 34, 20), fill=P["skin_shadow"])
-    draw.rectangle((16, 10, 32, 17), fill=P["skin"])
-    # 头巾与飘尾
-    draw.polygon(((10, 8), (13, 3), (35, 3), (38, 8)), fill=P["ink_black"])
-    draw.polygon(((12, 7), (14, 4), (34, 4), (36, 7)), fill=headband_dark)
-    draw.line((14, 5, 34, 5), fill=headband, width=1)
-    draw.line((34, 7, 41, 14), fill=headband, width=2)
-    # 凶煞怒目与络腮虬髯
-    draw.line(((17, 11), (21, 13)), fill=P["ink_black"], width=2)
-    draw.line(((27, 13), (31, 11)), fill=P["ink_black"], width=2)
-    draw.point((19, 13), fill=P["steel_shine"])
+    # 48x48 Q 版奶凶水匪小头目：大头巾 + 气鼓鼓怒眼 + 扛着超大九环大刀 (A) / 开山大板斧 (B)
+    headband_color = P["vermilion_bright"] if actor_id == "mvp_bandit_a" else P["jade_light"]
+    # 地面软影
+    draw.ellipse((10, 40, 38, 47), fill=P["shadow"])
+    # 短短小粗腿与草鞋
+    draw.rectangle((14, 36, 20, 42), fill=P["ink_black"])
+    draw.rectangle((28, 36, 34, 42), fill=P["ink_black"])
+    draw.rectangle((15, 38, 19, 42), fill=P["paper_shadow"])
+    draw.rectangle((29, 38, 33, 42), fill=P["paper_shadow"])
+    # 敞襟小短打
+    draw.ellipse((10, 22, 38, 38), fill=P["ink_black"])
+    draw.ellipse((11, 23, 37, 37), fill=P["leather_deep"])
+    draw.polygon(((18, 23), (30, 23), (24, 33)), fill=P["skin"])
+    # 奶凶大圆脑袋
+    draw.ellipse((10, 5, 38, 24), fill=P["ink_black"])
+    draw.ellipse((11, 6, 37, 23), fill=P["skin"])
+    draw.ellipse((12, 7, 36, 21), fill=P["skin_light"])
+    # 大大头巾与侧边飘扬大结
+    draw.polygon(((10, 9), (14, 2), (34, 2), (38, 9)), fill=P["ink_black"])
+    draw.polygon(((12, 8), (15, 3), (33, 3), (36, 8)), fill=headband_color)
+    draw.polygon(((34, 4), (43, 1), (40, 8)), fill=headband_color)
+    draw.polygon(((35, 6), (44, 10), (37, 10)), fill=headband_color)
+    # 奶凶怒眉与大圆眼 (> < / 气鼓鼓)
+    draw.line(((14, 10), (19, 13)), fill=P["ink_black"], width=2)
+    draw.line(((29, 13), (34, 10)), fill=P["ink_black"], width=2)
+    # 大眼睛
+    draw.ellipse((16, 12, 21, 17), fill=P["ink_black"])
+    draw.ellipse((27, 12, 32, 17), fill=P["ink_black"])
+    draw.point((18, 13), fill=P["steel_shine"])
     draw.point((29, 13), fill=P["steel_shine"])
-    # 络腮大胡
-    draw.rectangle((15, 17, 33, 21), fill=P["ink_black"])
-    draw.line((16, 18, 32, 18), fill=P["hair_dark"], width=1)
-    # 专属武器：九环大刀 (A) / 开山双刃阔斧 (B)
+    # 气鼓鼓腮帮子与小怒嘴
+    draw.ellipse((12, 16, 16, 19), fill=P["blush"])
+    draw.ellipse((32, 16, 36, 19), fill=P["blush"])
+    draw.line(((22, 19), (26, 19)), fill=P["ink_black"], width=2)
+    # 专属超大 Q 版武器：扛在肩上的超大九环大刀 (A) / 巨大双刃开山斧 (B)
     if actor_id == "mvp_bandit_a":
-        # 环首九环大刀：厚背寒光 + 刀背赤金环扣
-        draw.line(((33, 30), (46, 11)), fill=P["ink_black"], width=5)
-        draw.line(((33, 30), (46, 11)), fill=P["steel_dark"], width=3)
-        draw.line(((34, 29), (45, 12)), fill=P["steel_light"], width=2)
-        draw.line(((36, 27), (45, 13)), fill=P["steel_shine"], width=1)
-        # 刀背 3 枚赤金环扣
-        for hx, hy in ((39, 19), (42, 15), (44, 12)):
-            draw.rectangle((hx, hy, hx + 1, hy + 1), fill=P["gold_light"])
+        # 夸张超大九环刀
+        draw.line(((30, 32), (45, 6)), fill=P["ink_black"], width=7)
+        draw.line(((30, 32), (45, 6)), fill=P["steel_dark"], width=5)
+        draw.line(((31, 30), (44, 7)), fill=P["steel_light"], width=3)
+        draw.line(((33, 28), (44, 8)), fill=P["steel_shine"], width=1)
+        # 刀背 3 个大大的金色闪亮圆环
+        for hx, hy in ((37, 17), (40, 12), (43, 7)):
+            draw.ellipse((hx - 2, hy - 2, hx + 2, hy + 2), fill=P["ink_black"])
+            draw.ellipse((hx - 1, hy - 1, hx + 1, hy + 1), fill=P["gold_light"])
             draw.point((hx, hy), fill=P["gold_shine"])
     else:
-        # 开山双刃阔斧：沉木长柄 + 精钢大斧刃
-        draw.line(((33, 32), (43, 12)), fill=P["wood_deep"], width=3)
-        draw.line(((34, 31), (42, 13)), fill=P["wood_dark"], width=1)
-        # 斧头两侧弧刃
-        draw.polygon(((38, 10), (47, 7), (45, 20), (37, 18)), fill=P["ink_black"])
-        draw.polygon(((39, 11), (46, 8), (44, 19), (38, 17)), fill=P["steel_dark"])
-        draw.polygon(((40, 12), (45, 9), (43, 18), (39, 16)), fill=P["steel_light"])
-        draw.line(((45, 8), (44, 18)), fill=P["steel_shine"], width=1)
+        # 夸张超大双刃板斧
+        draw.line(((30, 35), (42, 8)), fill=P["wood_deep"], width=4)
+        draw.polygon(((34, 6), (46, 2), (44, 18), (32, 15)), fill=P["ink_black"])
+        draw.polygon(((35, 7), (45, 3), (43, 17), (33, 14)), fill=P["steel"])
+        draw.line(((45, 3), (43, 17)), fill=P["steel_shine"], width=2)
     return image
 
 
@@ -679,7 +645,7 @@ def _new_module(size, opaque=False):
 
 
 def _draw_town_module(name):
-    """Draw one authored, composable town module with pixel-art masterwork shading."""
+    """Draw one authored, composable town module with chibi stylized wuxia aesthetics."""
     if name in ("road_a", "road_b", "road_turn", "water_deep", "water_flow",
                 "water_reflection", "shore_grass", "shore_stone", "bollard", "lantern",
                 "crate"):
@@ -696,249 +662,178 @@ def _draw_town_module(name):
     draw = ImageDraw.Draw(image)
     size = image.width
     if name.startswith("road"):
-        # 16x16 江南青石路面：错落青石板 + 石缝青苔 + 斑驳石光
-        draw.rectangle((0, 0, 15, 15), fill=P["ink_black"])
-        draw.rectangle((1, 1, 14, 14), fill=P["stone"])
-        # 逐块石板细密勾勒
+        # 16x16 Q版卡通青石路面：圆角大块石板 + 萌萌小青苔点 + 清晰明亮石纹
+        draw.rectangle((0, 0, 15, 15), fill=P["stone"])
         if name == "road_a":
-            # 横向青石铺地
-            draw.line((1, 5, 14, 5), fill=P["stone_dark"], width=1)
-            draw.line((1, 10, 14, 10), fill=P["stone_dark"], width=1)
-            draw.line((7, 1, 7, 5), fill=P["stone_dark"], width=1)
-            draw.line((11, 6, 11, 10), fill=P["stone_dark"], width=1)
-            draw.line((5, 11, 5, 14), fill=P["stone_dark"], width=1)
-            # 石板顶沿亮线高光
-            draw.line((1, 1, 14, 1), fill=P["stone_highlight"], width=1)
-            draw.line((1, 6, 14, 6), fill=P["stone_light"], width=1)
-            draw.line((1, 11, 14, 11), fill=P["stone_light"], width=1)
-            # 石缝偶见微苔
-            draw.point((7, 5), fill=P["jade_moss"])
-            draw.point((11, 10), fill=P["jade_moss"])
+            # 横向大块卡通石板
+            draw.line((0, 7, 15, 7), fill=P["ink_black"], width=1)
+            draw.line((7, 0, 7, 7), fill=P["ink_black"], width=1)
+            draw.line((11, 7, 11, 15), fill=P["ink_black"], width=1)
+            # 石板顶沿亮线
+            draw.line((1, 1, 6, 1), fill=P["stone_shine"], width=1)
+            draw.line((8, 1, 14, 1), fill=P["stone_shine"], width=1)
+            draw.line((1, 8, 10, 8), fill=P["stone_shine"], width=1)
+            # 萌系小青苔球
+            draw.ellipse((6, 6, 8, 8), fill=P["jade_light"])
         elif name == "road_b":
-            # 纵向青石铺地
-            draw.line((5, 1, 5, 14), fill=P["stone_dark"], width=1)
-            draw.line((10, 1, 10, 14), fill=P["stone_dark"], width=1)
-            draw.line((1, 7, 5, 7), fill=P["stone_dark"], width=1)
-            draw.line((6, 11, 10, 11), fill=P["stone_dark"], width=1)
-            draw.line((11, 6, 14, 6), fill=P["stone_dark"], width=1)
-            # 亮面高光
-            draw.line((1, 1, 5, 1), fill=P["stone_highlight"], width=1)
-            draw.line((6, 1, 10, 1), fill=P["stone_light"], width=1)
-            draw.line((11, 1, 14, 1), fill=P["stone_highlight"], width=1)
-            draw.point((5, 7), fill=P["jade_moss"])
+            # 纵向大块卡通石板
+            draw.line((7, 0, 7, 15), fill=P["ink_black"], width=1)
+            draw.line((0, 7, 7, 7), fill=P["ink_black"], width=1)
+            draw.line((7, 11, 15, 11), fill=P["ink_black"], width=1)
+            draw.line((1, 1, 1, 6), fill=P["stone_shine"], width=1)
+            draw.line((8, 1, 8, 10), fill=P["stone_shine"], width=1)
+            draw.ellipse((6, 10, 8, 12), fill=P["jade_light"])
         else:
-            # 弯道交界石阶
-            draw.arc((-6, -6, 22, 22), 0, 90, fill=P["stone_highlight"], width=2)
-            draw.arc((-4, -4, 20, 20), 0, 90, fill=P["stone_light"], width=1)
-            draw.arc((-2, -2, 18, 18), 0, 90, fill=P["stone_dark"], width=1)
+            # 弯道交界石板
+            draw.arc((-4, -4, 20, 20), 0, 90, fill=P["stone_shine"], width=2)
+            draw.arc((-2, -2, 18, 18), 0, 90, fill=P["ink_black"], width=1)
         return image
     if name.startswith("water"):
-        # 16x16 碧波微漾与波光倒影（逐行平滑水纹）
+        # 16x16 Q版卡通碧波水面：明亮青绿碧水 + 可爱圆润水波纹
         base = P["water_deep"] if name == "water_deep" else P["water"]
         draw.rectangle((0, 0, 15, 15), fill=base)
-        # 深浅水流微澜
         if name == "water_flow":
-            draw.line((1, 3, 5, 3, 9, 4, 14, 4), fill=P["water_ripple"], width=1)
-            draw.line((2, 4, 6, 4), fill=P["water_shine"], width=1)
-            draw.line((0, 9, 4, 8, 10, 8, 15, 9), fill=P["water_light"], width=1)
-            draw.line((5, 9, 8, 9), fill=P["water_ripple"], width=1)
-            draw.line((3, 13, 8, 13, 13, 14), fill=P["water_light"], width=1)
+            # 萌系圆弧水浪
+            draw.arc((1, 2, 7, 6), 0, 180, fill=P["water_shine"], width=1)
+            draw.arc((8, 8, 14, 12), 0, 180, fill=P["water_shine"], width=1)
+            draw.arc((3, 11, 9, 15), 0, 180, fill=P["water_light"], width=1)
         elif name == "water_reflection":
-            # 黛瓦倒影与红灯笼碎金星芒
-            draw.line((2, 1, 5, 5, 1, 9), fill=P["roof_dark"], width=1)
-            draw.line((3, 2, 6, 6), fill=P["roof_light"], width=1)
-            # 水面灯火星光
-            draw.line((9, 4, 14, 9), fill=P["warm"], width=1)
-            draw.line((10, 5, 13, 8), fill=P["warm_light"], width=1)
-            draw.point((11, 6), fill=P["warm_glow"])
-            draw.point((12, 7), fill=P["warm_glow"])
+            # 倒映的暖金小光斑
+            draw.ellipse((4, 4, 8, 8), fill=P["warm_glow"])
+            draw.ellipse((9, 9, 13, 13), fill=P["warm_light"])
         else:
-            draw.line((2, 6, 7, 6, 13, 7), fill=P["water_light"], width=1)
-            draw.line((4, 7, 6, 7), fill=P["water_ripple"], width=1)
-            draw.line((0, 12, 5, 11, 11, 11, 15, 12), fill=P["water_light"], width=1)
+            draw.arc((2, 5, 8, 9), 0, 180, fill=P["water_light"], width=1)
+            draw.arc((7, 10, 13, 14), 0, 180, fill=P["water_ripple"], width=1)
         return image
     if name.startswith("shore"):
-        # 16x16 驳岸青苔与石质阶梯
+        # 16x16 驳岸青草与石阶
         draw.rectangle((0, 0, 15, 15), fill=P["jade_moss"])
-        draw.polygon(((0, 8), (5, 6), (10, 7), (15, 4), (15, 15), (0, 15)), fill=P["ink_black"])
-        draw.polygon(((0, 9), (5, 7), (10, 8), (15, 5), (15, 15), (0, 15)),
-                     fill=P["stone_dark"] if name == "shore_stone" else P["water_deep"])
-        draw.polygon(((0, 10), (5, 8), (10, 9), (15, 6), (15, 15), (0, 15)),
+        draw.polygon(((0, 8), (15, 4), (15, 15), (0, 15)), fill=P["ink_black"])
+        draw.polygon(((0, 9), (15, 5), (15, 15), (0, 15)),
                      fill=P["stone"] if name == "shore_stone" else P["water"])
-        draw.line((0, 9, 5, 7, 10, 8, 15, 5), fill=P["stone_highlight"], width=1)
-        # 岸边青草聚簇
-        draw.line((2, 3, 3, 1), fill=P["jade_light"], width=1)
-        draw.line((7, 4, 8, 2), fill=P["jade_light"], width=1)
-        draw.line((12, 3, 13, 1), fill=P["jade_shine"], width=1)
+        draw.line((0, 9, 15, 5), fill=P["stone_shine"], width=1)
+        # 萌萌圆圆的小草芽
+        draw.ellipse((2, 2, 5, 5), fill=P["jade_shine"])
+        draw.ellipse((8, 1, 11, 4), fill=P["jade_shine"])
         return image
     if name == "inn_roof":
-        # 64x64 歇山顶黛瓦层叠飞檐（瓦当勾头 + 翘角飞檐 + 脊兽）
-        draw.polygon(((0, 40), (14, 8), (49, 2), (63, 34), (58, 48), (5, 48)), fill=P["ink_black"])
-        draw.polygon(((5, 38), (16, 11), (48, 6), (59, 33), (55, 43), (8, 43)), fill=P["roof_dark"])
-        draw.polygon(((7, 36), (17, 13), (47, 8), (57, 32), (53, 41), (10, 41)), fill=P["roof"])
-        # 瓦垄层次逐层递进
-        for y in range(12, 42, 5):
-            draw.line((10, y, 56, y - 6), fill=P["roof_light"], width=2)
-            draw.line((11, y - 1, 55, y - 7), fill=P["roof_highlight"], width=1)
-            draw.line((12, y - 2, 54, y - 8), fill=P["roof_shine"], width=1)
-        # 滴水瓦当与飞檐金翘角
-        draw.line((2, 41, 62, 41), fill=P["gold_dark"], width=2)
-        draw.line((1, 40, 6, 37), fill=P["roof_shine"], width=2)
-        draw.line((63, 36, 58, 38), fill=P["roof_shine"], width=2)
+        # 64x64 Q版卡通大飞檐屋顶：圆润歇山顶 + 饱满翘角 + 鲜明瓦当
+        draw.polygon(((2, 38), (16, 6), (48, 6), (62, 38), (56, 46), (8, 46)), fill=P["ink_black"])
+        draw.polygon(((5, 36), (18, 9), (46, 9), (59, 36), (54, 43), (10, 43)), fill=P["roof"])
+        # 圆润的大瓦垄
+        for y in range(12, 40, 6):
+            draw.line((10, y, 54, y), fill=P["roof_light"], width=2)
+            draw.line((10, y - 1, 54, y - 1), fill=P["roof_shine"], width=1)
+        # 飞檐大金角
+        draw.line((2, 38, 8, 35), fill=P["gold_shine"], width=2)
+        draw.line((62, 38, 56, 35), fill=P["gold_shine"], width=2)
         return image
     if name == "inn_wall":
-        # 64x64 粉墙黛瓦 + 立体雕花木窗 + 青石踢脚线
-        draw.rectangle((1, 12, 62, 63), fill=P["ink_black"])
-        draw.rectangle((5, 16, 58, 60), fill=P["paper_dark"])
-        draw.rectangle((8, 19, 55, 58), fill=P["paper_shadow"])
-        draw.rectangle((10, 20, 53, 57), fill=P["paper"])
-        # 实木立柱与横梁
-        for x in (11, 31, 51):
-            draw.rectangle((x, 16, x + 3, 58), fill=P["wood_deep"])
-            draw.line((x + 1, 17, x + 1, 57), fill=P["wood"], width=1)
-            draw.line((x + 2, 17, x + 2, 57), fill=P["wood_light"], width=1)
-        # 两扇透光雕花万字木窗（暖阳倾洒）
-        for wx in (16, 36):
-            draw.rectangle((wx, 26, wx + 11, 40), fill=P["ink_black"])
-            draw.rectangle((wx + 1, 27, wx + 10, 39), fill=P["wood_deep"])
-            draw.rectangle((wx + 2, 28, wx + 9, 38), fill=P["warm"])
-            draw.rectangle((wx + 3, 29, wx + 8, 37), fill=P["warm_light"])
-            draw.rectangle((wx + 4, 30, wx + 7, 36), fill=P["warm_glow"])
-            # 十字花格窗棂
-            draw.line((wx + 5, 27, wx + 5, 39), fill=P["wood_dark"], width=1)
-            draw.line((wx + 2, 33, wx + 9, 33), fill=P["wood_dark"], width=1)
-        # 墙底青石踢脚线
-        draw.rectangle((5, 57, 58, 61), fill=P["stone_dark"])
-        draw.rectangle((5, 58, 58, 60), fill=P["stone"])
-        draw.line((5, 58, 58, 58), fill=P["stone_highlight"], width=1)
+        # 64x64 Q版卡通白墙：明亮暖白墙面 + 大大的圆角雕花暖窗
+        draw.rectangle((2, 14, 61, 62), fill=P["ink_black"])
+        draw.rectangle((5, 17, 58, 59), fill=P["paper"])
+        # 两扇大大的暖光卡通木窗
+        for wx in (12, 36):
+            draw.rectangle((wx, 25, wx + 15, 43), fill=P["ink_black"])
+            draw.rectangle((wx + 2, 27, wx + 13, 41), fill=P["wood_dark"])
+            draw.rectangle((wx + 3, 28, wx + 12, 40), fill=P["warm_light"])
+            draw.rectangle((wx + 5, 30, wx + 10, 38), fill=P["warm_glow"])
+            # 大十字窗格
+            draw.line((wx + 7, 27, wx + 7, 41), fill=P["wood_deep"], width=2)
+            draw.line((wx + 2, 34, wx + 13, 34), fill=P["wood_deep"], width=2)
+        # 墙脚大石块
+        draw.rectangle((5, 54, 58, 59), fill=P["stone"])
+        draw.line((5, 54, 58, 54), fill=P["stone_shine"], width=1)
         return image
     if name == "inn_door":
-        # 32x32 红木雕花大门 + 黄铜兽首门环
+        # 32x32 Q版卡通客栈大门：饱满圆润红木门 + 大大的金色兽首门环
         draw.rectangle((1, 0, 30, 31), fill=P["ink_black"])
-        draw.rectangle((4, 3, 27, 31), fill=P["wood_deep"])
-        draw.rectangle((6, 4, 25, 30), fill=P["wood_dark"])
-        draw.rectangle((7, 5, 24, 29), fill=P["wood"])
-        # 双扇门中缝与包边
-        draw.line((15, 3, 15, 31), fill=P["wood_deep"], width=2)
-        draw.line((16, 4, 16, 30), fill=P["wood_light"], width=1)
-        # 黄铜门环与乳钉
-        for hy in (11, 19):
-            draw.rectangle((9, hy, 12, hy + 2), fill=P["gold_dark"])
-            draw.rectangle((10, hy, 11, hy + 2), fill=P["gold_shine"])
-            draw.rectangle((18, hy, 21, hy + 2), fill=P["gold_dark"])
-            draw.rectangle((19, hy, 20, hy + 2), fill=P["gold_shine"])
-        # 门槛青石
-        draw.rectangle((0, 28, 31, 31), fill=P["stone"])
-        draw.line((0, 28, 31, 28), fill=P["stone_highlight"], width=1)
+        draw.rectangle((4, 3, 27, 30), fill=P["wood"])
+        draw.line((15, 3, 15, 30), fill=P["ink_black"], width=2)
+        # 大大金色圆门环
+        for hx in (8, 20):
+            draw.ellipse((hx, 13, hx + 4, 17), fill=P["gold_light"])
+            draw.point((hx + 2, 15), fill=P["gold_shine"])
         return image
     if name == "inn_sign":
-        # 32x32 “悦来客栈”朱红酒幌招牌 + 铜钩木架
-        draw.rectangle((1, 2, 30, 29), fill=P["ink_black"])
-        draw.rectangle((3, 4, 28, 26), fill=P["wood_deep"])
-        draw.rectangle((5, 5, 26, 24), fill=P["wood_dark"])
-        draw.rectangle((7, 7, 24, 11), fill=P["paper"])
-        draw.line((8, 9, 23, 9), fill=P["ink_black"], width=1)
-        # 飘扬朱红酒旗
-        draw.polygon(((8, 12), (23, 12), (20, 24), (10, 24)), fill=P["vermilion_deep"])
-        draw.polygon(((9, 13), (22, 13), (19, 23), (11, 23)), fill=P["vermilion"])
-        draw.line(((9, 13), (21, 13)), fill=P["vermilion_shine"], width=1)
-        # 金黄“酒”字草书印
-        draw.rectangle((13, 15, 17, 20), fill=P["paper_shine"])
+        # 32x32 Q版卡通招牌：圆角酒幌木架 + 飘扬大红“酒”字小旗
+        draw.rectangle((2, 2, 29, 29), fill=P["ink_black"])
+        draw.rectangle((4, 4, 27, 10), fill=P["wood"])
+        # 大红酒旗
+        draw.polygon(((6, 11), (25, 11), (21, 26), (10, 26)), fill=P["vermilion"])
+        draw.line(((6, 11), (25, 11)), fill=P["vermilion_shine"], width=2)
+        # 卡通大白圈“酒”
+        draw.ellipse((12, 14, 19, 21), fill=P["paper_shine"])
         draw.point((15, 17), fill=P["ink_black"])
         return image
     if name == "bridge":
-        # 48x48 江南青石拱桥（半圆拱券石 + 错落石阶 + 望柱抱鼓石栏杆）
-        draw.polygon(((0, 25), (6, 11), (41, 11), (47, 25), (44, 40), (3, 40)), fill=P["ink_black"])
-        draw.polygon(((2, 25), (8, 13), (39, 13), (45, 25), (42, 36), (5, 36)), fill=P["stone_dark"])
-        draw.polygon(((3, 26), (9, 14), (38, 14), (44, 26), (40, 34), (7, 34)), fill=P["stone"])
-        # 半圆拱券石与阴影青苔
-        draw.arc((11, 21, 36, 43), 180, 360, fill=P["ink_black"], width=5)
-        draw.arc((12, 22, 35, 42), 180, 360, fill=P["jade_moss"], width=3)
-        draw.arc((13, 23, 34, 41), 180, 360, fill=P["water_abyss"], width=1)
-        # 石桥板缝与石栏杆
-        for x in (8, 17, 27, 37):
-            draw.line((x, 12, x - 2, 35), fill=P["stone_dark"], width=2)
-            draw.line((x + 1, 12, x - 1, 35), fill=P["stone_light"], width=1)
-            draw.line((x + 2, 12, x, 35), fill=P["stone_highlight"], width=1)
-            # 望柱抱鼓石圆雕
-            draw.rectangle((x - 1, 8, x + 2, 13), fill=P["stone_highlight"])
-            draw.point((x, 9), fill=P["stone_shine"])
-        draw.line((3, 14, 44, 14), fill=P["stone_highlight"], width=1)
+        # 48x48 Q版卡通青石拱桥：圆滚滚大彩虹拱桥 + 圆球望柱 + 萌萌石板
+        draw.polygon(((0, 23), (8, 9), (39, 9), (47, 23), (44, 38), (3, 38)), fill=P["ink_black"])
+        draw.polygon(((3, 23), (10, 11), (37, 11), (44, 23), (41, 35), (6, 35)), fill=P["stone"])
+        # 大大的圆半月桥拱
+        draw.arc((10, 18, 37, 44), 180, 360, fill=P["ink_black"], width=6)
+        draw.arc((12, 20, 35, 42), 180, 360, fill=P["water_abyss"], width=3)
+        # 桥面亮线与圆球石雕望柱
+        draw.line((8, 11, 39, 11), fill=P["stone_shine"], width=2)
+        for x in (8, 18, 28, 38):
+            # 圆滚滚卡通石球望柱
+            draw.ellipse((x - 2, 5, x + 3, 10), fill=P["ink_black"])
+            draw.ellipse((x - 1, 6, x + 2, 9), fill=P["stone_shine"])
         return image
     if name == "boat":
-        # 48x48 摇橹乌篷船（竹篾圆拱船篷 + 尖翘木板船身 + 木橹与白幔）
-        draw.polygon(((1, 28), (45, 28), (39, 41), (7, 41)), fill=P["ink_black"])
-        draw.polygon(((4, 30), (42, 30), (37, 38), (9, 38)), fill=P["wood_deep"])
-        draw.polygon(((5, 31), (41, 31), (36, 37), (10, 37)), fill=P["wood"])
-        draw.line((5, 31, 41, 31), fill=P["wood_highlight"], width=1)
-        # 拱形深色竹篾圆篷（细密编织纹）
-        draw.arc((15, 15, 33, 33), 180, 360, fill=P["ink_black"], width=4)
-        draw.arc((16, 16, 32, 32), 180, 360, fill=P["wood_deep"], width=3)
-        draw.arc((17, 17, 31, 31), 180, 360, fill=P["wood_dark"], width=1)
-        # 船尾木橹与船头白幔
-        draw.line((22, 30, 22, 5), fill=P["wood_light"], width=2)
-        draw.polygon(((24, 7), (41, 18), (24, 24)), fill=P["paper_shadow"])
-        draw.polygon(((25, 8), (40, 18), (25, 23)), fill=P["paper"])
-        draw.line((25, 9, 39, 18), fill=P["paper_shine"], width=1)
+        # 48x48 Q版卡通乌篷船：圆滚滚小胖木船 + 可爱圆弧竹篾篷 + 小白旗
+        draw.ellipse((2, 26, 45, 42), fill=P["ink_black"])
+        draw.ellipse((4, 28, 43, 40), fill=P["wood"])
+        draw.line((5, 29, 42, 29), fill=P["wood_shine"], width=1)
+        # 圆滚滚胖胖竹席篷
+        draw.ellipse((14, 12, 34, 32), fill=P["ink_black"])
+        draw.ellipse((16, 14, 32, 30), fill=P["wood_deep"])
+        draw.line((18, 20, 30, 20), fill=P["wood_light"], width=2)
+        # 船头小旗
+        draw.polygon(((33, 12), (43, 17), (33, 22)), fill=P["paper_shine"])
         return image
     if name == "bollard":
-        # 16x16 沿河系缆沉木桩
-        draw.rectangle((3, 2, 12, 15), fill=P["ink_black"])
-        draw.rectangle((4, 3, 11, 14), fill=P["wood_deep"])
-        draw.rectangle((5, 4, 10, 13), fill=P["wood"])
-        draw.rectangle((3, 1, 12, 4), fill=P["wood_light"])
-        draw.rectangle((4, 2, 11, 3), fill=P["wood_highlight"])
+        # 16x16 圆滚滚小木桩
+        draw.ellipse((3, 2, 12, 14), fill=P["ink_black"])
+        draw.ellipse((4, 3, 11, 13), fill=P["wood"])
+        draw.ellipse((4, 3, 11, 6), fill=P["wood_shine"])
         return image
     if name == "lantern":
-        # 16x16 悬挂八角红木灯笼 + 暖黄烛光晕染 + 鲜红流苏
-        draw.rectangle((7, 0, 8, 15), fill=P["wood_deep"])
-        draw.rectangle((1, 3, 14, 14), fill=P["ink_black"])
-        draw.rectangle((3, 4, 12, 13), fill=P["vermilion_deep"])
-        draw.rectangle((4, 5, 11, 12), fill=P["warm_dark"])
-        draw.rectangle((5, 6, 10, 11), fill=P["warm"])
-        draw.rectangle((6, 7, 9, 10), fill=P["warm_light"])
-        draw.rectangle((7, 8, 8, 9), fill=P["warm_glow"])
-        # 下方悬垂朱红流苏
-        draw.line((7, 14, 8, 15), fill=P["vermilion_bright"], width=1)
+        # 16x16 Q版圆滚滚大红灯笼：像红苹果一样饱满可爱 + 发散暖光
+        draw.ellipse((1, 2, 14, 13), fill=P["ink_black"])
+        draw.ellipse((2, 3, 13, 12), fill=P["vermilion"])
+        draw.ellipse((4, 5, 11, 10), fill=P["warm_light"])
+        draw.ellipse((6, 6, 9, 9), fill=P["warm_glow"])
+        # 小红流苏
+        draw.line((7, 13, 8, 15), fill=P["vermilion_bright"], width=2)
         return image
     if name == "crate":
-        # 16x16 码头实木货箱 + 铜包角加固
-        draw.rectangle((0, 1, 15, 15), fill=P["ink_black"])
-        draw.rectangle((1, 2, 14, 14), fill=P["wood_deep"])
+        # 16x16 卡通实木宝箱/货箱
+        draw.rectangle((1, 2, 14, 14), fill=P["ink_black"])
         draw.rectangle((2, 3, 13, 13), fill=P["wood"])
-        draw.line((2, 3, 13, 13), fill=P["wood_light"], width=1)
-        draw.line((13, 3, 2, 13), fill=P["wood_light"], width=1)
-        draw.rectangle((6, 7, 9, 10), fill=P["gold_light"])
+        draw.rectangle((5, 6, 10, 10), fill=P["gold_light"])
         draw.point((7, 8), fill=P["gold_shine"])
         return image
     if name in ("willow_near", "willow_far"):
-        # 烟雨垂柳：苍劲皴裂老树干 + 5 团细腻柳叶簇 + 柔韧飘曳柳丝
-        draw.line((size // 2, 0, size // 2 - 8, size - 4), fill=P["ink_black"], width=6)
-        draw.line((size // 2, 0, size // 2 - 8, size - 4), fill=P["wood_deep"], width=4)
-        draw.line((size // 2 + 1, 0, size // 2 - 7, size - 4), fill=P["wood"], width=2)
-        draw.line((size // 2 + 2, 0, size // 2 - 6, size - 4), fill=P["wood_highlight"], width=1)
-        leaf_dark = P["jade_moss"] if name == "willow_near" else P["jade_dark"]
-        leaf_mid = P["jade"] if name == "willow_near" else P["jade_light"]
-        leaf_light = P["jade_shine"]
-        for index, y in enumerate(range(5, size - 5, 7)):
-            offset = 12 + (index % 3) * 6
-            # 左侧柳叶球形聚簇与柳丝
-            draw.polygon(((size // 2 - 4, y), (size // 2 - offset, y + 7),
-                          (size // 2 - 5, y + 16)), fill=leaf_dark)
-            draw.polygon(((size // 2 - 3, y + 1), (size // 2 - offset + 2, y + 7),
-                          (size // 2 - 4, y + 13)), fill=leaf_mid)
-            draw.line(((size // 2 - 2, y + 2), (size // 2 - offset + 4, y + 8)), fill=leaf_light, width=1)
-            # 右侧柳叶球形聚簇与柳丝
-            draw.polygon(((size // 2 + 2, y + 2), (size // 2 + offset, y + 8),
-                          (size // 2 + 4, y + 17)), fill=leaf_mid)
-            draw.polygon(((size // 2 + 3, y + 3), (size // 2 + offset - 2, y + 8),
-                          (size // 2 + 5, y + 14)), fill=leaf_light)
+        # 蓬松棉花糖般的 Q 版垂柳（鲜亮翠绿 + 层次分明大叶球）
+        draw.line((size // 2, 2, size // 2 - 4, size - 4), fill=P["wood_deep"], width=4)
+        # 3 团圆滚滚蓬松大柳叶球
+        for ox, oy, r, color in (
+            (size // 2 - 8, 14, 10, P["jade_light"]),
+            (size // 2 + 8, 16, 11, P["jade_shine"]),
+            (size // 2, 8, 9, P["jade_shine"]),
+        ):
+            draw.ellipse((ox - r, oy - r, ox + r, oy + r), fill=P["ink_black"])
+            draw.ellipse((ox - r + 1, oy - r + 1, ox + r - 1, oy + r - 1), fill=color)
+        # 柔柔飘垂的小柳丝
+        for lx in range(size // 2 - 14, size // 2 + 15, 6):
+            draw.line((lx, 20, lx + 1, size - 8), fill=P["jade_shine"], width=1)
         return image
     if name == "roof_trim":
-        # 32x32 前景飞檐瓦当
-        draw.polygon(((0, 0), (31, 0), (31, 13), (19, 9), (10, 15), (0, 10)), fill=P["ink_black"])
-        draw.polygon(((2, 1), (29, 1), (29, 10), (19, 7), (10, 12), (2, 8)), fill=P["roof"])
-        draw.line((2, 2, 29, 2), fill=P["roof_shine"], width=1)
+        # 32x32 前景大飞檐
+        draw.polygon(((0, 0), (31, 0), (31, 14), (0, 14)), fill=P["ink_black"])
+        draw.polygon(((2, 1), (29, 1), (29, 11), (2, 11)), fill=P["roof"])
+        draw.line((2, 2, 29, 2), fill=P["roof_shine"], width=2)
         return image
     raise AssertionError("unreachable module: " + name)
 
@@ -978,7 +873,7 @@ def _build_dense_town(project_root):
 
 
 def _draw_inn_module(name):
-    """Draw interior modules with pixel-art masterwork shading and warm atmospheric pools."""
+    """Draw interior modules with cute chibi stylized wuxia aesthetics."""
     if name in ("floor_wood_a", "floor_wood_b", "entry_stone", "rug"):
         image = _new_module(16, opaque=True)
     elif name in ("window_light", "north_door", "counter_lantern", "shelf"):
@@ -992,155 +887,114 @@ def _draw_inn_module(name):
     draw = ImageDraw.Draw(image)
     size = image.width
     if name.startswith("floor_wood"):
-        # 16x16 温润拼花红木地板（木纹嵌条 + 榫卯缝线）
-        draw.rectangle((0, 0, 15, 15), fill=P["wood_deep"])
-        draw.rectangle((1, 1, 14, 14), fill=P["wood_dark"])
-        draw.rectangle((2, 2, 13, 13), fill=P["wood"])
-        y = 4 if name == "floor_wood_a" else 9
-        draw.line((1, y, 14, y), fill=P["wood_light"], width=1)
-        draw.line((1, y + 1, 14, y + 1), fill=P["wood_highlight"], width=1)
-        draw.line((7, 1, 7, 14), fill=P["wood_deep"], width=1)
+        # 16x16 温暖明亮实木地板
+        draw.rectangle((0, 0, 15, 15), fill=P["wood"])
+        draw.line((0, 0, 15, 0), fill=P["wood_shine"], width=1)
+        draw.line((0, 15, 15, 15), fill=P["ink_black"], width=1)
+        draw.line((7, 0, 7, 15), fill=P["wood_dark"], width=1)
         return image
     if name == "entry_stone":
-        # 16x16 玄关青石板
-        draw.rectangle((0, 0, 15, 15), fill=P["ink_black"])
-        draw.rectangle((1, 1, 14, 14), fill=P["stone"])
-        draw.line((1, 7, 14, 7), fill=P["stone_highlight"], width=1)
-        draw.line((7, 1, 7, 14), fill=P["stone_dark"], width=1)
+        draw.rectangle((0, 0, 15, 15), fill=P["stone"])
+        draw.line((0, 0, 15, 0), fill=P["stone_shine"], width=1)
+        draw.line((0, 15, 15, 15), fill=P["ink_black"], width=1)
         return image
     if name == "rug":
-        # 16x16 迎宾金丝祥云地毯（朱红织锦 + 金线如意回纹）
-        draw.rectangle((0, 0, 15, 15), fill=P["vermilion_deep"])
-        draw.rectangle((1, 1, 14, 14), fill=P["vermilion"])
-        draw.rectangle((3, 3, 12, 12), fill=P["gold_dark"])
-        draw.rectangle((4, 4, 11, 11), fill=P["gold"])
-        draw.rectangle((5, 5, 10, 10), fill=P["gold_shine"])
+        # 16x16 迎宾大红金丝小地毯
+        draw.rectangle((0, 0, 15, 15), fill=P["vermilion"])
+        draw.rectangle((2, 2, 13, 13), fill=P["gold_light"])
+        draw.rectangle((4, 4, 11, 11), fill=P["vermilion_bright"])
         return image
     if name == "counter":
-        # 64x64 掌柜红木柜台（雕花回纹裙板 + 翻开线装账本 + 算盘 + 青花毛笔筒）
-        draw.rectangle((0, 18, 63, 59), fill=P["ink_black"])
-        draw.rectangle((3, 21, 60, 40), fill=P["wood_light"])
-        draw.rectangle((3, 41, 60, 56), fill=P["wood"])
-        # 雕花实木立柱与立面回纹
-        for x in range(8, 59, 10):
-            draw.line((x, 23, x, 55), fill=P["wood_deep"], width=2)
-            draw.line((x + 1, 23, x + 1, 55), fill=P["wood_highlight"], width=1)
-        draw.line((3, 21, 60, 21), fill=P["wood_shine"], width=1)
-        # 台面翻开的线装账本
-        draw.rectangle((17, 11, 41, 21), fill=P["ink_black"])
-        draw.rectangle((19, 13, 39, 19), fill=P["paper"])
-        draw.line((20, 15, 38, 15), fill=P["ink_black"], width=1)
+        # 64x64 Q版掌柜红木大柜台：翻开的大账本 + 圆滚滚青花笔筒
+        draw.rectangle((2, 16, 61, 58), fill=P["ink_black"])
+        draw.rectangle((5, 19, 58, 38), fill=P["wood_shine"])
+        draw.rectangle((5, 39, 58, 55), fill=P["wood"])
+        # 翻开的大账本
+        draw.rectangle((16, 10, 42, 21), fill=P["ink_black"])
+        draw.rectangle((18, 12, 40, 19), fill=P["paper_shine"])
+        draw.line((20, 14, 38, 14), fill=P["ink_black"], width=1)
         draw.line((20, 17, 38, 17), fill=P["ink_black"], width=1)
-        # 青花毛笔筒（插着狼毫毛笔）
-        draw.rectangle((44, 13, 51, 21), fill=P["porcelain_white"])
-        draw.rectangle((45, 15, 50, 19), fill=P["porcelain_blue"])
-        draw.line((46, 7, 46, 13), fill=P["wood_deep"], width=1)
-        draw.line((49, 9, 49, 13), fill=P["wood_deep"], width=1)
+        # 圆圆青花毛笔筒
+        draw.ellipse((45, 11, 53, 21), fill=P["porcelain_white"])
+        draw.line((46, 16, 52, 16), fill=P["porcelain_blue"], width=2)
         return image
     if name == "counter_lantern":
-        # 32x32 柜台八角暖光灯笼 + 柔和光晕渐变
-        draw.line((16, 0, 16, 7), fill=P["wood_deep"], width=2)
-        draw.rectangle((6, 6, 26, 27), fill=P["ink_black"])
-        draw.rectangle((8, 8, 24, 25), fill=P["vermilion_deep"])
-        draw.rectangle((10, 10, 22, 23), fill=P["warm_dark"])
-        draw.rectangle((12, 12, 20, 21), fill=P["warm"])
-        draw.rectangle((14, 14, 18, 19), fill=P["warm_light"])
-        draw.rectangle((15, 15, 17, 18), fill=P["warm_glow"])
+        # 32x32 柜台大暖光灯笼
+        draw.ellipse((6, 6, 25, 25), fill=P["ink_black"])
+        draw.ellipse((8, 8, 23, 23), fill=P["vermilion"])
+        draw.ellipse((11, 11, 20, 20), fill=P["warm_light"])
+        draw.ellipse((13, 13, 18, 18), fill=P["warm_glow"])
         return image
     if name == "table":
-        # 48x48 沉木八仙圆桌 + 景德镇青花提梁茶壶 + 双茶盏
-        draw.ellipse((1, 9, 47, 37), fill=P["ink_black"])
-        draw.ellipse((4, 12, 44, 34), fill=P["wood_deep"])
-        draw.ellipse((6, 14, 42, 32), fill=P["wood"])
-        draw.line((9, 17, 39, 17), fill=P["wood_highlight"], width=2)
-        # 桌腿与阴影
-        for x in (10, 36):
-            draw.rectangle((x, 30, x + 5, 44), fill=P["wood_deep"])
-            draw.line((x + 1, 30, x + 1, 43), fill=P["wood_light"])
-        # 青花瓷提梁茶壶（壶嘴出水弧度 + 青花釉色）
-        draw.ellipse((20, 18, 28, 26), fill=P["porcelain_white"])
-        draw.ellipse((21, 19, 27, 25), fill=P["porcelain_blue"])
-        draw.line((24, 15, 24, 18), fill=P["wood_deep"], width=1)
-        # 两只白瓷茶盏
-        draw.rectangle((14, 21, 17, 24), fill=P["porcelain_white"])
-        draw.rectangle((31, 21, 34, 24), fill=P["porcelain_white"])
+        # 48x48 Q版圆滚滚实木大圆桌 + 胖胖青花大茶壶与茶碗
+        draw.ellipse((2, 8, 45, 36), fill=P["ink_black"])
+        draw.ellipse((4, 10, 43, 34), fill=P["wood"])
+        draw.line((8, 14, 39, 14), fill=P["wood_shine"], width=2)
+        # 桌面大大的胖青花茶壶
+        draw.ellipse((19, 16, 29, 26), fill=P["porcelain_white"])
+        draw.line((21, 21, 27, 21), fill=P["porcelain_blue"], width=2)
+        # 两只可爱白瓷小茶碗
+        draw.ellipse((12, 20, 17, 25), fill=P["porcelain_white"])
+        draw.ellipse((31, 20, 36, 25), fill=P["porcelain_white"])
         return image
     if name == "stove":
-        # 48x48 厨房青石火灶 + 柴火暖焰
-        draw.rectangle((2, 3, 45, 45), fill=P["ink_black"])
-        draw.rectangle((5, 6, 42, 42), fill=P["stone_dark"])
+        # 48x48 厨房青石火灶 + 旺盛暖焰
+        draw.rectangle((3, 4, 44, 44), fill=P["ink_black"])
         draw.rectangle((6, 7, 41, 41), fill=P["stone"])
-        draw.line((6, 7, 41, 7), fill=P["stone_highlight"], width=1)
-        draw.rectangle((11, 18, 36, 42), fill=P["ink_black"])
-        # 柴火熊熊火焰
-        draw.polygon(((17, 36), (24, 15), (31, 36)), fill=P["vermilion_bright"])
-        draw.polygon(((19, 35), (24, 20), (29, 35)), fill=P["warm"])
-        draw.polygon(((21, 34), (24, 25), (27, 34)), fill=P["warm_glow"])
-        draw.rectangle((8, 8, 16, 12), fill=P["wood_deep"])
+        draw.rectangle((12, 18, 35, 41), fill=P["ink_black"])
+        # 熊熊大火苗
+        draw.polygon(((16, 36), (24, 15), (32, 36)), fill=P["vermilion_bright"])
+        draw.polygon(((19, 35), (24, 21), (29, 35)), fill=P["warm_glow"])
         return image
     if name == "stairs":
-        # 64x64 实木楼梯台阶 + 扶手雕花立柱
-        draw.rectangle((1, 3, 63, 63), fill=P["ink_black"])
-        for index in range(7):
-            y = 8 + index * 7
-            draw.rectangle((5 + index * 3, y, 58, y + 6), fill=P["wood"])
-            draw.line((5 + index * 3, y, 58, y), fill=P["wood_highlight"], width=1)
-            draw.line((5 + index * 3, y + 6, 58, y + 6), fill=P["wood_deep"], width=1)
+        # 64x64 实木楼梯
+        draw.rectangle((2, 4, 62, 62), fill=P["ink_black"])
+        for index in range(6):
+            y = 8 + index * 8
+            draw.rectangle((6 + index * 3, y, 58, y + 7), fill=P["wood"])
+            draw.line((6 + index * 3, y, 58, y), fill=P["wood_shine"], width=1)
         return image
     if name == "kitchen_wall":
-        # 64x64 厨房木格背景墙 + 悬挂腊味干货与红辣椒
-        draw.rectangle((0, 0, 63, 63), fill=P["ink_black"])
-        draw.rectangle((4, 4, 59, 59), fill=P["wood_deep"])
-        for y in (12, 26, 40):
-            draw.line((6, y, 57, y), fill=P["wood"], width=2)
-        # 悬挂腊肉干货与红辣椒串
-        draw.rectangle((8, 8, 22, 23), fill=P["paper_shadow"])
-        draw.rectangle((40, 8, 53, 21), fill=P["vermilion_deep"])
-        for py in (9, 13, 17):
-            draw.point((46, py), fill=P["vermilion_bright"])
+        # 64x64 厨房木墙 + 挂着可爱大红辣椒串
+        draw.rectangle((1, 1, 62, 62), fill=P["ink_black"])
+        draw.rectangle((4, 4, 59, 59), fill=P["wood_dark"])
+        # 大红辣椒串
+        for py in (12, 18, 24, 30):
+            draw.ellipse((43, py, 49, py + 5), fill=P["vermilion_bright"])
         return image
     if name == "window_light":
-        # 32x32 江南镂空雕花木窗 + 暖阳斜照光斑
-        draw.rectangle((0, 0, 31, 31), fill=P["ink_black"])
-        draw.rectangle((3, 3, 28, 28), fill=P["warm_dark"])
-        draw.rectangle((5, 5, 26, 26), fill=P["warm"])
-        draw.rectangle((7, 7, 24, 24), fill=P["warm_light"])
-        draw.rectangle((9, 9, 22, 22), fill=P["warm_glow"])
-        # 万字木格窗棂
-        draw.line((15, 3, 15, 28), fill=P["wood_deep"], width=2)
-        draw.line((3, 15, 28, 15), fill=P["wood_deep"], width=2)
-        draw.rectangle((7, 7, 24, 24), outline=P["wood_deep"])
+        # 32x32 雕花木窗与暖阳
+        draw.rectangle((1, 1, 30, 30), fill=P["ink_black"])
+        draw.rectangle((4, 4, 27, 27), fill=P["warm_light"])
+        draw.rectangle((7, 7, 24, 24), fill=P["warm_glow"])
+        draw.line((15, 4, 15, 27), fill=P["wood_dark"], width=2)
+        draw.line((4, 15, 27, 15), fill=P["wood_dark"], width=2)
         return image
     if name == "north_door":
-        # 32x32 客栈后院实木小门 + 黄铜搭扣
-        draw.rectangle((1, 0, 30, 31), fill=P["ink_black"])
-        draw.rectangle((4, 2, 27, 31), fill=P["wood_deep"])
-        draw.rectangle((5, 3, 26, 30), fill=P["wood"])
-        draw.line((15, 3, 15, 31), fill=P["wood_light"])
-        draw.rectangle((18, 16, 21, 19), fill=P["gold_light"])
-        draw.point((19, 17), fill=P["gold_shine"])
+        # 32x32 通往后院实木小门
+        draw.rectangle((2, 1, 29, 31), fill=P["ink_black"])
+        draw.rectangle((5, 4, 26, 30), fill=P["wood"])
+        draw.ellipse((18, 16, 22, 20), fill=P["gold_light"])
         return image
     if name == "shelf":
-        # 32x32 博古酒架（多宝格 + 红布封泥酒坛 + 青花酒壶）
-        draw.rectangle((1, 1, 30, 31), fill=P["ink_black"])
-        draw.rectangle((3, 3, 28, 29), fill=P["wood_deep"])
-        for y in (5, 13, 21):
-            draw.line((3, y, 28, y), fill=P["wood_highlight"], width=2)
-        # 红布封泥酒坛（“绍兴花雕”、“女儿红”、“竹叶青”）
-        for x, y, color in ((6, 6, P["vermilion"]), (16, 6, P["jade"]),
-                            (9, 14, P["vermilion_bright"]), (19, 14, P["gold_light"])):
-            draw.rectangle((x, y, x + 5, y + 6), fill=P["ink_black"])
-            draw.rectangle((x + 1, y + 1, x + 4, y + 5), fill=color)
-            draw.line((x + 1, y + 1, x + 4, y + 1), fill=P["paper_shine"], width=1)
+        # 32x32 博古酒架：整整齐齐圆滚滚的红布封泥胖酒坛
+        draw.rectangle((2, 2, 29, 30), fill=P["ink_black"])
+        draw.rectangle((4, 4, 27, 28), fill=P["wood"])
+        draw.line((4, 15, 27, 15), fill=P["wood_shine"], width=2)
+        # 上下两排圆滚滚的小胖酒坛
+        for x, y, color in ((7, 7, P["vermilion"]), (17, 7, P["jade"]),
+                            (10, 18, P["vermilion_bright"]), (20, 18, P["gold_light"])):
+            draw.ellipse((x, y, x + 6, y + 6), fill=P["ink_black"])
+            draw.ellipse((x + 1, y + 1, x + 5, y + 5), fill=color)
+            draw.line((x + 1, y + 1, x + 5, y + 1), fill=P["paper_shine"], width=1)
         return image
     if name == "foreground_beam":
-        # 64x64 客栈前景挑高实木立柱与雕花横梁
+        # 64x64 前景雕花实木大横梁
         draw.rectangle((0, 0, 14, 63), fill=P["ink_black"])
         draw.rectangle((2, 0, 11, 63), fill=P["wood_deep"])
-        draw.line((4, 0, 4, 63), fill=P["wood_light"], width=1)
-        draw.polygon(((10, 0), (63, 0), (63, 13), (22, 13)), fill=P["ink_black"])
-        draw.polygon(((12, 1), (63, 1), (63, 11), (24, 11)), fill=P["wood_deep"])
-        draw.line((24, 11, 63, 11), fill=P["wood_highlight"], width=1)
+        draw.polygon(((10, 0), (63, 0), (63, 14), (22, 14)), fill=P["ink_black"])
+        draw.polygon(((12, 1), (63, 1), (63, 11), (24, 11)), fill=P["wood"])
+        draw.line((24, 11, 63, 11), fill=P["wood_shine"], width=1)
         return image
     raise AssertionError("unreachable inn module: " + name)
 
