@@ -18,43 +18,63 @@ WEAPON_IDS = ("weapon_sword", "weapon_gauntlets", "weapon_dart")
 
 P = {
     "clear": (0, 0, 0, 0),
+    "ink_deep": (14, 15, 24, 255),
     "ink": (24, 26, 42, 255),
     "ink_light": (48, 48, 67, 255),
     "skin_shadow": (134, 83, 63, 255),
     "skin": (213, 158, 120, 255),
     "skin_light": (246, 202, 158, 255),
-    "hair": (35, 31, 42, 255),
-    "hair_light": (76, 65, 78, 255),
-    "cloak_dark": (28, 50, 101, 255),
-    "cloak": (48, 82, 150, 255),
+    "hair": (32, 28, 38, 255),
+    "hair_light": (72, 62, 75, 255),
+    "hair_shine": (115, 100, 120, 255),
+    "cloak_dark": (26, 45, 90, 255),
+    "cloak": (46, 78, 142, 255),
     "cloak_light": (82, 121, 188, 255),
-    "paper_shadow": (180, 172, 164, 255),
+    "cloak_trim": (120, 160, 220, 255),
+    "paper_shadow": (175, 168, 158, 255),
     "paper": (235, 229, 210, 255),
     "paper_light": (255, 247, 224, 255),
     "vermilion_dark": (109, 39, 43, 255),
     "vermilion": (183, 57, 55, 255),
-    "vermilion_light": (232, 94, 71, 255),
+    "vermilion_light": (235, 88, 68, 255),
+    "vermilion_bright": (255, 110, 85, 255),
+    "leather_dark": (60, 38, 28, 255),
     "leather": (92, 60, 45, 255),
     "leather_light": (151, 105, 68, 255),
-    "steel_dark": (71, 86, 105, 255),
-    "steel": (160, 185, 204, 255),
-    "steel_light": (228, 238, 239, 255),
-    "shadow": (22, 25, 40, 110),
+    "steel_dark": (60, 75, 95, 255),
+    "steel": (150, 175, 195, 255),
+    "steel_light": (215, 230, 238, 255),
+    "steel_shine": (245, 252, 255, 255),
+    "shadow": (18, 20, 35, 120),
+    "gold_dark": (160, 115, 45, 255),
     "gold": (220, 168, 75, 255),
-    "water_deep": (20, 57, 72, 255),
-    "water": (35, 92, 105, 255),
-    "water_light": (83, 149, 150, 255),
-    "jade_dark": (37, 71, 64, 255),
-    "jade": (67, 108, 78, 255),
+    "gold_light": (250, 215, 125, 255),
+    "water_deep": (18, 52, 68, 255),
+    "water": (32, 85, 98, 255),
+    "water_light": (78, 142, 145, 255),
+    "water_ripple": (115, 185, 192, 255),
+    "jade_dark": (32, 65, 58, 255),
+    "jade": (62, 102, 75, 255),
+    "jade_light": (95, 145, 110, 255),
+    "jade_moss": (42, 78, 52, 255),
+    "stone_dark": (75, 80, 76, 255),
     "stone": (104, 110, 104, 255),
     "stone_light": (159, 161, 145, 255),
-    "wood_dark": (65, 43, 35, 255),
-    "wood": (116, 76, 49, 255),
-    "wood_light": (171, 122, 73, 255),
+    "stone_highlight": (195, 198, 182, 255),
+    "wood_dark": (58, 38, 30, 255),
+    "wood": (110, 72, 46, 255),
+    "wood_light": (168, 118, 70, 255),
+    "wood_highlight": (205, 155, 105, 255),
+    "roof_dark": (26, 38, 48, 255),
     "roof": (34, 48, 62, 255),
     "roof_light": (70, 91, 102, 255),
+    "roof_highlight": (105, 130, 145, 255),
+    "warm_dark": (180, 115, 45, 255),
     "warm": (234, 172, 79, 255),
     "warm_light": (255, 228, 150, 255),
+    "warm_glow": (255, 245, 190, 255),
+    "porcelain_blue": (45, 85, 145, 255),
+    "porcelain_white": (240, 246, 252, 255),
 }
 
 TOWN_ROLES = (
@@ -118,83 +138,119 @@ def _draw_frame(layers, ox, oy, direction, animation, frame_index, frame_count):
     weapon = draws["weapon"]
     accessory = draws["accessory"]
 
-    # The foot shadow fixes the visual/collision anchor at the bottom pivot.
-    _polygon(accessory, ox, oy, ((cx - 11, 43), (cx + 11, 43), (cx + 8, 46),
-                                  (cx - 8, 46)), P["shadow"])
+    # 1. 角色地面投影与步履
+    _polygon(accessory, ox, oy, ((cx - 12, 43), (cx + 12, 43), (cx + 9, 46),
+                                  (cx - 9, 46)), P["shadow"])
 
     left_step = -stride // 2
     right_step = stride // 2
-    _rect(body, ox, oy, (cx - 10 + left_step, 31 + cy, cx - 3 + left_step, 42), P["ink"])
-    _rect(body, ox, oy, (cx + 3 + right_step, 31 + cy, cx + 10 + right_step, 42), P["ink"])
-    _rect(body, ox, oy, (cx - 8 + left_step, 33 + cy, cx - 4 + left_step, 39), P["paper_shadow"])
-    _rect(body, ox, oy, (cx + 4 + right_step, 33 + cy, cx + 8 + right_step, 39), P["paper_shadow"])
-    _rect(body, ox, oy, (cx - 11 + left_step, 40, cx - 2 + left_step, 44), P["ink"])
-    _rect(body, ox, oy, (cx + 2 + right_step, 40, cx + 11 + right_step, 44), P["ink"])
-    _rect(body, ox, oy, (cx - 9 + left_step, 40, cx - 3 + left_step, 42), P["leather"])
-    _rect(body, ox, oy, (cx + 3 + right_step, 40, cx + 9 + right_step, 42), P["leather"])
+    # 裤腿与长靴
+    _rect(body, ox, oy, (cx - 10 + left_step, 31 + cy, cx - 3 + left_step, 41), P["ink_deep"])
+    _rect(body, ox, oy, (cx + 3 + right_step, 31 + cy, cx + 10 + right_step, 41), P["ink_deep"])
+    _rect(body, ox, oy, (cx - 8 + left_step, 32 + cy, cx - 4 + left_step, 38), P["paper_shadow"])
+    _rect(body, ox, oy, (cx + 4 + right_step, 32 + cy, cx + 8 + right_step, 38), P["paper_shadow"])
+    # 皂靴与铜扣
+    _rect(body, ox, oy, (cx - 11 + left_step, 39, cx - 2 + left_step, 44), P["ink"])
+    _rect(body, ox, oy, (cx + 2 + right_step, 39, cx + 11 + right_step, 44), P["ink"])
+    _rect(body, ox, oy, (cx - 9 + left_step, 40, cx - 3 + left_step, 43), P["leather"])
+    _rect(body, ox, oy, (cx + 3 + right_step, 40, cx + 9 + right_step, 43), P["leather"])
+    _rect(body, ox, oy, (cx - 5 + left_step, 40, cx - 4 + left_step, 41), P["gold_light"])
+    _rect(body, ox, oy, (cx + 4 + right_step, 40, cx + 5 + right_step, 41), P["gold_light"])
 
-    # The robe is a large silhouette before its small material highlights.
+    # 2. 儒侠青灰外袍与开衩层次
     cloak_shift = layout["cloak"] * (3 + attack)
     _polygon(outfit, ox, oy, ((cx - 11, 18 + cy), (cx + 10, 18 + cy),
                                (cx + 15 + cloak_shift, 33), (cx + 8, 37),
-                               (cx, 34), (cx - 10, 37), (cx - 15 + cloak_shift, 31)), P["ink"])
+                               (cx, 34), (cx - 10, 37), (cx - 15 + cloak_shift, 31)), P["ink_deep"])
     _polygon(outfit, ox, oy, ((cx - 9, 19 + cy), (cx + 8, 19 + cy),
-                               (cx + 12 + cloak_shift, 31), (cx + 6, 34),
-                               (cx, 31), (cx - 8, 34), (cx - 12 + cloak_shift, 29)), P["cloak_dark"])
+                               (cx + 13 + cloak_shift, 32), (cx + 6, 35),
+                               (cx, 32), (cx - 8, 35), (cx - 13 + cloak_shift, 30)), P["cloak_dark"])
     _polygon(outfit, ox, oy, ((cx - 7, 20 + cy), (cx + 6, 20 + cy),
-                               (cx + 8 + cloak_shift, 29), (cx + 3, 31),
-                               (cx - 5, 29), (cx - 9 + cloak_shift, 28)), P["cloak"])
-    _line(outfit, ox, oy, ((cx - 7, 22 + cy), (cx - 3, 26), (cx - 1, 30)), P["cloak_light"], 2)
-    _polygon(outfit, ox, oy, ((cx - 6, 22 + cy), (cx + 6, 22 + cy),
-                               (cx + 9, 34), (cx, 36), (cx - 9, 34)), P["paper_shadow"])
-    _polygon(outfit, ox, oy, ((cx - 4, 22 + cy), (cx + 4, 22 + cy),
-                               (cx + 5, 33), (cx, 34), (cx - 5, 33)), P["paper"])
-    _line(outfit, ox, oy, ((cx, 23 + cy), (cx, 33)), P["paper_light"], 1)
+                               (cx + 9 + cloak_shift, 30), (cx + 3, 32),
+                               (cx - 5, 30), (cx - 9 + cloak_shift, 29)), P["cloak"])
+    _line(outfit, ox, oy, ((cx - 8, 22 + cy), (cx - 4, 27), (cx - 1, 31)), P["cloak_light"], 2)
+    _line(outfit, ox, oy, ((cx - 7, 23 + cy), (cx - 3, 28)), P["cloak_trim"], 1)
 
-    # Sleeves and hands are deliberately asymmetric in side views.
-    arm_shift = attack * (1 if direction in ("right", "down") else -1)
-    _rect(outfit, ox, oy, (cx - 14, 22 + cy, cx - 8, 30 + cy), P["ink"])
-    _rect(outfit, ox, oy, (cx + 8, 22 + cy, cx + 14, 30 + cy), P["ink"])
-    _rect(outfit, ox, oy, (cx - 12, 23 + cy, cx - 8, 28 + cy), P["cloak"])
-    _rect(outfit, ox, oy, (cx + 8, 23 + cy, cx + 12, 28 + cy), P["cloak"])
-    _rect(body, ox, oy, (cx - 13, 29 + cy, cx - 9, 32 + cy), P["skin_shadow"])
-    _rect(body, ox, oy, (cx + 9 + arm_shift, 29 + cy, cx + 13 + arm_shift, 32 + cy), P["skin"])
+    # 白绫中单与交领
+    _polygon(outfit, ox, oy, ((cx - 6, 21 + cy), (cx + 6, 21 + cy),
+                               (cx + 8, 33), (cx, 35), (cx - 8, 33)), P["paper_shadow"])
+    _polygon(outfit, ox, oy, ((cx - 4, 21 + cy), (cx + 4, 21 + cy),
+                               (cx + 5, 32), (cx, 33), (cx - 5, 32)), P["paper"])
+    _line(outfit, ox, oy, ((cx, 22 + cy), (cx, 32)), P["paper_light"], 1)
 
-    # Head/face/hair use separate source modules so the established baker remains valid.
-    _rect(face, ox, oy, (cx - 7, 7 + cy, cx + 7, 20 + cy), P["ink"])
+    # 3. 双臂、护腕与手掌
+    arm_shift = attack * (2 if direction in ("right", "down") else -2)
+    _rect(outfit, ox, oy, (cx - 14, 21 + cy, cx - 8, 30 + cy), P["ink_deep"])
+    _rect(outfit, ox, oy, (cx + 8, 21 + cy, cx + 14, 30 + cy), P["ink_deep"])
+    _rect(outfit, ox, oy, (cx - 12, 22 + cy, cx - 8, 28 + cy), P["cloak"])
+    _rect(outfit, ox, oy, (cx + 8, 22 + cy, cx + 12, 28 + cy), P["cloak"])
+    # 皮革护腕与手部
+    _rect(body, ox, oy, (cx - 13, 27 + cy, cx - 9, 30 + cy), P["leather_dark"])
+    _rect(body, ox, oy, (cx + 9 + arm_shift, 27 + cy, cx + 13 + arm_shift, 30 + cy), P["leather_dark"])
+    _rect(body, ox, oy, (cx - 12, 28 + cy, cx - 10, 29 + cy), P["gold"])
+    _rect(body, ox, oy, (cx + 10 + arm_shift, 28 + cy, cx + 12 + arm_shift, 29 + cy), P["gold"])
+    _rect(body, ox, oy, (cx - 13, 30 + cy, cx - 9, 33 + cy), P["skin_shadow"])
+    _rect(body, ox, oy, (cx + 9 + arm_shift, 30 + cy, cx + 13 + arm_shift, 33 + cy), P["skin"])
+
+    # 4. 面容、眼神高光与束发
+    _rect(face, ox, oy, (cx - 7, 7 + cy, cx + 7, 20 + cy), P["ink_deep"])
     _rect(face, ox, oy, (cx - 5, 8 + cy, cx + 5, 18 + cy), P["skin"])
-    _rect(face, ox, oy, (cx - 4, 9 + cy, cx + 4, 13 + cy), P["skin_light"])
+    _rect(face, ox, oy, (cx - 4, 9 + cy, cx + 4, 14 + cy), P["skin_light"])
     if layout["face"] == "front":
-        _rect(face, ox, oy, (cx - 3, 14 + cy, cx - 2, 15 + cy), P["ink"])
-        _rect(face, ox, oy, (cx + 2, 14 + cy, cx + 3, 15 + cy), P["ink"])
+        _rect(face, ox, oy, (cx - 3, 13 + cy, cx - 2, 15 + cy), P["ink_deep"])
+        _rect(face, ox, oy, (cx + 2, 13 + cy, cx + 3, 15 + cy), P["ink_deep"])
+        _rect(face, ox, oy, (cx - 3, 13 + cy, cx - 3, 13 + cy), P["steel_shine"])
+        _rect(face, ox, oy, (cx + 2, 13 + cy, cx + 2, 13 + cy), P["steel_shine"])
+        _rect(face, ox, oy, (cx - 1, 17 + cy, cx + 1, 17 + cy), P["skin_shadow"])
     elif layout["face"] == "left":
-        _rect(face, ox, oy, (cx - 5, 14 + cy, cx - 4, 15 + cy), P["ink"])
+        _rect(face, ox, oy, (cx - 5, 13 + cy, cx - 4, 15 + cy), P["ink_deep"])
+        _rect(face, ox, oy, (cx - 5, 13 + cy, cx - 5, 13 + cy), P["steel_shine"])
     elif layout["face"] == "right":
-        _rect(face, ox, oy, (cx + 4, 14 + cy, cx + 5, 15 + cy), P["ink"])
+        _rect(face, ox, oy, (cx + 4, 13 + cy, cx + 5, 15 + cy), P["ink_deep"])
+        _rect(face, ox, oy, (cx + 4, 13 + cy, cx + 4, 13 + cy), P["steel_shine"])
 
-    _polygon(hair, ox, oy, ((cx - 8, 8 + cy), (cx - 5, 3 + cy), (cx + 4, 3 + cy),
-                             (cx + 8, 9 + cy), (cx + 5, 13 + cy), (cx - 6, 12 + cy)), P["ink"])
-    _polygon(hair, ox, oy, ((cx - 5, 7 + cy), (cx - 2, 4 + cy), (cx + 4, 5 + cy),
-                             (cx + 6, 10 + cy), (cx + 1, 8 + cy), (cx - 4, 10 + cy)), P["hair"])
-    _rect(hair, ox, oy, (cx - 3, 0 + cy, cx + 4, 5 + cy), P["ink"])
-    _rect(hair, ox, oy, (cx - 1, 0 + cy, cx + 2, 3 + cy), P["hair_light"])
+    # 发髻与垂鬓
+    _polygon(hair, ox, oy, ((cx - 8, 8 + cy), (cx - 5, 2 + cy), (cx + 4, 2 + cy),
+                             (cx + 8, 9 + cy), (cx + 6, 14 + cy), (cx - 6, 13 + cy)), P["ink_deep"])
+    _polygon(hair, ox, oy, ((cx - 6, 7 + cy), (cx - 3, 3 + cy), (cx + 4, 4 + cy),
+                             (cx + 7, 10 + cy), (cx + 2, 8 + cy), (cx - 4, 10 + cy)), P["hair"])
+    _line(hair, ox, oy, ((cx - 2, 4 + cy), (cx + 3, 5 + cy)), P["hair_shine"], 1)
+    _rect(hair, ox, oy, (cx - 3, 0 + cy, cx + 3, 4 + cy), P["ink_deep"])
+    _rect(hair, ox, oy, (cx - 1, 0 + cy, cx + 2, 2 + cy), P["hair_light"])
     if layout["face"] == "back":
-        _rect(hair, ox, oy, (cx - 6, 10 + cy, cx + 6, 18 + cy), P["hair"])
-    ribbon = layout["ribbon"]
-    _rect(accessory, ox, oy, (cx - 2, 4 + cy, cx + 3, 6 + cy), P["vermilion"])
-    _polygon(accessory, ox, oy, ((cx + ribbon * 2, 5 + cy), (cx + ribbon * 10, 8 + cy),
-                                 (cx + ribbon * 6, 11 + cy)), P["vermilion"])
-    _line(accessory, ox, oy, ((cx + ribbon * 3, 7 + cy), (cx + ribbon * 9, 10 + cy)), P["vermilion_light"], 1)
+        _rect(hair, ox, oy, (cx - 6, 10 + cy, cx + 6, 19 + cy), P["hair"])
+        _line(hair, ox, oy, ((cx, 10 + cy), (cx, 18 + cy)), P["hair_shine"], 1)
+    # 两缕垂鬓
+    _line(hair, ox, oy, ((cx - 6, 12 + cy), (cx - 6, 18 + cy)), P["hair"], 1)
+    _line(hair, ox, oy, ((cx + 6, 12 + cy), (cx + 6, 18 + cy)), P["hair"], 1)
 
-    # Waist sash, pouch and scabbard keep the protagonist readable when idle.
-    _rect(accessory, ox, oy, (cx - 9, 27 + cy, cx + 9, 30 + cy), P["vermilion_dark"])
-    _rect(accessory, ox, oy, (cx - 6, 27 + cy, cx + 7, 28 + cy), P["vermilion"])
-    _polygon(accessory, ox, oy, ((cx + 5, 29 + cy), (cx + 11, 34), (cx + 8, 36),
-                                 (cx + 3, 30 + cy)), P["vermilion"])
+    # 飘逸朱红发带
+    ribbon = layout["ribbon"]
+    ribbon_sway = 1 if frame_index % 2 == 1 else 0
+    _rect(accessory, ox, oy, (cx - 2, 3 + cy, cx + 3, 5 + cy), P["vermilion_dark"])
+    _polygon(accessory, ox, oy, ((cx + ribbon * 2, 4 + cy),
+                                 (cx + ribbon * (9 + ribbon_sway), 7 + cy),
+                                 (cx + ribbon * (6 + ribbon_sway), 12 + cy)), P["vermilion"])
+    _line(accessory, ox, oy, ((cx + ribbon * 3, 6 + cy),
+                              (cx + ribbon * (8 + ribbon_sway), 9 + cy)), P["vermilion_bright"], 1)
+
+    # 5. 朱红与黛蓝双层腰封 + 青玉佩流苏
+    _rect(accessory, ox, oy, (cx - 9, 26 + cy, cx + 9, 30 + cy), P["ink_deep"])
+    _rect(accessory, ox, oy, (cx - 8, 27 + cy, cx + 8, 28 + cy), P["cloak_dark"])
+    _rect(accessory, ox, oy, (cx - 7, 28 + cy, cx + 7, 29 + cy), P["vermilion"])
+    _rect(accessory, ox, oy, (cx - 1, 27 + cy, cx + 1, 29 + cy), P["gold_light"])
+    # 青玉佩与流苏垂带
+    _polygon(accessory, ox, oy, ((cx + 4, 29 + cy), (cx + 8, 33 + cy), (cx + 6, 35 + cy),
+                                 (cx + 2, 30 + cy)), P["jade"])
+    _line(accessory, ox, oy, ((cx + 6, 34 + cy), (cx + 7, 39 + cy)), P["vermilion_bright"], 1)
+
+    # 6. 背负剑鞘与兽首吞口
     scabbard = layout["sword"]
-    _line(weapon, ox, oy, ((cx + scabbard * 9, 16 + cy), (cx + scabbard * 15, 36)), P["ink"], 4)
-    _line(weapon, ox, oy, ((cx + scabbard * 8, 16 + cy), (cx + scabbard * 14, 35)), P["leather"], 2)
-    _rect(weapon, ox, oy, (cx + scabbard * 6 - 1, 14 + cy, cx + scabbard * 6 + 2, 19 + cy), P["gold"])
+    _line(weapon, ox, oy, ((cx + scabbard * 9, 15 + cy), (cx + scabbard * 16, 37)), P["ink_deep"], 4)
+    _line(weapon, ox, oy, ((cx + scabbard * 8, 15 + cy), (cx + scabbard * 15, 36)), P["leather_dark"], 2)
+    _line(weapon, ox, oy, ((cx + scabbard * 8, 15 + cy), (cx + scabbard * 11, 23 + cy)), P["steel_shine"], 1)
+    _rect(weapon, ox, oy, (cx + scabbard * 6 - 1, 13 + cy, cx + scabbard * 6 + 3, 18 + cy), P["gold"])
+    _rect(weapon, ox, oy, (cx + scabbard * 6, 14 + cy, cx + scabbard * 6 + 2, 17 + cy), P["gold_light"])
 
 
 def _new_sheet(size):
@@ -223,23 +279,35 @@ def _draw_weapon_layer(weapon_id):
     image = Image.new("RGBA", (FRAME_SIZE, FRAME_SIZE), P["clear"])
     draw = ImageDraw.Draw(image)
     if weapon_id == "weapon_sword":
-        draw.line(((19, 34), (35, 11)), fill=P["ink"], width=5)
-        draw.line(((19, 34), (35, 11)), fill=P["steel_dark"], width=3)
-        draw.line(((20, 32), (34, 12)), fill=P["steel_light"], width=1)
-        draw.rectangle((16, 31, 23, 34), fill=P["gold"])
-        draw.rectangle((17, 35, 21, 42), fill=P["leather"])
+        # 冷钢宝剑：兽首剑格 + 刃光高光 + 剑柄缠绳
+        draw.line(((18, 35), (36, 10)), fill=P["ink_deep"], width=5)
+        draw.line(((18, 35), (36, 10)), fill=P["steel_dark"], width=3)
+        draw.line(((19, 33), (35, 11)), fill=P["steel_light"], width=2)
+        draw.line(((21, 31), (35, 12)), fill=P["steel_shine"], width=1)
+        # 青铜剑格与剑柄
+        draw.rectangle((15, 30, 24, 34), fill=P["gold_dark"])
+        draw.rectangle((16, 31, 23, 33), fill=P["gold_light"])
+        draw.rectangle((16, 35, 21, 43), fill=P["leather_dark"])
+        draw.line((17, 36, 20, 42), fill=P["vermilion"], width=1)
+        draw.rectangle((17, 43, 20, 45), fill=P["gold"])
     elif weapon_id == "weapon_gauntlets":
-        draw.rectangle((19, 23, 32, 35), fill=P["ink"])
-        draw.rectangle((21, 24, 30, 33), fill=P["leather"])
-        draw.rectangle((22, 23, 30, 26), fill=P["leather_light"])
-        for x in (21, 24, 27, 30):
-            draw.rectangle((x, 19, x + 2, 25), fill=P["steel"])
+        # 玄铁指虎：金属光泽 + 铆钉 + 暗纹护腕
+        draw.rectangle((18, 22, 33, 36), fill=P["ink_deep"])
+        draw.rectangle((20, 23, 31, 34), fill=P["leather_dark"])
+        draw.rectangle((21, 22, 31, 26), fill=P["leather_light"])
+        for x in (20, 23, 26, 29):
+            draw.rectangle((x, 18, x + 2, 24), fill=P["steel_dark"])
+            draw.line((x, 19, x + 1, 21), fill=P["steel_shine"])
+            draw.rectangle((x + 1, 27, x + 2, 28), fill=P["gold_light"])
     elif weapon_id == "weapon_dart":
-        draw.rectangle((17, 26, 28, 37), fill=P["ink"])
-        draw.rectangle((19, 28, 26, 35), fill=P["leather"])
-        for index, y in enumerate((17, 21, 25)):
-            draw.polygon(((27, y), (40, y + 3), (27, y + 6)), fill=P["steel_dark"])
-            draw.line(((28, y + 3), (38, y + 3)), fill=P["steel_light"], width=1)
+        # 流线型透甲飞镖：三棱银刃 + 尾羽系绳
+        draw.rectangle((16, 25, 29, 38), fill=P["ink_deep"])
+        draw.rectangle((18, 27, 27, 36), fill=P["leather_dark"])
+        for index, y in enumerate((16, 21, 26)):
+            draw.polygon(((26, y), (42, y + 3), (26, y + 6)), fill=P["steel_dark"])
+            draw.polygon(((28, y + 1), (40, y + 3), (28, y + 5)), fill=P["steel_light"])
+            draw.line(((29, y + 3), (41, y + 3)), fill=P["steel_shine"], width=1)
+            draw.line(((22, y + 3), (25, y + 3)), fill=P["vermilion_bright"], width=1)
     else:
         raise ValueError("unknown weapon ID: " + weapon_id)
     return image
@@ -267,114 +335,183 @@ def _draw_town_module(name):
     draw = ImageDraw.Draw(image)
     size = image.width
     if name.startswith("road"):
-        draw.rectangle((0, 0, 15, 15), fill=P["ink"])
+        # 青石路面：咬合石纹 + 斑驳石光
+        draw.rectangle((0, 0, 15, 15), fill=P["ink_deep"])
         draw.rectangle((1, 1, 14, 14), fill=P["stone"])
         if name == "road_a":
-            draw.line((1, 5, 14, 4), fill=P["stone_light"])
-            draw.line((3, 12, 12, 13), fill=P["ink_light"])
+            draw.line((1, 4, 14, 3), fill=P["stone_light"], width=1)
+            draw.line((1, 5, 14, 5), fill=P["stone_highlight"], width=1)
+            draw.line((3, 11, 12, 12), fill=P["stone_dark"], width=1)
+            draw.rectangle((6, 7, 9, 9), fill=P["stone_highlight"])
         elif name == "road_b":
-            draw.line((5, 1, 4, 14), fill=P["stone_light"])
-            draw.line((12, 3, 13, 12), fill=P["ink_light"])
+            draw.line((4, 1, 3, 14), fill=P["stone_light"], width=1)
+            draw.line((5, 1, 5, 14), fill=P["stone_highlight"], width=1)
+            draw.line((11, 3, 12, 12), fill=P["stone_dark"], width=1)
+            draw.rectangle((7, 5, 9, 8), fill=P["stone_highlight"])
         else:
-            draw.arc((-6, -6, 22, 22), 0, 90, fill=P["stone_light"], width=2)
+            draw.arc((-6, -6, 22, 22), 0, 90, fill=P["stone_highlight"], width=2)
+            draw.arc((-4, -4, 20, 20), 0, 90, fill=P["stone_light"], width=1)
         return image
     if name.startswith("water"):
+        # 碧波微漾与波光倒影
         base = P["water_deep"] if name == "water_deep" else P["water"]
         draw.rectangle((0, 0, 15, 15), fill=base)
         if name == "water_flow":
-            draw.line((1, 5, 9, 4, 14, 6), fill=P["water_light"])
-            draw.line((0, 12, 6, 11), fill=P["water_light"])
+            draw.line((1, 4, 8, 3, 14, 5), fill=P["water_ripple"], width=1)
+            draw.line((0, 11, 6, 10, 12, 12), fill=P["water_light"], width=1)
+            draw.rectangle((9, 10, 10, 11), fill=P["water_ripple"])
         elif name == "water_reflection":
-            draw.line((3, 2, 5, 6, 2, 10), fill=P["roof_light"], width=1)
-            draw.line((11, 7, 14, 11), fill=P["warm"], width=1)
+            # 黛瓦倒影与红灯笼金暖碎影
+            draw.line((3, 1, 6, 5, 2, 9), fill=P["roof_dark"], width=1)
+            draw.line((4, 2, 7, 6), fill=P["roof_light"], width=1)
+            draw.line((10, 6, 14, 10), fill=P["warm"], width=1)
+            draw.line((11, 7, 13, 9), fill=P["warm_light"], width=1)
         else:
-            draw.line((2, 9, 10, 9), fill=P["water_light"])
+            draw.line((2, 8, 12, 8), fill=P["water_light"], width=1)
+            draw.line((4, 9, 8, 9), fill=P["water_ripple"], width=1)
         return image
     if name.startswith("shore"):
-        draw.rectangle((0, 0, 15, 15), fill=P["jade_dark"])
-        draw.polygon(((0, 10), (5, 8), (9, 9), (15, 6), (15, 15), (0, 15)), fill=P["ink"])
-        draw.polygon(((0, 11), (5, 9), (10, 10), (15, 7), (15, 15), (0, 15)),
+        # 驳岸青苔与石质阶梯
+        draw.rectangle((0, 0, 15, 15), fill=P["jade_moss"])
+        draw.polygon(((0, 9), (5, 7), (10, 8), (15, 5), (15, 15), (0, 15)), fill=P["ink_deep"])
+        draw.polygon(((0, 10), (5, 8), (10, 9), (15, 6), (15, 15), (0, 15)),
                      fill=P["stone"] if name == "shore_stone" else P["water"])
-        draw.line((0, 11, 5, 9, 10, 10, 15, 7), fill=P["stone_light"], width=1)
+        draw.line((0, 10, 5, 8, 10, 9, 15, 6), fill=P["stone_highlight"], width=1)
+        draw.rectangle((6, 4, 8, 6), fill=P["jade_light"])
         return image
     if name == "inn_roof":
-        draw.polygon(((2, 38), (16, 10), (47, 4), (62, 36), (56, 47), (7, 47)), fill=P["ink"])
-        draw.polygon(((7, 36), (18, 13), (46, 8), (57, 35), (53, 41), (10, 41)), fill=P["roof"])
-        for y in range(16, 40, 7):
-            draw.line((12, y, 54, y - 6), fill=P["roof_light"], width=2)
-        draw.line((5, 42, 59, 42), fill=P["ink_light"], width=2)
+        # 歇山顶黛瓦层叠飞檐
+        draw.polygon(((1, 39), (15, 9), (48, 3), (63, 35), (57, 47), (6, 47)), fill=P["ink_deep"])
+        draw.polygon(((6, 37), (17, 12), (47, 7), (58, 34), (54, 42), (9, 42)), fill=P["roof"])
+        for y in range(14, 40, 6):
+            draw.line((11, y, 55, y - 6), fill=P["roof_light"], width=2)
+            draw.line((12, y - 1, 54, y - 7), fill=P["roof_highlight"], width=1)
+        # 飞檐翘角与滴水瓦
+        draw.line((3, 41, 61, 41), fill=P["gold_dark"], width=2)
+        draw.line((2, 40, 5, 38), fill=P["roof_highlight"], width=2)
+        draw.line((62, 37, 59, 39), fill=P["roof_highlight"], width=2)
         return image
     if name == "inn_wall":
-        draw.rectangle((3, 14, 60, 62), fill=P["ink"])
-        draw.rectangle((7, 18, 56, 59), fill=P["paper_shadow"])
-        draw.rectangle((11, 21, 52, 57), fill=P["paper"])
-        for x in (12, 31, 50):
-            draw.rectangle((x, 18, x + 3, 59), fill=P["wood_dark"])
-        draw.rectangle((18, 28, 27, 38), fill=P["ink"])
-        draw.rectangle((20, 30, 25, 36), fill=P["warm"])
-        draw.rectangle((38, 28, 47, 38), fill=P["ink"])
-        draw.rectangle((40, 30, 45, 36), fill=P["warm"])
-        draw.line((8, 59, 55, 59), fill=P["wood_light"], width=2)
+        # 粉墙黛瓦与镂空雕花木窗
+        draw.rectangle((2, 13, 61, 63), fill=P["ink_deep"])
+        draw.rectangle((6, 17, 57, 60), fill=P["paper_shadow"])
+        draw.rectangle((10, 20, 53, 58), fill=P["paper"])
+        for x in (11, 31, 51):
+            draw.rectangle((x, 17, x + 3, 60), fill=P["wood_dark"])
+            draw.line((x + 1, 18, x + 1, 59), fill=P["wood_light"])
+        # 两扇透光木格花窗
+        for wx in (17, 37):
+            draw.rectangle((wx, 27, wx + 10, 39), fill=P["ink_deep"])
+            draw.rectangle((wx + 2, 29, wx + 8, 37), fill=P["warm"])
+            draw.rectangle((wx + 3, 30, wx + 7, 36), fill=P["warm_light"])
+            draw.line((wx + 5, 29, wx + 5, 37), fill=P["wood_dark"], width=1)
+            draw.line((wx + 2, 33, wx + 8, 33), fill=P["wood_dark"], width=1)
+        # 墙底青石踢脚线
+        draw.rectangle((6, 58, 57, 61), fill=P["stone"])
+        draw.line((6, 58, 57, 58), fill=P["stone_highlight"], width=1)
         return image
     if name == "inn_door":
-        draw.rectangle((3, 2, 28, 31), fill=P["ink"])
-        draw.rectangle((6, 5, 25, 31), fill=P["wood"])
-        draw.line((15, 5, 15, 31), fill=P["wood_light"], width=2)
-        draw.rectangle((18, 18, 20, 20), fill=P["gold"])
-        draw.rectangle((0, 28, 31, 31), fill=P["warm"])
+        # 红木雕花客栈大门 + 黄铜门环
+        draw.rectangle((2, 1, 29, 31), fill=P["ink_deep"])
+        draw.rectangle((5, 4, 26, 31), fill=P["wood_dark"])
+        draw.rectangle((6, 5, 25, 30), fill=P["wood"])
+        draw.line((15, 4, 15, 31), fill=P["wood_light"], width=2)
+        # 门环与铜钉
+        for hy in (12, 20):
+            draw.rectangle((9, hy, 12, hy + 2), fill=P["gold_light"])
+            draw.rectangle((18, hy, 21, hy + 2), fill=P["gold_light"])
+        draw.rectangle((0, 28, 31, 31), fill=P["stone"])
         return image
     if name == "inn_sign":
-        draw.rectangle((2, 4, 29, 27), fill=P["ink"])
-        draw.rectangle((5, 6, 26, 24), fill=P["wood"])
-        draw.rectangle((8, 10, 23, 12), fill=P["paper"])
-        draw.rectangle((11, 15, 20, 19), fill=P["vermilion"])
-        draw.line((1, 2, 29, 2), fill=P["wood_light"], width=2)
+        # “悦来客栈”朱红酒幌招牌
+        draw.rectangle((1, 3, 30, 28), fill=P["ink_deep"])
+        draw.rectangle((4, 5, 27, 25), fill=P["wood_dark"])
+        draw.rectangle((7, 8, 24, 11), fill=P["paper"])
+        # 朱红酒字大旗
+        draw.polygon(((9, 13), (22, 13), (20, 23), (11, 23)), fill=P["vermilion"])
+        draw.rectangle((13, 15, 18, 20), fill=P["paper_light"])
+        draw.line((0, 1, 31, 1), fill=P["wood_light"], width=2)
         return image
     if name == "bridge":
-        draw.polygon(((0, 27), (7, 13), (40, 13), (47, 27), (42, 38), (5, 38)), fill=P["ink"])
-        draw.polygon(((4, 27), (10, 17), (37, 17), (43, 27), (39, 33), (8, 33)), fill=P["stone"])
-        for x in (9, 18, 29, 39):
-            draw.line((x, 14, x - 2, 35), fill=P["stone_light"], width=2)
-        draw.line((5, 18, 42, 18), fill=P["paper"], width=1)
+        # 江南青石拱桥 + 抱鼓石栏杆
+        draw.polygon(((0, 26), (6, 12), (41, 12), (47, 26), (43, 39), (4, 39)), fill=P["ink_deep"])
+        draw.polygon(((3, 26), (9, 15), (38, 15), (44, 26), (40, 34), (7, 34)), fill=P["stone"])
+        # 桥拱阴影与苔痕
+        draw.arc((12, 22, 35, 42), 180, 360, fill=P["ink_deep"], width=4)
+        draw.arc((13, 23, 34, 41), 180, 360, fill=P["jade_moss"], width=2)
+        # 石桥板缝与石栏杆
+        for x in (8, 17, 27, 37):
+            draw.line((x, 13, x - 2, 35), fill=P["stone_light"], width=2)
+            draw.line((x + 1, 13, x - 1, 35), fill=P["stone_highlight"], width=1)
+            # 望柱抱鼓石
+            draw.rectangle((x - 1, 9, x + 2, 14), fill=P["stone_highlight"])
+        draw.line((4, 15, 43, 15), fill=P["stone_highlight"], width=1)
         return image
     if name == "boat":
-        draw.polygon(((3, 30), (43, 30), (37, 39), (10, 39)), fill=P["ink"])
-        draw.polygon(((7, 32), (39, 32), (34, 36), (12, 36)), fill=P["wood"])
-        draw.line((24, 31, 24, 8), fill=P["wood_light"], width=2)
-        draw.polygon(((26, 10), (41, 20), (26, 25)), fill=P["paper_shadow"])
-        draw.line((26, 12, 38, 20), fill=P["paper_light"], width=1)
+        # 摇橹木质乌篷船 + 竹篾篷顶
+        draw.polygon(((2, 29), (44, 29), (38, 40), (8, 40)), fill=P["ink_deep"])
+        draw.polygon(((5, 31), (41, 31), (35, 37), (10, 37)), fill=P["wood"])
+        draw.line((6, 31, 40, 31), fill=P["wood_light"], width=1)
+        # 拱形竹篾船篷
+        draw.arc((16, 16, 32, 32), 180, 360, fill=P["ink_deep"], width=3)
+        draw.arc((17, 17, 31, 31), 180, 360, fill=P["wood_dark"], width=2)
+        # 船橹与白帆/布幔
+        draw.line((22, 31, 22, 6), fill=P["wood_light"], width=2)
+        draw.polygon(((24, 8), (41, 19), (24, 24)), fill=P["paper_shadow"])
+        draw.polygon(((25, 9), (39, 19), (25, 23)), fill=P["paper"])
+        draw.line((25, 10, 38, 19), fill=P["paper_light"], width=1)
         return image
     if name == "bollard":
-        draw.rectangle((5, 4, 10, 15), fill=P["ink"])
-        draw.rectangle((6, 5, 9, 14), fill=P["wood"])
-        draw.rectangle((4, 2, 11, 6), fill=P["wood_light"])
+        # 沿河系缆青石/沉木桩
+        draw.rectangle((4, 3, 11, 15), fill=P["ink_deep"])
+        draw.rectangle((5, 4, 10, 14), fill=P["wood_dark"])
+        draw.rectangle((6, 5, 9, 13), fill=P["wood"])
+        draw.rectangle((3, 1, 12, 5), fill=P["wood_light"])
+        draw.rectangle((4, 2, 11, 4), fill=P["wood_highlight"])
         return image
     if name == "lantern":
+        # 挂檐八角红木灯笼 + 暖黄烛光
         draw.rectangle((7, 0, 8, 15), fill=P["wood_dark"])
-        draw.rectangle((3, 5, 12, 13), fill=P["ink"])
-        draw.rectangle((5, 6, 10, 11), fill=P["warm"])
-        draw.rectangle((6, 7, 9, 10), fill=P["warm_light"])
+        draw.rectangle((2, 4, 13, 14), fill=P["ink_deep"])
+        draw.rectangle((4, 5, 11, 13), fill=P["vermilion_dark"])
+        draw.rectangle((5, 6, 10, 12), fill=P["warm"])
+        draw.rectangle((6, 7, 9, 11), fill=P["warm_light"])
+        draw.rectangle((7, 8, 8, 10), fill=P["warm_glow"])
+        # 灯笼流苏
+        draw.line((7, 14, 8, 15), fill=P["vermilion_bright"], width=1)
         return image
     if name == "crate":
-        draw.rectangle((1, 2, 14, 15), fill=P["ink"])
-        draw.rectangle((3, 4, 12, 14), fill=P["wood"])
-        draw.line((3, 5, 12, 13), fill=P["wood_light"], width=1)
-        draw.line((12, 5, 3, 13), fill=P["wood_light"], width=1)
+        # 码头货箱 + 铜锁扣
+        draw.rectangle((0, 1, 15, 15), fill=P["ink_deep"])
+        draw.rectangle((2, 3, 13, 14), fill=P["wood_dark"])
+        draw.rectangle((3, 4, 12, 13), fill=P["wood"])
+        draw.line((3, 4, 12, 13), fill=P["wood_light"], width=1)
+        draw.line((12, 4, 3, 13), fill=P["wood_light"], width=1)
+        draw.rectangle((6, 7, 9, 10), fill=P["gold_light"])
         return image
     if name in ("willow_near", "willow_far"):
-        draw.line((size // 2, 0, size // 2 - 8, size - 5), fill=P["ink"], width=5)
-        draw.line((size // 2, 0, size // 2 - 8, size - 5), fill=P["wood_dark"], width=3)
-        leaf_color = P["jade_dark"] if name == "willow_near" else P["jade"]
-        for index, y in enumerate(range(7, size - 6, 9)):
-            offset = 10 + (index % 3) * 5
-            draw.polygon(((size // 2 - 4, y), (size // 2 - offset, y + 7),
-                          (size // 2 - 6, y + 12)), fill=leaf_color)
-            draw.polygon(((size // 2 + 1, y + 3), (size // 2 + offset, y + 8),
-                          (size // 2 + 3, y + 14)), fill=P["jade"])
+        # 烟雨垂柳：虬曲老树干 + 多层翠绿柔韧柳丝
+        draw.line((size // 2, 0, size // 2 - 8, size - 4), fill=P["ink_deep"], width=5)
+        draw.line((size // 2, 0, size // 2 - 8, size - 4), fill=P["wood_dark"], width=3)
+        draw.line((size // 2 + 1, 0, size // 2 - 7, size - 4), fill=P["wood_light"], width=1)
+        leaf_dark = P["jade_dark"] if name == "willow_near" else P["jade"]
+        leaf_light = P["jade"] if name == "willow_near" else P["jade_light"]
+        for index, y in enumerate(range(6, size - 6, 8)):
+            offset = 12 + (index % 3) * 6
+            # 左侧垂柳带
+            draw.polygon(((size // 2 - 4, y), (size // 2 - offset, y + 8),
+                          (size // 2 - 5, y + 15)), fill=leaf_dark)
+            draw.line(((size // 2 - 4, y), (size // 2 - offset + 2, y + 8)), fill=leaf_light, width=1)
+            # 右侧垂柳带
+            draw.polygon(((size // 2 + 2, y + 2), (size // 2 + offset, y + 9),
+                          (size // 2 + 4, y + 16)), fill=leaf_light)
+            draw.line(((size // 2 + 2, y + 2), (size // 2 + offset - 2, y + 9)), fill=leaf_dark, width=1)
         return image
     if name == "roof_trim":
-        draw.polygon(((0, 0), (31, 0), (31, 11), (20, 8), (11, 13), (0, 9)), fill=P["ink"])
-        draw.polygon(((2, 2), (29, 2), (29, 8), (20, 6), (11, 10), (2, 7)), fill=P["roof"])
+        # 前景飞檐瓦当
+        draw.polygon(((0, 0), (31, 0), (31, 12), (19, 8), (10, 14), (0, 9)), fill=P["ink_deep"])
+        draw.polygon(((2, 1), (29, 1), (29, 9), (19, 6), (10, 11), (2, 7)), fill=P["roof"])
+        draw.line((2, 2, 29, 2), fill=P["roof_highlight"], width=1)
         return image
     raise AssertionError("unreachable module: " + name)
 
@@ -384,45 +521,82 @@ def _draw_dense_actor(actor_id):
     image = Image.new("RGBA", (size, size), P["clear"])
     draw = ImageDraw.Draw(image)
     if actor_id == "mvp_lost_pouch":
-        draw.rectangle((3, 7, 12, 15), fill=P["ink"])
-        draw.rectangle((4, 8, 11, 14), fill=P["wood"])
-        draw.rectangle((5, 9, 10, 13), fill=P["wood_light"])
-        draw.line((3, 7, 12, 7), fill=P["vermilion"], width=2)
-        draw.rectangle((7, 3, 8, 8), fill=P["paper"])
+        # 精致云纹锦囊：金线锁边 + 朱红结扣 + 青玉流苏
+        draw.ellipse((2, 6, 13, 15), fill=P["ink_deep"])
+        draw.ellipse((3, 7, 12, 14), fill=P["vermilion"])
+        draw.ellipse((4, 8, 11, 13), fill=P["vermilion_bright"])
+        draw.line((3, 7, 12, 7), fill=P["gold_light"], width=2)
+        draw.rectangle((6, 2, 9, 6), fill=P["gold"])
+        draw.rectangle((7, 3, 8, 5), fill=P["jade_light"])
+        draw.line((7, 14, 8, 16), fill=P["jade"], width=1)
         return image
     if actor_id == "mvp_innkeeper":
-        draw.ellipse((9, 40, 39, 47), fill=P["shadow"])
-        draw.rectangle((13, 29, 21, 42), fill=P["ink"])
-        draw.rectangle((28, 29, 36, 42), fill=P["ink"])
-        draw.rectangle((8, 20, 40, 35), fill=P["ink"])
-        draw.rectangle((11, 21, 37, 34), fill=P["wood"])
-        draw.rectangle((13, 22, 19, 32), fill=P["wood_light"])
-        draw.rectangle((28, 23, 35, 33), fill=P["paper_shadow"])
-        draw.rectangle((13, 8, 36, 22), fill=P["ink"])
-        draw.rectangle((16, 10, 33, 20), fill=P["skin"])
-        draw.rectangle((11, 5, 38, 12), fill=P["ink"])
-        draw.rectangle((14, 6, 35, 9), fill=P["roof_light"])
-        draw.rectangle((18, 16, 20, 17), fill=P["ink"])
-        draw.rectangle((29, 16, 31, 17), fill=P["ink"])
-        draw.rectangle((23, 25, 26, 27), fill=P["gold"])
+        # 掌柜老赵：文生方巾 + 酱色员外长衫 + 青灰围裙 + 铜钥匙算盘
+        draw.ellipse((8, 39, 40, 47), fill=P["shadow"])
+        # 长靴与裤脚
+        draw.rectangle((13, 29, 21, 42), fill=P["ink_deep"])
+        draw.rectangle((28, 29, 36, 42), fill=P["ink_deep"])
+        # 酱色员外长衫与青灰围裙
+        draw.rectangle((7, 19, 41, 36), fill=P["ink_deep"])
+        draw.rectangle((9, 20, 39, 35), fill=P["wood_dark"])
+        draw.rectangle((12, 21, 36, 33), fill=P["paper_shadow"])
+        draw.rectangle((14, 22, 34, 31), fill=P["paper"])
+        # 腰封与掌柜铜钥匙圈
+        draw.rectangle((10, 23, 38, 25), fill=P["leather_dark"])
+        draw.ellipse((12, 26, 17, 31), fill=P["gold_light"])
+        draw.ellipse((13, 27, 16, 30), fill=P["ink_deep"])
+        # 头面部与文生方巾软帽
+        draw.rectangle((12, 7, 37, 22), fill=P["ink_deep"])
+        draw.rectangle((15, 9, 34, 20), fill=P["skin"])
+        draw.rectangle((16, 10, 33, 15), fill=P["skin_light"])
+        draw.rectangle((10, 4, 39, 11), fill=P["ink_deep"])
+        draw.rectangle((13, 5, 36, 8), fill=P["roof"])
+        draw.rectangle((15, 5, 34, 6), fill=P["roof_highlight"])
+        # 和善五官与胡须
+        draw.rectangle((17, 13, 19, 15), fill=P["ink_deep"])
+        draw.rectangle((29, 13, 31, 15), fill=P["ink_deep"])
+        draw.line((21, 17, 27, 17), fill=P["ink_deep"], width=2)
+        # 手中青花瓷茶壶
+        draw.rectangle((32, 24, 38, 29), fill=P["porcelain_white"])
+        draw.rectangle((34, 25, 36, 27), fill=P["porcelain_blue"])
         return image
     if actor_id not in ("mvp_bandit_a", "mvp_bandit_b"):
         raise ValueError("unknown dense actor: " + actor_id)
-    accent = P["vermilion"] if actor_id == "mvp_bandit_a" else P["jade"]
-    draw.ellipse((10, 40, 38, 47), fill=P["shadow"])
-    draw.rectangle((12, 30, 21, 42), fill=P["ink"])
-    draw.rectangle((27, 30, 36, 42), fill=P["ink"])
-    draw.rectangle((9, 20, 39, 35), fill=P["ink"])
-    draw.polygon(((12, 21), (35, 21), (40, 33), (25, 39), (8, 33)), fill=accent)
-    draw.rectangle((16, 22, 33, 31), fill=P["vermilion_dark"] if actor_id == "mvp_bandit_a" else P["cloak_dark"])
-    draw.rectangle((14, 8, 35, 22), fill=P["ink"])
-    draw.rectangle((17, 10, 32, 20), fill=P["skin"])
-    draw.rectangle((12, 5, 37, 12), fill=P["ink"])
-    draw.rectangle((15, 6, 34, 9), fill=accent)
-    draw.rectangle((18, 16, 20, 17), fill=P["ink"])
-    draw.rectangle((29, 16, 31, 17), fill=P["ink"])
-    draw.line((35, 27, 46, 15), fill=P["ink"], width=3)
-    draw.line((36, 26, 45, 16), fill=P["steel_light"], width=1)
+    # 河岸水匪：粗布短打劲装 + 头巾 + 肌肉阴影 + 环首九环大刀 / 阔刃斧
+    accent = P["vermilion_bright"] if actor_id == "mvp_bandit_a" else P["jade_light"]
+    accent_dark = P["vermilion_dark"] if actor_id == "mvp_bandit_a" else P["jade_dark"]
+    draw.ellipse((9, 39, 39, 47), fill=P["shadow"])
+    # 绑腿与草鞋
+    draw.rectangle((12, 30, 21, 42), fill=P["ink_deep"])
+    draw.rectangle((27, 30, 36, 42), fill=P["ink_deep"])
+    draw.line((13, 33, 20, 33), fill=P["paper_shadow"], width=1)
+    draw.line((28, 33, 35, 33), fill=P["paper_shadow"], width=1)
+    # 短打上衣与敞襟肌肉
+    draw.rectangle((8, 19, 40, 36), fill=P["ink_deep"])
+    draw.polygon(((11, 20), (36, 20), (41, 33), (25, 39), (7, 33)), fill=accent_dark)
+    draw.polygon(((13, 21), (34, 21), (38, 31), (25, 36), (10, 31)), fill=accent)
+    draw.polygon(((20, 20), (28, 20), (24, 29)), fill=P["skin_shadow"])
+    draw.polygon(((21, 21), (27, 21), (24, 27)), fill=P["skin"])
+    # 面容与煞气头巾
+    draw.rectangle((13, 7, 36, 22), fill=P["ink_deep"])
+    draw.rectangle((16, 9, 33, 20), fill=P["skin"])
+    draw.rectangle((11, 4, 38, 11), fill=P["ink_deep"])
+    draw.rectangle((14, 5, 35, 8), fill=accent)
+    draw.line((33, 8, 39, 13), fill=accent, width=2)
+    # 凶悍眼神与络腮胡
+    draw.rectangle((17, 13, 20, 15), fill=P["ink_deep"])
+    draw.rectangle((28, 13, 31, 15), fill=P["ink_deep"])
+    draw.line((16, 17, 32, 17), fill=P["ink_deep"], width=2)
+    # 专属武器：九环大刀 (A) / 阔刃斧 (B)
+    if actor_id == "mvp_bandit_a":
+        draw.line(((34, 28), (46, 12)), fill=P["ink_deep"], width=4)
+        draw.line(((35, 27), (45, 13)), fill=P["steel_light"], width=2)
+        draw.line(((37, 25), (45, 14)), fill=P["steel_shine"], width=1)
+        draw.rectangle((41, 15, 43, 17), fill=P["gold_light"])
+    else:
+        draw.line(((34, 30), (42, 14)), fill=P["wood_dark"], width=3)
+        draw.polygon(((39, 13), (46, 10), (45, 20), (38, 18)), fill=P["steel_light"])
+        draw.line(((45, 11), (44, 19)), fill=P["steel_shine"], width=1)
     return image
 
 
@@ -521,97 +695,138 @@ def _draw_inn_module(name):
     draw = ImageDraw.Draw(image)
     size = image.width
     if name.startswith("floor_wood"):
+        # 温润拼花红木地板
         draw.rectangle((0, 0, 15, 15), fill=P["wood_dark"])
         draw.rectangle((1, 1, 14, 14), fill=P["wood"])
-        y = 5 if name == "floor_wood_a" else 10
-        draw.line((2, y, 13, y), fill=P["wood_light"], width=1)
-        draw.line((8, 1, 8, 14), fill=P["ink_light"], width=1)
+        y = 4 if name == "floor_wood_a" else 9
+        draw.line((1, y, 14, y), fill=P["wood_light"], width=1)
+        draw.line((1, y + 1, 14, y + 1), fill=P["wood_highlight"], width=1)
+        draw.line((7, 1, 7, 14), fill=P["ink_deep"], width=1)
         return image
     if name == "entry_stone":
-        draw.rectangle((0, 0, 15, 15), fill=P["ink"])
+        # 玄关青石板
+        draw.rectangle((0, 0, 15, 15), fill=P["ink_deep"])
         draw.rectangle((1, 1, 14, 14), fill=P["stone"])
-        draw.line((1, 8, 14, 8), fill=P["stone_light"])
-        draw.line((8, 1, 8, 14), fill=P["ink_light"])
+        draw.line((1, 7, 14, 7), fill=P["stone_highlight"], width=1)
+        draw.line((7, 1, 7, 14), fill=P["stone_dark"], width=1)
         return image
     if name == "rug":
+        # 迎宾金丝祥云地毯
         draw.rectangle((0, 0, 15, 15), fill=P["vermilion_dark"])
-        draw.rectangle((2, 2, 13, 13), fill=P["vermilion"])
-        draw.rectangle((5, 5, 10, 10), fill=P["gold"])
+        draw.rectangle((1, 1, 14, 14), fill=P["vermilion"])
+        draw.rectangle((4, 4, 11, 11), fill=P["gold_dark"])
+        draw.rectangle((5, 5, 10, 10), fill=P["gold_light"])
         return image
     if name == "counter":
-        draw.rectangle((2, 20, 61, 57), fill=P["ink"])
-        draw.rectangle((5, 23, 58, 39), fill=P["wood_light"])
-        draw.rectangle((5, 40, 58, 54), fill=P["wood"])
-        for x in range(10, 57, 11):
-            draw.line((x, 25, x, 53), fill=P["wood_dark"], width=2)
-        draw.line((5, 23, 58, 23), fill=P["paper_light"], width=1)
-        draw.rectangle((20, 13, 44, 22), fill=P["ink"])
-        draw.rectangle((22, 15, 42, 20), fill=P["paper_shadow"])
+        # 掌柜红木柜台 + 账本 + 青花笔筒
+        draw.rectangle((1, 19, 62, 58), fill=P["ink_deep"])
+        draw.rectangle((4, 22, 59, 40), fill=P["wood_light"])
+        draw.rectangle((4, 41, 59, 55), fill=P["wood"])
+        for x in range(9, 58, 10):
+            draw.line((x, 24, x, 54), fill=P["wood_dark"], width=2)
+            draw.line((x + 1, 24, x + 1, 54), fill=P["wood_highlight"], width=1)
+        draw.line((4, 22, 59, 22), fill=P["wood_highlight"], width=1)
+        # 台面账本与青花瓷茶具
+        draw.rectangle((18, 12, 42, 21), fill=P["ink_deep"])
+        draw.rectangle((20, 14, 40, 19), fill=P["paper"])
+        draw.line((21, 16, 39, 16), fill=P["ink_deep"], width=1)
+        draw.rectangle((45, 14, 50, 20), fill=P["porcelain_white"])
+        draw.rectangle((46, 16, 49, 18), fill=P["porcelain_blue"])
         return image
     if name == "counter_lantern":
-        draw.line((16, 0, 16, 8), fill=P["wood_dark"], width=2)
-        draw.rectangle((8, 8, 24, 25), fill=P["ink"])
-        draw.rectangle((10, 10, 22, 23), fill=P["vermilion_dark"])
-        draw.rectangle((12, 12, 20, 21), fill=P["warm"])
-        draw.rectangle((14, 14, 18, 19), fill=P["warm_light"])
+        # 柜台暖光八角灯笼
+        draw.line((16, 0, 16, 7), fill=P["wood_dark"], width=2)
+        draw.rectangle((7, 7, 25, 26), fill=P["ink_deep"])
+        draw.rectangle((9, 9, 23, 24), fill=P["vermilion_dark"])
+        draw.rectangle((11, 11, 21, 22), fill=P["warm"])
+        draw.rectangle((13, 13, 19, 20), fill=P["warm_light"])
+        draw.rectangle((15, 15, 17, 18), fill=P["warm_glow"])
         return image
     if name == "table":
-        draw.ellipse((3, 11, 45, 35), fill=P["ink"])
-        draw.ellipse((7, 14, 41, 31), fill=P["wood"])
-        draw.line((11, 18, 37, 18), fill=P["wood_light"], width=2)
-        for x in (12, 35):
-            draw.rectangle((x, 31, x + 5, 43), fill=P["wood_dark"])
-        draw.rectangle((17, 5, 28, 12), fill=P["paper_shadow"])
+        # 沉木八仙圆桌 + 青瓷茶壶茶盏
+        draw.ellipse((2, 10, 46, 36), fill=P["ink_deep"])
+        draw.ellipse((5, 13, 43, 33), fill=P["wood_dark"])
+        draw.ellipse((7, 15, 41, 31), fill=P["wood"])
+        draw.line((10, 18, 38, 18), fill=P["wood_highlight"], width=2)
+        # 桌腿与阴影
+        for x in (11, 35):
+            draw.rectangle((x, 31, x + 5, 44), fill=P["wood_dark"])
+            draw.line((x + 1, 31, x + 1, 43), fill=P["wood_light"])
+        # 青瓷茶壶与茶盏
+        draw.ellipse((21, 19, 27, 25), fill=P["porcelain_white"])
+        draw.ellipse((22, 20, 26, 24), fill=P["porcelain_blue"])
+        draw.rectangle((15, 22, 18, 25), fill=P["porcelain_white"])
         return image
     if name == "stove":
-        draw.rectangle((4, 5, 43, 43), fill=P["ink"])
-        draw.rectangle((7, 8, 40, 40), fill=P["stone"])
-        draw.rectangle((13, 20, 34, 40), fill=P["ink"])
-        draw.polygon(((19, 35), (24, 18), (30, 35)), fill=P["vermilion"])
-        draw.polygon(((22, 34), (25, 23), (28, 34)), fill=P["warm"])
-        draw.rectangle((10, 10, 17, 13), fill=P["wood_dark"])
+        # 厨房青石火灶 + 柴火暖焰
+        draw.rectangle((3, 4, 44, 44), fill=P["ink_deep"])
+        draw.rectangle((6, 7, 41, 41), fill=P["stone"])
+        draw.line((6, 7, 41, 7), fill=P["stone_highlight"], width=1)
+        draw.rectangle((12, 19, 35, 41), fill=P["ink_deep"])
+        # 柴火火焰
+        draw.polygon(((18, 36), (24, 16), (30, 36)), fill=P["vermilion_bright"])
+        draw.polygon(((20, 35), (24, 21), (28, 35)), fill=P["warm"])
+        draw.polygon(((22, 34), (24, 26), (26, 34)), fill=P["warm_glow"])
+        draw.rectangle((9, 9, 16, 12), fill=P["wood_dark"])
         return image
     if name == "stairs":
-        draw.rectangle((3, 5, 61, 61), fill=P["ink"])
+        # 实木楼梯台阶 + 扶手立柱
+        draw.rectangle((2, 4, 62, 62), fill=P["ink_deep"])
         for index in range(7):
-            y = 10 + index * 7
-            draw.rectangle((7 + index * 3, y, 56, y + 6), fill=P["wood"])
-            draw.line((7 + index * 3, y, 56, y), fill=P["wood_light"])
+            y = 9 + index * 7
+            draw.rectangle((6 + index * 3, y, 57, y + 6), fill=P["wood"])
+            draw.line((6 + index * 3, y, 57, y), fill=P["wood_highlight"], width=1)
+            draw.line((6 + index * 3, y + 6, 57, y + 6), fill=P["wood_dark"], width=1)
         return image
     if name == "kitchen_wall":
-        draw.rectangle((2, 2, 61, 61), fill=P["ink"])
-        draw.rectangle((6, 6, 57, 57), fill=P["wood_dark"])
-        for y in (14, 28, 42):
-            draw.line((8, y, 55, y), fill=P["wood"])
-        draw.rectangle((10, 10, 22, 23), fill=P["paper_shadow"])
-        draw.rectangle((42, 10, 53, 21), fill=P["paper_shadow"])
+        # 厨房木格背景墙 + 悬挂蒜头红椒
+        draw.rectangle((1, 1, 62, 62), fill=P["ink_deep"])
+        draw.rectangle((5, 5, 58, 58), fill=P["wood_dark"])
+        for y in (13, 27, 41):
+            draw.line((7, y, 56, y), fill=P["wood"], width=2)
+        # 挂腊味干货
+        draw.rectangle((9, 9, 21, 22), fill=P["paper_shadow"])
+        draw.rectangle((41, 9, 52, 20), fill=P["vermilion_dark"])
         return image
     if name == "window_light":
-        draw.rectangle((2, 2, 29, 29), fill=P["ink"])
-        draw.rectangle((5, 5, 26, 26), fill=P["warm"])
-        draw.rectangle((7, 7, 24, 24), fill=P["warm_light"])
-        draw.line((15, 5, 15, 26), fill=P["wood_dark"], width=2)
-        draw.line((5, 15, 26, 15), fill=P["wood_dark"], width=2)
+        # 江南镂空雕花木窗 + 暖阳斜照
+        draw.rectangle((1, 1, 30, 30), fill=P["ink_deep"])
+        draw.rectangle((4, 4, 27, 27), fill=P["warm"])
+        draw.rectangle((6, 6, 25, 25), fill=P["warm_light"])
+        draw.rectangle((9, 9, 22, 22), fill=P["warm_glow"])
+        # 万字花格窗棂
+        draw.line((15, 4, 15, 27), fill=P["wood_dark"], width=2)
+        draw.line((4, 15, 27, 15), fill=P["wood_dark"], width=2)
+        draw.rectangle((8, 8, 23, 23), outline=P["wood_dark"])
         return image
     if name == "north_door":
-        draw.rectangle((3, 1, 28, 31), fill=P["ink"])
-        draw.rectangle((6, 4, 25, 31), fill=P["wood"])
-        draw.line((15, 5, 15, 31), fill=P["wood_light"])
-        draw.rectangle((18, 18, 20, 20), fill=P["gold"])
+        # 客栈通往后院实木小门
+        draw.rectangle((2, 0, 29, 31), fill=P["ink_deep"])
+        draw.rectangle((5, 3, 26, 31), fill=P["wood_dark"])
+        draw.rectangle((6, 4, 25, 30), fill=P["wood"])
+        draw.line((15, 4, 15, 31), fill=P["wood_light"])
+        draw.rectangle((18, 17, 21, 19), fill=P["gold_light"])
         return image
     if name == "shelf":
-        draw.rectangle((3, 3, 28, 30), fill=P["ink"])
-        for y in (7, 15, 23):
-            draw.line((5, y, 26, y), fill=P["wood_light"], width=2)
-        for x, y, color in ((8, 8, P["vermilion"]), (17, 8, P["jade"]),
-                            (11, 16, P["paper"]), (21, 16, P["gold"])):
-            draw.rectangle((x, y, x + 3, y + 5), fill=color)
+        # 博古酒架：红布封泥酒坛 + 瓷盘
+        draw.rectangle((2, 2, 29, 31), fill=P["ink_deep"])
+        draw.rectangle((4, 4, 27, 29), fill=P["wood_dark"])
+        for y in (6, 14, 22):
+            draw.line((4, y, 27, y), fill=P["wood_highlight"], width=2)
+        # 红布封泥酒坛（女儿红、竹叶青）
+        for x, y, color in ((7, 7, P["vermilion"]), (16, 7, P["jade"]),
+                            (10, 15, P["vermilion_bright"]), (19, 15, P["gold_light"])):
+            draw.rectangle((x, y, x + 4, y + 6), fill=color)
+            draw.line((x, y, x + 4, y), fill=P["paper_light"], width=1)
         return image
     if name == "foreground_beam":
-        draw.rectangle((0, 0, 12, 63), fill=P["ink"])
-        draw.rectangle((3, 0, 9, 63), fill=P["wood_dark"])
-        draw.line((5, 0, 5, 63), fill=P["wood_light"], width=1)
-        draw.polygon(((10, 0), (63, 0), (63, 10), (24, 10)), fill=P["ink"])
+        # 客栈前景挑高立柱与雕花横梁
+        draw.rectangle((0, 0, 13, 63), fill=P["ink_deep"])
+        draw.rectangle((2, 0, 10, 63), fill=P["wood_dark"])
+        draw.line((4, 0, 4, 63), fill=P["wood_light"], width=1)
+        draw.polygon(((10, 0), (63, 0), (63, 12), (22, 12)), fill=P["ink_deep"])
+        draw.polygon(((12, 1), (63, 1), (63, 10), (24, 10)), fill=P["wood_dark"])
+        draw.line((24, 10, 63, 10), fill=P["wood_highlight"], width=1)
         return image
     raise AssertionError("unreachable inn module: " + name)
 
