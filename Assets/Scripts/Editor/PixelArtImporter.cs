@@ -12,8 +12,8 @@ namespace YuanHaiLu.Editor
         private const int PIXELS_PER_UNIT = 16;
         private static readonly string[] SpriteFolders =
         {
-            "Assets/Sprites",
-            "Assets/Art"
+            "Assets/Art",
+            "Assets/Resources/Art"
         };
 
         [MenuItem("Tools/渊海录/配置所有精灵为像素模式")]
