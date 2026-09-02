@@ -76,7 +76,8 @@ namespace YuanHaiLu.Character
         private void Start()
         {
             _originPosition = transform.position;
-            _player = GameObject.FindGameObjectWithTag("Player")?.transform;
+            var playerGo = GameObject.FindGameObjectWithTag("Player");
+            _player = playerGo != null ? playerGo.transform : null;
             SetNewPatrolTarget();
         }
 

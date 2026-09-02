@@ -36,12 +36,14 @@ namespace YuanHaiLu.UI
             // 初始化音量滑块
             if (bgmSlider != null)
             {
-                bgmSlider.value = GameSystem.AudioManager.Instance?.GetBGMVolume() ?? 0.6f;
+                var audioMgr = GameSystem.AudioManager.Instance;
+                bgmSlider.value = audioMgr != null ? audioMgr.GetBGMVolume() : 0.6f;
                 bgmSlider.onValueChanged.AddListener(OnBGMVolumeChanged);
             }
             if (sfxSlider != null)
             {
-                sfxSlider.value = GameSystem.AudioManager.Instance?.GetSFXVolume() ?? 0.8f;
+                var sfxMgr = GameSystem.AudioManager.Instance;
+                sfxSlider.value = sfxMgr != null ? sfxMgr.GetSFXVolume() : 0.8f;
                 sfxSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
             }
         }
@@ -173,7 +175,8 @@ namespace YuanHaiLu.UI
             if (GameManager.Instance != null)
                 GameManager.Instance.Pause();
 
-            GameSystem.AudioManager.Instance?.PlaySFX(GameSystem.AudioManager.SFX.UI_OPEN);
+            if (GameSystem.AudioManager.Instance != null)
+                GameSystem.AudioManager.Instance.PlaySFX(GameSystem.AudioManager.SFX.UI_OPEN);
         }
 
         public void Resume()
@@ -186,7 +189,8 @@ namespace YuanHaiLu.UI
             if (GameManager.Instance != null)
                 GameManager.Instance.Resume();
 
-            GameSystem.AudioManager.Instance?.PlaySFX(GameSystem.AudioManager.SFX.UI_CLOSE);
+            if (GameSystem.AudioManager.Instance != null)
+                GameSystem.AudioManager.Instance.PlaySFX(GameSystem.AudioManager.SFX.UI_CLOSE);
         }
 
         // === 按钮回调 ===
@@ -198,7 +202,8 @@ namespace YuanHaiLu.UI
 
         public void OnSaveButton()
         {
-            GameSystem.SaveManager.Instance?.SaveGame(0);
+            if (GameSystem.SaveManager.Instance != null)
+                GameSystem.SaveManager.Instance.SaveGame(0);
         }
 
         public void OnSettingsButton()
@@ -239,7 +244,8 @@ namespace YuanHaiLu.UI
         private void QuitToMenu()
         {
             // 自动存档
-            GameSystem.SaveManager.Instance?.SaveGame(-1);
+            if (GameSystem.SaveManager.Instance != null)
+                GameSystem.SaveManager.Instance.SaveGame(-1);
 
             Resume();
 
@@ -253,12 +259,14 @@ namespace YuanHaiLu.UI
 
         private void OnBGMVolumeChanged(float value)
         {
-            GameSystem.AudioManager.Instance?.SetBGMVolume(value);
+            if (GameSystem.AudioManager.Instance != null)
+                GameSystem.AudioManager.Instance.SetBGMVolume(value);
         }
 
         private void OnSFXVolumeChanged(float value)
         {
-            GameSystem.AudioManager.Instance?.SetSFXVolume(value);
+            if (GameSystem.AudioManager.Instance != null)
+                GameSystem.AudioManager.Instance.SetSFXVolume(value);
         }
     }
 }

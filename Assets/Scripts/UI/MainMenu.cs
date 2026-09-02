@@ -67,8 +67,10 @@ namespace YuanHaiLu.UI
             }
 
             GlobalSystemsBootstrapper.EnsureRequiredSystems(gameManager);
-            InventoryManager.Instance?.ResetForNewGame();
-            QuestManager.Instance?.ResetForNewGame();
+            var inventory = InventoryManager.Instance;
+            if (inventory != null) inventory.ResetForNewGame();
+            var quests = QuestManager.Instance;
+            if (quests != null) quests.ResetForNewGame();
             gameManager.playerName = "凌霜";
             gameManager.chapterIndex = 1;
             // 单主角 MVP：固定男性主角身体；只应用玩家选择的武器流派。

@@ -60,21 +60,23 @@ namespace YuanHaiLu.UI
             }
 
             // 监听武学系统
-            var martialSys = player?.GetComponent<MartialArtsSystem>();
+            var martialSys = player != null ? player.GetComponent<MartialArtsSystem>() : null;
             if (martialSys != null)
             {
                 martialSys.OnSkillEquipped += OnSkillEquipped;
             }
 
             // 监听升级系统
-            var levelSys = player?.GetComponent<LevelSystem>();
+            var levelSys = player != null ? player.GetComponent<LevelSystem>() : null;
             if (levelSys != null)
             {
                 levelSys.OnExpGained += UpdateExp;
             }
 
-            UpdateHP(playerStats?.currentHp ?? 100, playerStats?.maxHp ?? 100);
-            UpdateLevel(playerStats?.level ?? 1);
+            int hp = playerStats != null ? playerStats.currentHp : 100;
+            int maxHp = playerStats != null ? playerStats.maxHp : 100;
+            UpdateHP(hp, maxHp);
+            UpdateLevel(playerStats != null ? playerStats.level : 1);
         }
 
         // === 构建UI ===
@@ -310,7 +312,7 @@ namespace YuanHaiLu.UI
             }
 
             // 更新技能冷却
-            var martial = playerStats?.GetComponent<MartialArtsSystem>();
+            var martial = playerStats != null ? playerStats.GetComponent<MartialArtsSystem>() : null;
             if (martial != null)
             {
                 var equipped = martial.EquippedSkills;

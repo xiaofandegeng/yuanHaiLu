@@ -76,7 +76,8 @@ namespace YuanHaiLu.Map
             {
                 var nodes = new System.Collections.Generic.List<DialogueNode>();
                 nodes.AddRange(introSequence.nodes);
-                DialogueManager.Instance?.StartDialogue(nodes);
+                if (DialogueManager.Instance != null)
+                    DialogueManager.Instance.StartDialogue(nodes);
                 yield break; // 对话结束后由 DialogueManager 接管
             }
             else

@@ -123,7 +123,9 @@ namespace YuanHaiLu.GameSystem
             data = questData;
             state = QuestState.Active;
             acceptTime = System.DateTime.Now;
-            QuestObjective[] templates = questData?.objectives ?? Array.Empty<QuestObjective>();
+            QuestObjective[] templates = questData != null && questData.objectives != null
+                ? questData.objectives
+                : Array.Empty<QuestObjective>();
             Objectives = new QuestObjective[templates.Length];
             for (int i = 0; i < templates.Length; i++)
             {
@@ -248,7 +250,7 @@ namespace YuanHaiLu.GameSystem
         {
             QuestData quest = QuestDatabase.Get(questId);
             if (quest == null || completedQuestIds.Contains(questId)) return false;
-            if (activeQuests.Exists(active => active.data?.questId == questId)) return false;
+            if (activeQuests.Exists(active => active.data != null && active.data.questId == questId)) return false;
             if (activeQuests.Count >= maxActiveQuests) return false;
             return CheckPrerequisites(quest);
         }
@@ -303,7 +305,7 @@ namespace YuanHaiLu.GameSystem
         // === 完成任务 ===
         public bool CompleteQuest(string questId)
         {
-            ActiveQuest quest = activeQuests.Find(q => q.data?.questId == questId);
+            ActiveQuest quest = activeQuests.Find(q => q.data != null && q.data.questId == questId);
 
             if (quest == null || quest.state != ActiveQuest.QuestState.Completable)
             {
@@ -341,7 +343,7 @@ namespace YuanHaiLu.GameSystem
             // 经验
             if (quest.rewardExp > 0)
             {
-                var stats = player?.GetComponent<Character.CharacterStats>();
+                var stats = player != null ? player.GetComponent<Character.CharacterStats>() : null;
                 if (stats == null)
                 {
                     Debug.LogWarning("[Quest] 玩家或 CharacterStats 不存在，无法发放经验奖励");
@@ -389,7 +391,7 @@ namespace YuanHaiLu.GameSystem
             if (!string.IsNullOrEmpty(quest.rewardSkillId))
             {
                 var skill = MartialSkillDatabase.Get(quest.rewardSkillId);
-                var martial = player?.GetComponent<Character.MartialArtsSystem>();
+                var martial = player != null ? player.GetComponent<Character.MartialArtsSystem>() : null;
                 if (skill == null)
                 {
                     Debug.LogWarning($"[Quest] 奖励武学不存在: {quest.rewardSkillId}");
@@ -440,12 +442,12 @@ namespace YuanHaiLu.GameSystem
         // === 查询 ===
         public ActiveQuest GetActiveQuest(string questId)
         {
-            return activeQuests.Find(q => q.data?.questId == questId);
+            return activeQuests.Find(q => q.data != null && q.data.questId == questId);
         }
 
         public bool IsQuestActive(string questId)
         {
-            return activeQuests.Exists(q => q.data?.questId == questId);
+            return activeQuests.Exists(q => q.data != null && q.data.questId == questId);
         }
 
         public bool IsQuestCompleted(string questId)

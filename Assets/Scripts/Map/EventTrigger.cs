@@ -261,12 +261,14 @@ namespace YuanHaiLu.Map
         {
             if (!string.IsNullOrEmpty(effectId))
             {
-                Effects.EffectsManager.Instance?.PlayEffect(effectId, transform.position);
+                if (Effects.EffectsManager.Instance != null)
+                    Effects.EffectsManager.Instance.PlayEffect(effectId, transform.position);
             }
 
             if (changeBGM && !string.IsNullOrEmpty(newBGM))
             {
-                GameSystem.AudioManager.Instance?.PlayBGM(newBGM);
+                if (GameSystem.AudioManager.Instance != null)
+                    GameSystem.AudioManager.Instance.PlayBGM(newBGM);
             }
         }
 

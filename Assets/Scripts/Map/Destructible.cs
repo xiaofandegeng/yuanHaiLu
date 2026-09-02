@@ -129,7 +129,8 @@ namespace YuanHaiLu.Map
                     else
                     {
                         // 直接加入背包
-                        GameSystem.InventoryManager.Instance?.AddItem(itemId);
+                        if (GameSystem.InventoryManager.Instance != null)
+                            GameSystem.InventoryManager.Instance.AddItem(itemId);
                     }
                     Debug.Log($"[Destructible] {objectName} 掉落了物品: {itemId}");
                 }

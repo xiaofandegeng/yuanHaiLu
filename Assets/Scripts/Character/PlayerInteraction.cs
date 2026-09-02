@@ -57,7 +57,7 @@ namespace YuanHaiLu.Character
                 _candidate.OnInteract(gameObject);
                 // 触发后清空，等下一轮检测重新填充（避免同帧重复触发）
                 _candidate = null;
-                _hud?.HideInteractPrompt();
+                if (_hud != null) _hud.HideInteractPrompt();
             }
         }
 
@@ -96,11 +96,11 @@ namespace YuanHaiLu.Character
                 {
                     // 尝试用对象名作提示文案
                     string prompt = GetPromptText(_candidate);
-                    _hud?.ShowInteractPrompt(prompt);
+                    if (_hud != null) _hud.ShowInteractPrompt(prompt);
                 }
                 else
                 {
-                    _hud?.HideInteractPrompt();
+                    if (_hud != null) _hud.HideInteractPrompt();
                 }
             }
         }
@@ -110,7 +110,7 @@ namespace YuanHaiLu.Character
             if (_candidate != null)
             {
                 _candidate = null;
-                _hud?.HideInteractPrompt();
+                if (_hud != null) _hud.HideInteractPrompt();
             }
         }
 
@@ -119,7 +119,8 @@ namespace YuanHaiLu.Character
         /// </summary>
         private string GetPromptText(IInteractable target)
         {
-            var go = (target as MonoBehaviour)?.gameObject;
+            var targetBehaviour = target as MonoBehaviour;
+            var go = targetBehaviour != null ? targetBehaviour.gameObject : null;
             if (go != null)
             {
                 var npc = go.GetComponent<NPCBase>();

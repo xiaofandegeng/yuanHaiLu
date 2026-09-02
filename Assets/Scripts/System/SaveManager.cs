@@ -154,15 +154,21 @@ namespace YuanHaiLu.GameSystem
                 saveTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             };
 
-            // 背包/武学/已完成任务（单例可能在场景中，用 null 安全访问）
-            saveData.inventory = InventoryManager.Instance?.GetSaveData();
+            // 背包/武学/已完成任务（单例可能在场景中，用两段式判空访问）
+            var inventory = InventoryManager.Instance;
+            if (inventory != null)
+                saveData.inventory = inventory.GetSaveData();
             var martial = player.GetComponent<MartialArtsSystem>();
             if (martial != null)
             {
                 saveData.martialArts = martial.GetSaveData();
             }
-            saveData.completedQuests = QuestManager.Instance?.GetCompletedQuests();
-            saveData.quests = QuestManager.Instance?.GetSaveData();
+            var quests = QuestManager.Instance;
+            if (quests != null)
+            {
+                saveData.completedQuests = quests.GetCompletedQuests();
+                saveData.quests = quests.GetSaveData();
+            }
 
             string json = JsonUtility.ToJson(saveData, true);
             string key = slot == -1 ? AUTO_SAVE_KEY : SAVE_KEY + slot;
@@ -309,7 +315,8 @@ namespace YuanHaiLu.GameSystem
 
                 // SetBaseFromLoad 必须先于装备重算；装备恢复完成后再按最终上限
                 // 写回当前资源，避免装备增加上限时把合法 HP/MP 提前裁剪掉。
-                stats?.SetCurrentResourcesFromLoad(saveData.currentHp, saveData.currentMp);
+                if (stats != null)
+                    stats.SetCurrentResourcesFromLoad(saveData.currentHp, saveData.currentMp);
 
                 if (saveData.martialArts != null)
                 {

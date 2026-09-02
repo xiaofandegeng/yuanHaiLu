@@ -98,7 +98,8 @@ namespace YuanHaiLu.GameSystem
             }
 
             // 显示提示
-            transition?.ShowAreaName("烟柳客栈", "已在此处复活", 2f);
+            if (transition != null)
+                transition.ShowAreaName("烟柳客栈", "已在此处复活", 2f);
 
             _isDead = false;
         }

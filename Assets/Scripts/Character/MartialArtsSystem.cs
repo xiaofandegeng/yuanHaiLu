@@ -132,7 +132,8 @@ namespace YuanHaiLu.Character
             // 如果这个技能已在其他槽位，先卸下
             for (int i = 0; i < _equippedSkills.Length; i++)
             {
-                if (_equippedSkills[i]?.skillId == skill.skillId)
+                var equipped = _equippedSkills[i];
+                if (equipped != null && equipped.skillId == skill.skillId)
                     _equippedSkills[i] = null;
             }
 
@@ -189,7 +190,8 @@ namespace YuanHaiLu.Character
         {
             Debug.Log($"[武学] 释放 {skill.skillName}！消耗内力 {skill.mpCost}");
 
-            var dir = GetComponent<PlayerController>()?.LastDirection ?? Vector2.right;
+            var controller = GetComponent<PlayerController>();
+            var dir = controller != null ? controller.LastDirection : Vector2.right;
 
             switch (skill.type)
             {
@@ -458,7 +460,7 @@ namespace YuanHaiLu.Character
 
             var equipped = new List<string>();
             foreach (var skill in _equippedSkills)
-                equipped.Add(skill?.skillId ?? "");
+                equipped.Add(skill != null ? skill.skillId : "");
             data.equippedSkillIds = equipped.ToArray();
 
             return data;

@@ -76,7 +76,8 @@ namespace YuanHaiLu.Map
             player.transform.position = destination.position;
 
             // 更新摄像机位置（消除跟随延迟）
-            var camFollow = Camera.main?.GetComponent<CameraFollow>();
+            var mainCam = Camera.main;
+            var camFollow = mainCam != null ? mainCam.GetComponent<CameraFollow>() : null;
             if (camFollow != null)
             {
                 camFollow.transform.position = new Vector3(

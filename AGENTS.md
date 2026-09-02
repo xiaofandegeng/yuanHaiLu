@@ -450,6 +450,7 @@ yuanHaiLu/
     - 本地未跟踪垃圾：`Logs/`、`YuanHaiLu*.csproj`、`.zcode/plans/` 过期会话计划。
     - docs/18 §6.C 冻结项（v2 三层资产、`mvp_scene_layer_builder.py`、`CreateMvpSceneLayers`、整屏层测试）按用户决定保持不动，待 Gate R1 批准。
 89. 文档同步至 v5/docs-15 现状：README.md 与 SETUP_GUIDE.md 重写 v3/v4 时代描述（删 12 外观/2 性别×6 职业选择与 Tab 背包/Q 任务日志操作项，改固定男主+三武器流派；25→26 场景；101+7+45→139+14+52；代码计数 68→75、测试文件 19→28；结构树去 Combat/ 已删脚本；build 预期 skipped=219；编辑器工具表对齐现存 21 个菜单项）；AGENTS.md 文件映射去已删脚本、docs 清单改为现存 01/02/15/18、§10 重写为外部 AI 分支约束；CLAUDE.md 首次入库。
+90. fake-null 约定违规全库清理：全量扫描 `Assets/Scripts` 的 `?.`/`??`，把所有作用于 `UnityEngine.Object` 派生类型（MonoBehaviour 单例、GameObject、CharacterStats/MartialSkill/QuestData 等 SO 与组件）的 34 处违规改为两段式判空（`var x = X.Instance; if (x != null) x.M();` 或 `x != null ? x.M() : 默认值`），涉及 17 个文件：MainMenu、PauseMenu（8 处）、HUD、CharacterVisual（ApplyTo 的 `GetComponent ?? AddComponent` 与自身 :40 注释自相矛盾处）、CharacterAudio、LevelSystem、PlayerInteraction（4 处 `_hud?.` + `(target as MonoBehaviour)?.gameObject`）、EnemyAI、MartialArtsSystem（MartialSkill 为 ScriptableObject）、DialogueManager（条件/动作 switch 全部）、QuestManager（lambda 内 `q.data?.questId` ×4、`player?.GetComponent` ×2、ctor 模板判空）、SaveManager、SceneDirector、TeleportPoint（`Camera.main?.`）、Destructible、EventTrigger、PlayerDeathHandler。保留的合法用法：`On*?.Invoke` 事件委托、普通类/数组/字符串（InventorySaveData 数组、JSON 布局类、`Path.GetDirectoryName`、`ISpriteNameFileIdDataProvider`）、`quest?.data == null`（`?.` 作用于普通类 ActiveQuest，`.data == null` 走 Unity 重载比较）。验证：EditMode 139/139、PlayMode 14/14、无 CS 警告。
 
 ## 8. 当前人工 QA 清单
 

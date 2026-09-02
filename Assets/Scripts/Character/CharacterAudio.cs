@@ -45,7 +45,8 @@ namespace YuanHaiLu.Character
             if (_footstepTimer <= 0f)
             {
                 string footstep = GetTerrainFootstep();
-                AudioManager.Instance?.PlaySFXRandomPitch(footstep, 0.85f, 1.15f);
+                var audioMgr = AudioManager.Instance;
+                if (audioMgr != null) audioMgr.PlaySFXRandomPitch(footstep, 0.85f, 1.15f);
 
                 // 冲刺时步伐更快
                 float interval = _controller.IsDashing ? footstepInterval * 0.6f : footstepInterval;
@@ -78,12 +79,14 @@ namespace YuanHaiLu.Character
 
         private void OnDamaged(int damage)
         {
-            AudioManager.Instance?.PlaySFXRandomPitch(hurtSfx, 0.9f, 1.1f);
+            var audioMgr = AudioManager.Instance;
+            if (audioMgr != null) audioMgr.PlaySFXRandomPitch(hurtSfx, 0.9f, 1.1f);
         }
 
         private void OnDeath()
         {
-            AudioManager.Instance?.PlaySFX(deathSfx);
+            var audioMgr = AudioManager.Instance;
+            if (audioMgr != null) audioMgr.PlaySFX(deathSfx);
         }
 
         private void OnDestroy()

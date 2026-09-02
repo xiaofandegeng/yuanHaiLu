@@ -265,13 +265,16 @@ namespace YuanHaiLu.Dialogue
             switch (parts[0])
             {
                 case "hasItem":
-                    return GameSystem.InventoryManager.Instance?.HasItem(parts[1]) ?? false;
+                    return GameSystem.InventoryManager.Instance != null
+                        && GameSystem.InventoryManager.Instance.HasItem(parts[1]);
 
                 case "questActive":
-                    return GameSystem.QuestManager.Instance?.IsQuestActive(parts[1]) ?? false;
+                    return GameSystem.QuestManager.Instance != null
+                        && GameSystem.QuestManager.Instance.IsQuestActive(parts[1]);
 
                 case "questComplete":
-                    return GameSystem.QuestManager.Instance?.IsQuestCompleted(parts[1]) ?? false;
+                    return GameSystem.QuestManager.Instance != null
+                        && GameSystem.QuestManager.Instance.IsQuestCompleted(parts[1]);
 
                 case "level>=":
                     var player = GameObject.FindGameObjectWithTag("Player");
@@ -283,7 +286,8 @@ namespace YuanHaiLu.Dialogue
                     return false;
 
                 case "gold>=":
-                    return (GameSystem.InventoryManager.Instance?.Gold ?? 0) >= int.Parse(parts[1]);
+                    return GameSystem.InventoryManager.Instance != null
+                        && GameSystem.InventoryManager.Instance.Gold >= int.Parse(parts[1]);
 
                 default:
                     return true;
@@ -301,27 +305,35 @@ namespace YuanHaiLu.Dialogue
             {
                 case "giveItem":
                     int qty = parts.Length > 2 ? int.Parse(parts[2]) : 1;
-                    GameSystem.InventoryManager.Instance?.AddItem(parts[1], qty);
+                    if (GameSystem.InventoryManager.Instance != null)
+                        GameSystem.InventoryManager.Instance.AddItem(parts[1], qty);
                     Debug.Log($"[对话] 获得物品: {parts[1]} x{qty}");
                     break;
 
                 case "startQuest":
-                    GameSystem.QuestManager.Instance?.AcceptQuestById(parts[1]);
+                    if (GameSystem.QuestManager.Instance != null)
+                        GameSystem.QuestManager.Instance.AcceptQuestById(parts[1]);
                     Debug.Log($"[对话] 开始任务: {parts[1]}");
                     break;
 
                 case "completeQuest":
-                    GameSystem.QuestManager.Instance?.CompleteQuest(parts[1]);
+                    if (GameSystem.QuestManager.Instance != null)
+                        GameSystem.QuestManager.Instance.CompleteQuest(parts[1]);
                     break;
 
                 case "giveGold":
-                    GameSystem.InventoryManager.Instance?.AddGold(int.Parse(parts[1]));
+                    if (GameSystem.InventoryManager.Instance != null)
+                        GameSystem.InventoryManager.Instance.AddGold(int.Parse(parts[1]));
                     Debug.Log($"[对话] 获得 {parts[1]} 文钱");
                     break;
 
                 case "heal":
                     var p = GameObject.FindGameObjectWithTag("Player");
-                    if (p != null) p.GetComponent<CharacterStats>()?.Heal(int.Parse(parts[1]));
+                    if (p != null)
+                    {
+                        var healStats = p.GetComponent<CharacterStats>();
+                        if (healStats != null) healStats.Heal(int.Parse(parts[1]));
+                    }
                     break;
 
                 case "learnSkill":

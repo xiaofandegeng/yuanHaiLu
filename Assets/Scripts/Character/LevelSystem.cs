@@ -91,7 +91,8 @@ namespace YuanHaiLu.Character
 
             // 升级特效
             Effects.EffectsManager.LevelUpEffect(transform.position);
-            GameSystem.AudioManager.Instance?.PlaySFX(GameSystem.AudioManager.SFX.LEVEL_UP);
+            var audioMgr = GameSystem.AudioManager.Instance;
+            if (audioMgr != null) audioMgr.PlaySFX(GameSystem.AudioManager.SFX.LEVEL_UP);
 
             // 金钱奖励
             var inv = GameSystem.InventoryManager.Instance;
