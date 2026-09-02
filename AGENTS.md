@@ -96,7 +96,7 @@ YuanHaiLu.Effects
   EffectsManager（特效池、命中火花、伤害数字、剑气、屏闪）
 
 YuanHaiLu.Map
-  TileMapManager / AreaTrigger / TeleportPoint / Destructible
+  AreaTrigger / TeleportPoint / Destructible
   ItemPickup / EventTrigger / SceneDirector
 
 YuanHaiLu.Dialogue
@@ -109,7 +109,7 @@ YuanHaiLu.GameSystem
   AudioManager / GameTimeManager / ScreenTransition / PlayerDeathHandler
 
 YuanHaiLu.UI
-  HUD / MainMenu / InventoryUI / QuestUI / PauseMenu / DialogueUI
+  HUD / MainMenu / PauseMenu / DialogueUI
 
 YuanHaiLu.Editor
   DemoSceneGenerator / MainMenuSceneGenerator / InnSceneGenerator / PlaySceneAssembler
@@ -221,7 +221,7 @@ Ground → Environment → Character → Foreground → UI
 - 角色分类固定：12 Player、15 Named、36 NPC、24 Enemies、10 Bosses。
 - 环境固定：10 Regions（tianshu/cangyue/yanliu/chisha/youhuang/hanyuan/prologue_village/luoyuan/jueyun/zhenyue）和 13 Interiors（inn/residence/shop/pharmacy/academy/yamen/palace/temple/cave/tomb/dungeon/military_camp/ship_cabin）。
 - `CharacterVisual.Apply` 中 UnityEngine.Object 的组件检查必须用显式两段 `== null`；禁止 `GetComponent<T>() ?? AddComponent<T>()`，Unity “fake null” 曾导致 `MissingComponentException`。
-- docs/18 起 MVP 试玩画面由 `MvpWorldModule` 密集小模块装配：`Assets/ArtSource/MVP/dense_pixel/layouts/{town,inn}.json` 声明 placements（asset/x/y/layer/sortingOrder/role），`MvpSceneModuleAssembler` 在两个 Demo 场景放置 `Assets/Art/MVP/dense_pixel/environment/` 下 ≤64×64 持久精灵，排序映射 `Ground→Default/-100`、`Environment→Environment`、`Foreground→Foreground`；掌柜/两水匪为 48×48、荷包 16×16（`Resources/Art/MVP/dense_pixel/actors/`，`MvpArtCatalog` dense 优先、旧 `Art/MVP/` 根兜底）。docs/17 的 v2 三层整屏资源（`Assets/ArtSource|Art/Environment/MVP/v2/`）与 `CreateMvpSceneLayers` 暂作 §6.C 过渡回滚点保留，Gate R1 批准前禁止删除。离屏截图必须**先**绑定 480×270 `RenderTexture`，再刷新 `PixelPerfectCamera`，否则 Unity 会把视口按编辑器 Game View 钳制并在两侧留下清屏色。
+- docs/18 起 MVP 试玩画面由 `MvpWorldModule` 密集小模块装配：`Assets/ArtSource/MVP/dense_pixel/layouts/{town,inn}.json` 声明 placements（asset/x/y/layer/sortingOrder/role），`MvpSceneModuleAssembler` 在两个 Demo 场景放置 `Assets/Art/MVP/dense_pixel/environment/` 下 ≤64×64 持久精灵，排序映射 `Ground→Default/-100`、`Environment→Environment`、`Foreground→Foreground`；掌柜/两水匪为 48×48、荷包 16×16（`Resources/Art/MVP/dense_pixel/actors/`，`MvpArtCatalog` dense 优先、旧 `Art/MVP/` 根兜底）。docs/18 §3 的 v2 三层整屏资源（`Assets/ArtSource|Art/Environment/MVP/v2/`）与 `CreateMvpSceneLayers` 暂作 §6.C 过渡回滚点保留，Gate R1 批准前禁止删除。离屏截图必须**先**绑定 480×270 `RenderTexture`，再刷新 `PixelPerfectCamera`，否则 Unity 会把视口按编辑器 Game View 钳制并在两侧留下清屏色。
 - 主菜单与烟柳镇实际渲染基线见 `Assets/Art/Characters/Player/previews/main-menu-character-selection.png`、`Assets/Art/Environment/previews/demo-yanliu-gameplay.png`。
 
 ## 4. 开发与测试流程
@@ -267,7 +267,7 @@ python3 -m tools.art_pipeline.validate --all
 
 - v5 已保存主角外观、武器流派与活跃任务，但尚未保存敌人状态、唯一拾取物、一次性事件、区域标志和其他世界状态（读档后 Demo 敌人与门控对象按场景初始状态重置，任务进度仍按存档恢复）。
 - `MVP_01` 已在 Demo/客栈全链路接线；`M01_01`–`M01_05` 运行时模板已完成但烟柳镇场景尚未为其配置 `QuestGiver` 与目标，属阶段二内容。
-- docs/15 冻结项仍然有效：其余 11 套主角外观、85 个非 MVP 角色、10 户外、12 个非 inn 室内与批量美术流水线保持原样。MVP 美术例外（docs/17/18）为：固定男主 48×48 可动画源帧、两张 Demo 的密集小模块与 v2 三层过渡资产，及掌柜/两水匪/荷包静态精灵（48px 人物/16px 荷包，旧 32px `Resources/Art/MVP/` 根保留兜底）；此前 7 张功能小图继续保留。所有例外均经持久资源加载，禁止运行时生成；正式角色/环境美术零改动。
+- docs/15 冻结项仍然有效：其余 11 套主角外观、85 个非 MVP 角色、10 户外、12 个非 inn 室内与批量美术流水线保持原样。MVP 美术例外（docs/18 §3）为：固定男主 48×48 可动画源帧、两张 Demo 的密集小模块与 v2 三层过渡资产，及掌柜/两水匪/荷包静态精灵（48px 人物/16px 荷包，旧 32px `Resources/Art/MVP/` 根保留兜底）；此前 7 张功能小图继续保留。所有例外均经持久资源加载，禁止运行时生成；正式角色/环境美术零改动。
 - 正式 97 角色和 23 环境已完成确定性第一版，但仍需要人工精修表情、攻击动作节奏、地标细节和区域独特构图。
 - 角色 Controller/动画资源已生成；当前基础状态切换仅完整覆盖 down 向 idle/walk，四方向 BlendTree 和所有动作的运行时过渡仍可继续深化。
 - 物品/任务主要由代码表和 Markdown 设计稿提供，正式 `.asset` 资源仍待制作。
@@ -283,25 +283,25 @@ python3 -m tools.art_pipeline.validate --all
 ```text
 yuanHaiLu/
 ├── Assets/
-│   ├── Scripts/                 78 个运行时/编辑器 .cs
-│   ├── Tests/EditMode/          138 个测试用例
+│   ├── Scripts/                 75 个运行时/编辑器 .cs
+│   ├── Tests/EditMode/          139 个测试用例
 │   ├── Tests/PlayMode/          14 个测试用例
 │   ├── ArtSource/               稳定 PNG/JSON、模块、布局、清单
 │   ├── Art/                     97 角色 + 23 环境输出和验收图
 │   ├── Prefabs/Characters/      97 个正式 Prefab
 │   ├── AnimatorControllers/     97 个正式 Controller
 │   ├── Tilemaps/Formal/         23 套持久 Tile 资产
-│   ├── Scenes/                  MainMenu + Demo + 10 Regions + 13 Interiors
+│   ├── Scenes/                  MainMenu + 2 Demo + 10 Regions + 13 Interiors + 3 Showcase
 │   └── Resources/Art/           两个正式目录资产
 ├── docs/
 │   ├── 01-art-style-guide.md
 │   ├── 02-story-design.md
-│   ├── 03-art-production-handoff.md
-│   ├── 04-external-ai-development-handoff.md
-│   └── 05-post-development-review-plan.md
-├── tools/art_pipeline/          确定性美术 baker/validator（48 测试）
+│   ├── 15-single-hero-mvp-design.md
+│   └── 18-dense-pixel-mvp-implementation-handoff.md
+├── tools/art_pipeline/          确定性美术 baker/validator（52 测试）
 ├── ProjectSettings/             修改后需重启 Unity
 ├── Packages/manifest.json
+├── CLAUDE.md                    Claude Code 项目指引
 ├── README.md
 ├── SETUP_GUIDE.md
 └── AGENTS.md                    本文件
@@ -441,6 +441,16 @@ yuanHaiLu/
 86. 截图回归前提按稀疏构图重写为 `GameplayCaptureFillsTheFullLogicalFrameWithHudAndWorldContent`：断言精确 480×270、顶部 HUD 带横贯逻辑宽度（Unity 视口钳制回归的哨兵——钳制时 HUD 会一并缩进中段）与内容占比下限；稀疏留白密度本身交 Gate R1 人工把关。
 87. 最终验证：EditMode 139/139、PlayMode 14/14、Python 52/52、`build --all` built=0 skipped=219、`validate --all` 通过；三张 480×270 1× 复核图输出 `/private/tmp/yuanhailu-mvp-rework-review/` 待 Gate R1；§6.C（删除 v2 三层/`mvp_scene_layer_builder.py`/`CreateMvpSceneLayers`/旧图层测试及 `build.py` 注册）在用户批准 1× 截图前禁止执行。
 
+### 第十五批：死代码与冗余资产清理（2026-09-02）
+
+88. 全工程引用盘点（脚本 GUID 全 Assets 扫描 + 类名全代码扫描双重验证，HUD/PauseMenu/DialogueUI/MainMenu 等作有引用对照）后删除零引用死代码与冗余资产：
+    - C#（含 `.meta`）：`Assets/Scripts/UI/InventoryUI.cs`、`Assets/Scripts/UI/QuestUI.cs`、`Assets/Scripts/Map/TileMapManager.cs` — 场景/prefab/asset/代码全部零引用，`PlaySceneAssembler` 从不创建背包/任务日志 UI；`LevelSystem.cs` 的 `CharacterStatsExtensions` 整类删除（`Heal`/`RestoreMp` 被 `CharacterStats` 同名实例方法遮蔽、从未被扩展形式调用，`OnKillEnemy` 零调用）；`InventoryManager.cs` 的 `ItemDataExtensions` 整类删除（唯一调用者是已删的 InventoryUI）。
+    - Python：`environment_modules.py`（零引用）、`character_modules.py`（仅 `source_audit` 一行包装；`test_character_roster.py` 改为直调 `assert_character_sources_complete`，测试数不变）、`generate_precision_showcase.py`（零引用的一次性展示图生成器）。
+    - 资产：`Assets/MobileDependencyResolver/`（EDM4U 1.0MB 26 文件，零代码引用；2132bdc 删除后被 7187d43 误加回，经用户确认再次删除）；`Assets/Art/MVP/previews/` 8 张 chibi 重制前的第三方参考/过程展示图（零 GUID 引用；保留 6 张 Gate R1 捕获图）。
+    - 本地未跟踪垃圾：`Logs/`、`YuanHaiLu*.csproj`、`.zcode/plans/` 过期会话计划。
+    - docs/18 §6.C 冻结项（v2 三层资产、`mvp_scene_layer_builder.py`、`CreateMvpSceneLayers`、整屏层测试）按用户决定保持不动，待 Gate R1 批准。
+89. 文档同步至 v5/docs-15 现状：README.md 与 SETUP_GUIDE.md 重写 v3/v4 时代描述（删 12 外观/2 性别×6 职业选择与 Tab 背包/Q 任务日志操作项，改固定男主+三武器流派；25→26 场景；101+7+45→139+14+52；代码计数 68→75、测试文件 19→28；结构树去 Combat/ 已删脚本；build 预期 skipped=219；编辑器工具表对齐现存 21 个菜单项）；AGENTS.md 文件映射去已删脚本、docs 清单改为现存 01/02/15/18、§10 重写为外部 AI 分支约束；CLAUDE.md 首次入库。
+
 ## 8. 当前人工 QA 清单
 
 自动测试不能替代 Play 验证。docs/15 验收标准第 6 条要求**三种流派各完成一次完整试玩**，当前状态：**待执行**（需可见 Unity 窗口人工操作；自动侧已由 EditMode/PlayMode 全覆盖）。每条流派（剑/拳套/暗器）各跑一遍下面的完整链路：
@@ -470,11 +480,8 @@ git branch -M main
 git push -u origin main
 ```
 
-## 10. 外部 AI 开发交接（2026-08-13）
+## 10. 外部 AI 分支约束
 
-- 完整开发交接计划：`docs/04-external-ai-development-handoff.md`。
-- 开发完成后的独立审查与验证计划：`docs/05-post-development-review-plan.md`。
-- `main` 是唯一权威基线；`/Users/lhw/code/yuanHaiLu/.worktrees/full-art-production` 仅作为未提交素材来源。
-- 来源分支 `codex/full-art-production` 与 `main` 没有共同祖先，禁止直接 merge；必须按交接计划迁移到从最新 `main` 创建的新 `codex/` 分支。
-- 当前已知硬约束：默认外观及 v1–v3 迁移仍为 `player_female_swordsman`；不得覆盖 `QuestTarget` 成功推进后才锁定的修复；不得夹带 `ProjectSettings` 平台噪声和 Resolver `.meta` 删除。
-- 外部 AI 完成后不得自行宣告合并就绪；必须提供固定提交、测试 XML/日志、视觉截图和人工 QA 证据，再按审查计划独立复验。
+- `main` 是唯一权威基线；远程历史 `codex/*` 分支（外部 AI 美术产出）与 `main` 没有共同祖先，禁止直接 merge；如需取用素材，迁移到从最新 `main` 创建的新分支再搬运。
+- 不得覆盖 `QuestTarget` 成功推进后才锁定的修复；不得夹带 `ProjectSettings` 平台噪声。
+- 外部产出不得自行宣告合并就绪；必须提供固定提交、测试 XML/日志、视觉截图和人工 QA 证据，再独立复验。

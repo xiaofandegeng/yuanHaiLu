@@ -23,11 +23,12 @@
 
 ## 3. 场景与运行
 
-仓库维护 25 个 Build Settings 场景：
+仓库维护 26 个 Build Settings 场景：
 
 ```text
 Assets/Scenes/MainMenu.unity
 Assets/Scenes/Demo_YanLiuTown.unity
+Assets/Scenes/Demo_Inn.unity
 Assets/Scenes/Regions/*.unity（10 个）
 Assets/Scenes/Interiors/*.unity（13 个）
 ```
@@ -37,15 +38,17 @@ Assets/Scenes/Interiors/*.unity（13 个）
 ```text
 Tools → 渊海录 → 生成主菜单场景
 Tools → 渊海录 → 生成Demo场景
+Tools → 渊海录 → 生成客栈室内场景
 ```
 
 在 **File → Build Profiles**（部分界面仍显示 Build Settings）中按顺序加入：
 
 ```text
-0  MainMenu
-1  Demo_YanLiuTown
-2–11  Regions
-12–24 Interiors
+0   MainMenu
+1   Demo_YanLiuTown
+2   Demo_Inn
+3–12 Regions
+13–25 Interiors
 ```
 
 日常运行可从 `MainMenu` 开始；需要快速调试场景时也可直接打开 `Demo_YanLiuTown`，它会按新游戏入口初始化。
@@ -103,7 +106,7 @@ Ground → Environment → Character → Foreground → UI
 | Submit | Return / Enter | Space |
 | Cancel | Escape | 手柄 Button 1 |
 
-背包 Tab、任务 Q、武学 1–4 等功能直接读取 `KeyCode`。对话/暂停状态由 `GameManager` 输入门阻止战斗和武学误触。
+武学 1–4 等功能直接读取 `KeyCode`。对话/暂停状态由 `GameManager` 输入门阻止战斗和武学误触。
 
 ## 5. 运行时对象约定
 
@@ -145,7 +148,7 @@ MartialArtsSystem（武学功能需要）
 - 给普通敌人/Boss 添加 `QuestTarget`，配置 `objectiveType` 和稳定 `targetId`。
 - 区域目标配置 `AreaTrigger.questTargetId`；任务未接取时不会提前消耗一次性上报机会。
 - `ItemPickup` 和 `MartialArtsSystem.LearnSkill` 已自动在完整成功拾取/首次学习后上报。
-- v4 存档保存正式主角外观、活跃任务与目标进度；v1–v3 缺失外观时迁移为女剑客。
+- v5 存档保存固定男主外观、武器流派、活跃任务与目标进度；v1–v4 旧档迁移为男剑客 + 长剑。
 
 ## 6. Animator 约定
 
@@ -164,7 +167,7 @@ AttackIndex Int
 
 ## 7. 自动测试
 
-当前基线：101 个 EditMode、7 个 PlayMode、45 个 Python 测试。
+当前基线：139 个 EditMode、14 个 PlayMode、52 个 Python 测试。
 
 正式美术验证：
 
@@ -210,19 +213,19 @@ python3 -m tools.art_pipeline.validate --all
 
 重启 Unity 后至少验证：
 
-- [ ] 主菜单可见 12 个角色选择；切换外观后 idle 预览和金色选中态正确。
-- [ ] 主菜单“新游戏”进入 `Demo_YanLiuTown`，选择的外观保持。
+- [ ] 主菜单可选三种武器流派（剑/拳套/暗器）；预览恒为同一男主，武器小图随流派切换。
+- [ ] 主菜单“新游戏”进入 `Demo_YanLiuTown`，选择的流派保持。
 - [ ] Demo 正式地面、水岸、道路、桥、建筑、玩家和 NPC 可见，场景切换后视口外无残影。
 - [ ] 序章村庄 normal / burned 状态仅替换环境画面；入口、出口、地标锚点和墙体碰撞保持一致。
 - [ ] NPC 附近出现提示，K 与 E 都能开始对话。
 - [ ] 自动事件不显示交互提示；按键事件可以触发且一次性事件不会重复出现。
 - [ ] J 攻击、Shift 冲刺、数字键武学在探索状态可用。
 - [ ] ESC 显示暂停面板，再按 ESC 可继续游戏。
-- [ ] v4 存档后修改外观、位置、HP/MP、背包、装备、金钱、武学、活跃任务和已完成任务，读档可精确恢复。
+- [ ] v5 存档后修改武器流派、位置、HP/MP、背包、装备、金钱、武学、活跃任务和已完成任务，读档可精确恢复。
 - [ ] 读档不追加初始物资、不覆盖出生点；卸下装备后属性正确。
 - [ ] 再次加载其他场景不会重复应用旧存档。
 
-敌人、唯一拾取物、一次性事件、区域标志等世界状态目前不在存档范围，不能把它们列为通过项。五条主线模板尚未接入现有烟柳镇场景，场景端任务闭环留待阶段二。
+敌人、唯一拾取物、一次性事件、区域标志等世界状态目前不在存档范围，不能把它们列为通过项。`MVP_01` 已在烟柳镇 ↔ 客栈全链路接线；五条主线模板（`M01_01`–`M01_05`）尚未接入，留待阶段二。
 
 ## 9. 常见问题
 
@@ -230,7 +233,7 @@ python3 -m tools.art_pipeline.validate --all
 - **K/E 无响应**：重启 Unity，并检查 `InputManager.asset` 中只有一个 `Interact` 轴。
 - **NPC 无法检测**：确认物理层为 `NPC`，Collider2D 可进入交互半径，组件实现 `IInteractable`。
 - **物品 ID 找不到**：`InventoryManager` 先加载 `ItemDatabase` 代码表，再用 `Resources/Items` 下同 ID 的 SO 覆盖。
-- **读档后属性叠加**：v4 仍沿用 v2 的基础属性语义；装备加成由背包恢复后统一重算。
+- **读档后属性叠加**：v5 仍沿用 v2 的基础属性语义；装备加成由背包恢复后统一重算。
 - **任务读档警告**：未知任务模板/目标会跳过并警告，越界进度会钳制并警告；不要把这些警告静默删除。
 - **大量命名空间错误**：系统代码必须使用 `YuanHaiLu.GameSystem`，不要使用 `YuanHaiLu.System`。
 - **只有地标、没有 Tilemap 地面**：运行 `RegionSceneBuilder` 重建；生成器必须批量调用 `Tilemap.SetTiles`，不能改回逐格 `SetTile`。
