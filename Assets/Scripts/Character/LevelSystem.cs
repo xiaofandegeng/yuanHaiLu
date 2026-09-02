@@ -160,43 +160,4 @@ namespace YuanHaiLu.Character
         public void LoadSaveData(LevelSaveData data) => PendingPoints = data.pendingPoints;
     }
 
-    // ========== 扩展 CharacterStats ==========
-
-    /// <summary>
-    /// CharacterStats 扩展方法 — 经验和等级相关
-    /// </summary>
-    public static class CharacterStatsExtensions
-    {
-        /// <summary>
-        /// 击杀敌人时调用 — 计算经验、金钱、掉落
-        /// </summary>
-        public static void OnKillEnemy(this CharacterStats killer, CharacterStats enemy)
-        {
-            // 经验值 = 敌人等级 * 10 + 随机波动
-            int exp = enemy.level * 10 + Random.Range(-5, 10);
-            if (exp <= 0) exp = 5;
-
-            var levelSys = killer.GetComponent<LevelSystem>();
-            if (levelSys != null)
-            {
-                levelSys.GainExp(exp);
-            }
-        }
-
-        /// <summary>
-        /// 治疗角色
-        /// </summary>
-        public static void Heal(this CharacterStats stats, int amount)
-        {
-            stats.currentHp = Mathf.Min(stats.currentHp + amount, stats.maxHp);
-        }
-
-        /// <summary>
-        /// 恢复内力
-        /// </summary>
-        public static void RestoreMp(this CharacterStats stats, int amount)
-        {
-            stats.currentMp = Mathf.Min(stats.currentMp + amount, stats.maxMp);
-        }
-    }
 }

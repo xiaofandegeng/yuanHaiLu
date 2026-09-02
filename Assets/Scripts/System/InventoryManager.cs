@@ -67,23 +67,6 @@ namespace YuanHaiLu.GameSystem
         Legendary       // 传说（金色）
     }
 
-    // ItemData 扩展方法
-    public static class ItemDataExtensions
-    {
-        public static Color GetRarityColor(this ItemRarity rarity)
-        {
-            return rarity switch
-            {
-                ItemRarity.Common => Color.white,
-                ItemRarity.Uncommon => new Color(0.3f, 1f, 0.3f),    // 绿
-                ItemRarity.Rare => new Color(0.3f, 0.6f, 1f),         // 蓝
-                ItemRarity.Epic => new Color(0.7f, 0.3f, 1f),         // 紫
-                ItemRarity.Legendary => new Color(1f, 0.85f, 0.2f),   // 金
-                _ => Color.white
-            };
-        }
-    }
-
     /// <summary>
     /// 背包槽位
     /// </summary>
