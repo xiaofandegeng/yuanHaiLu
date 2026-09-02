@@ -276,7 +276,6 @@ namespace YuanHaiLu.Map
             if (GameManager.Instance != null)
                 GameManager.Instance.SetState(GameManager.GameState.Cutscene);
 
-            // TODO: 接入过场系统
             Debug.Log("[EventTrigger] 过场动画播放中...");
         }
 

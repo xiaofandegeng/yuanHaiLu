@@ -228,7 +228,6 @@ namespace YuanHaiLu.UI
 
         private void UpdateEquipmentSlots()
         {
-            // TODO: 显示已装备物品的图标
         }
 
         private void OnDestroy()

@@ -11,10 +11,10 @@
 | 引擎 | Unity `6000.4.10f1`（2D Core / 内置 2D，**不是 URP**） |
 | 平台 | macOS Apple Silicon（可扩 PC/WebGL/移动） |
 | 代码规模 | 78 个运行时/编辑器 C# 文件；另有 28 个测试 .cs |
-| 状态 | 单主角 MVP 垂直切片（docs/15/17，实施方向 docs/18）：固定男主 + 三武器流派 + `MvpWorldModule` 密集小模块装配的烟柳镇↔客栈闭环 + MVP_01 河岸失物；docs/18 §6.C 过渡层清理待 Gate R1 |
-| 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；当前工作分支 `codex/mvp-presentation-flow-rework`（基于单主角 MVP 复审基线） |
-| 测试 | 139 EditMode + 14 PlayMode + 52 Python 全通过（最终提交后须重跑并以 XML 为准；2026-08-29 许可证已恢复，批处理可正常执行） |
-| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/03-art-production-handoff.md`、`docs/04-external-ai-development-handoff.md`、`docs/05-post-development-review-plan.md`、`docs/15-single-hero-mvp-design.md`、`docs/16-mvp-presentation-flow-rework-handoff.md`（A–C 已实施）、`docs/17-mvp-art-integration-rework.md`（历史）、`docs/18-dense-pixel-mvp-implementation-handoff.md`（现行） |
+| 状态 | 单主角 MVP 垂直切片（docs/15，实施方向 docs/18）：固定男主 + 三武器流派 + `MvpWorldModule` 密集小模块装配的烟柳镇↔客栈闭环 + MVP_01 河岸失物 |
+| 版本控制 | Git，默认分支 `main`；`.gitignore` 已配置；已收敛为单一主分支 `main` |
+| 测试 | 139 EditMode + 14 PlayMode + 52 Python 全通过 |
+| 设计/交接 | `docs/01-art-style-guide.md`、`docs/02-story-design.md`、`docs/15-single-hero-mvp-design.md`、`docs/18-dense-pixel-mvp-implementation-handoff.md`（现行） |
 
 ## 1. 如何运行
 
